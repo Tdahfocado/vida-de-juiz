@@ -2130,6 +2130,52 @@ TOGA.cena3d = (function () {
           iniciarViagemEsmec();
         } },
 
+      { id: "missaoFlagrante", pos: P.salaProvas, raio: 2.2,
+        rotulo: function () {
+          return TOGA.atividades.missaoFeita("flagrante")
+            ? "🚔 rever o plantão do flagrante"
+            : "🚔 analisar o flagrante com a delegada (missão)";
+        },
+        visivel: function () { return TOGA.atividades.destravada("delegacia"); },
+        acao: function () {
+          if (!TOGA.atividades || TOGA.atividades.emVisita) return;
+          TOGA.controles3d.desativar();
+          TOGA.atividades.executarMissao("flagrante", function (r) {
+            reativarControles();
+            toastMundo(r.exemplar
+              ? "🚔 Três de três! A delegada fixa no mural do plantão: “fórum aprovado no nosso vestibular”. A ponte entre as casas nunca esteve tão firme."
+              : "✔ Plantão concluído. Algum ponto escapou — “por isso existe o exercício”, diz a delegada, sem drama. O próximo auto chega mais redondo.");
+          });
+        } },
+
+      { id: "oitivaDelegacia", pos: P.oitiva, raio: 2.0,
+        rotulo: "espiar a sala de oitiva",
+        acao: function () {
+          toastMundo("🎥 Mesa simples, duas cadeiras iguais e a câmera de luz vermelha no alto: aqui todo depoimento nasce gravado — proteção para quem fala E para quem ouve. A delegada resume: “dignidade não atrapalha investigação; atrapalha abuso.”");
+        } },
+
+      { id: "quadroOperacao", pos: P.quadroOperacao, raio: 2.0,
+        rotulo: "olhar o quadro da operação",
+        acao: function () {
+          toastMundo("🗺 “OPERAÇÃO MARESIA — EM APURAÇÃO”: fotos, linhas de barbante e um mapa do litoral. A escrivã cobre discretamente um nome com a mão: “segredo de justiça, doutor — o senhor entende melhor que ninguém.”");
+        } },
+
+      { id: "kitLacres", pos: P.kitLacres, raio: 1.8,
+        rotulo: "ver o kit de lacres",
+        acao: function () {
+          toastMundo("🔗 Lacres numerados, etiquetas, formulário de rastreio: o enxoval da cadeia de custódia (CPP, art. 158-A). Cada vestígio que chega ao fórum começou aqui, num adesivo amarelo preenchido a caneta.");
+        } },
+
+      { id: "cafeDelegacia", pos: P.cafeDelegacia, raio: 1.8,
+        rotulo: "café do plantão policial",
+        acao: function () {
+          jogador.segurar("xicara", "dir");
+          encenarJogador({ acao: "beber", dur: 2.0, aoFim: function () { jogador.segurar(null, "dir"); } });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-2); TOGA.motor.salvar(); }
+          if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("☕ Café de delegacia: passado às 5h, requentado às 7h, heroico às 15h. Desce como um mandado de segurança: com urgência e contra tudo. (−2 de estresse)");
+        } },
+
       { id: "npcDelegada", pos: P.delegada, raio: 1.8,
         rotulo: "cumprimentar a delegada",
         acao: function () {
@@ -2140,6 +2186,68 @@ TOGA.cena3d = (function () {
         rotulo: "cumprimentar a professora",
         acao: function () {
           toastMundo("🤝 “Tia Chica, para os íntimos e para os pequenos”, sorri a professora Francisca. “O senhor por aqui! As crianças NÃO vão acreditar.”");
+        } },
+
+      { id: "missaoCidadania", pos: { x: P.professora.x, z: P.professora.z + 1.6 }, raio: 2.2,
+        rotulo: function () {
+          return TOGA.atividades.missaoFeita("cidadania")
+            ? "🧒 rever o 'pergunta tudo' do 4º ano"
+            : "🧒 topar o 'pergunta tudo' do 4º ano (missão)";
+        },
+        visivel: function () { return TOGA.atividades.destravada("escola"); },
+        acao: function () {
+          if (!TOGA.atividades || TOGA.atividades.emVisita) return;
+          TOGA.controles3d.desativar();
+          TOGA.atividades.executarMissao("cidadania", function (r) {
+            reativarControles();
+            toastMundo(r.exemplar
+              ? "🧒 Três respostas na altura dos olhos — a tia Chica vai precisar de um mural maior. No portão, um bilhete de lápis no seu bolso: “volta sim?”."
+              : "✔ 'Pergunta tudo' concluído. Alguma resposta saiu de cima para baixo — criança percebe na hora, e perdoa na hora também. A porta da escola segue aberta.");
+          });
+        } },
+
+      { id: "muralDesenhos", pos: P.muralDesenhos, raio: 2.0,
+        rotulo: "ver o mural de desenhos",
+        acao: function () {
+          const fez = TOGA.atividades.concluida("escola");
+          toastMundo(fez
+            ? "🖍 No centro do mural, um desenho novo: um boneco de capa preta e martelo gigante, com a legenda “O QEBRA-GALHO DA SIDADE”. A ortografia é discutível; a homenagem, irrecorrível."
+            : "🖍 O mural do 4º ano: casas tortas, sóis de óculos, um cachorro caramelo suspeito de se chamar Razumikin. Toda obra-prima começa assim.");
+        } },
+
+      { id: "amarelinhaEscola", pos: P.amarelinha, raio: 1.8,
+        rotulo: "pular amarelinha",
+        acao: function () {
+          encenarJogador({ acao: "entregar", dur: 1.6 });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-2); TOGA.motor.salvar(); }
+          if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🦘 Um pé, dois pés, um pé — a toga atrapalha no 7, e duas crianças julgam tecnicamente a sua queda: “VALEU! O moço pisou na linha mas é visita.” Decisão colegiada, trânsito em julgado. (−2 de estresse)");
+        } },
+
+      { id: "hortaEscola", pos: P.horta, raio: 1.8,
+        rotulo: "ver a horta do 4º ano",
+        acao: function () {
+          toastMundo("🍅 Canteiros com plaquinhas de palito de picolé: ALFACE (da turma A), CEBOLINHA (da turma B) e um pé de tomate sob disputa judicial entre as duas. Você se declara impedido por suspeição de fome.");
+        } },
+
+      { id: "bebedouroEscola", pos: P.bebedouroEscola, raio: 1.6,
+        rotulo: "beber no bebedouro baixinho",
+        acao: function () {
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-1); TOGA.motor.salvar(); }
+          if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🚰 O bebedouro tem altura de aluno do 4º ano. Você verga em respeitosos noventa graus — e uma criança avalia, solene: “o moço é grande que nem o porteiro”. (−1 de estresse)");
+        } },
+
+      { id: "cantinhoLeitura", pos: P.cantinhoLeitura, raio: 2.0,
+        rotulo: "espiar o cantinho de leitura",
+        acao: function () {
+          toastMundo("📖 Tapete terracota, almofadas e uma leitora de sete anos que nem levanta os olhos do livro: “xiu. O lobo tá QUASE sendo absolvido.” Você sai na ponta dos pés — há julgamentos que não se interrompem.");
+        } },
+
+      { id: "merendeiraEscola", pos: P.merenda, raio: 2.0,
+        rotulo: "cumprimentar a merendeira",
+        acao: function () {
+          toastMundo("🤝 Tia Zefinha estende o tabuleiro pela janela da cantina: “bolo de macaxeira, doutor — receita com força de lei nesta escola.” Recusar seria atentado contra coisa julgada. Você não atenta.");
         } }
     ];
   }

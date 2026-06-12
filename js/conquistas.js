@@ -157,6 +157,14 @@ TOGA.conquistas = (function () {
       desc: "Na Sala de Mediação da ESMEC, conduza a simulação inteira sem impor nada: escuta, reformulação e o acordo que nasce das partes.",
       se: c => c.gatilho === "mediacao" && !!c.gabaritou },
 
+    { id: "plantaoFlagrante", icone: "🚔", nome: "Flagrante de manual",
+      desc: "No plantão da Delegacia, acerte os três pontos do auto de prisão: comunicações do art. 306, cadeia de custódia e o olhar da audiência de custódia.",
+      se: c => c.gatilho === "plantao-flagrante" && !!c.gabaritou },
+
+    { id: "alturaDosOlhos", icone: "🧒", nome: "Na altura dos olhos",
+      desc: "No 'pergunta tudo' do 4º ano, responda às três perguntas das crianças sem bicho-papão, sem desvio e sem mentira.",
+      se: c => c.gatilho === "perguntas-criancas" && !!c.gabaritou },
+
     { id: "cidadaoAoVolante", icone: "🚗", nome: "Cidadão(ã) ao volante",
       desc: "Faça a viagem até a ESMEC sem uma única infração: cinto, sinal, faixa de pedestres e radar.",
       se: c => c.gatilho === "viagem-limpa" },

@@ -96,6 +96,20 @@ async function cliqueVisita(page) {
   ok("visita à escola concluída", await cliqueVisita(page));
   ok("conquista da escola", await page.evaluate(() => TOGA.conquistas.tem("sementeCidadania")));
 
+  // as missões novas da rua: o flagrante e o 'pergunta tudo'
+  const pontosRua = await page.evaluate(() =>
+    ["oitiva", "investigacao", "salaProvas", "cantinhoLeitura", "amarelinha", "horta", "muralDesenhos"]
+      .every(k => !!TOGA.cidade3d.pontos[k]));
+  ok("salas e cantos novos da rua registrados", pontosRua);
+  await page.evaluate(() => TOGA.interacao3d.disparar("missaoFlagrante"));
+  await page.waitForTimeout(300);
+  ok("plantão do flagrante concluído (gabaritado)", await cliqueVisita(page));
+  ok("conquista Flagrante de manual", await page.evaluate(() => TOGA.conquistas.tem("plantaoFlagrante")));
+  await page.evaluate(() => TOGA.interacao3d.disparar("missaoCidadania"));
+  await page.waitForTimeout(300);
+  ok("'pergunta tudo' concluído (gabaritado)", await cliqueVisita(page));
+  ok("conquista Na altura dos olhos", await page.evaluate(() => TOGA.conquistas.tem("alturaDosOlhos")));
+
   // a viagem até a ESMEC (autopilot + turbo)
   await page.evaluate(() => TOGA.interacao3d.disparar("carroJuiz"));
   await page.waitForFunction(() => TOGA.cena3d.localAtivo === "esmec", null, { timeout: 120000 });

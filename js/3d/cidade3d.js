@@ -158,6 +158,57 @@ TOGA.cidade3d = (function () {
     caixa(0.5, 0.3, 0.4, RX - 6.5, 0.95, -7.5, mat(0xb9d2e0), { colide: false });
     caixa(0.5, 0.25, 0.4, RX - 5.6, 0.92, -7.4, mat(0xd8c84a), { colide: false });
     placaEm("CADEIA DE CUSTÓDIA — CPP 158-A", RX - 6, 2.1, -9.8, 0, 2.6);
+    /* ---- SALA DE OITIVA (canto leste-norte): depoimento DIGNO,
+       gravado em vídeo — mesa, cadeiras frente a frente, câmera ---- */
+    parede(RX - 7.2, -4, RX - 4, -4, matDeleg);
+    parede(RX - 7.2, -4, RX - 7.2, -1, matDeleg);   // vão de entrada z −1..2... (norte aberto)
+    caixa(1.4, 0.78, 0.8, RX - 5.6, 0.39, -2.2, mat(0x4a4f57));
+    caixa(0.5, 0.5, 0.5, RX - 5.6, 0.25, -1.3, mat(0x2a2d33), { colide: false });
+    caixa(0.5, 0.5, 0.5, RX - 5.6, 0.25, -3.1, mat(0x2a2d33), { colide: false });
+    // a câmera de gravação no alto, com a luzinha vermelha
+    caixa(0.22, 0.14, 0.3, RX - 4.4, 2.5, -3.6, mat(0x22262c), { colide: false, semSombra: true });
+    const luzRec = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 5),
+      new THREE.MeshBasicMaterial({ color: 0xc94f4f }));
+    luzRec.position.set(RX - 4.5, 2.44, -3.45);
+    scene.add(luzRec);
+    placaEm("SALA DE OITIVA — DEPOIMENTO GRAVADO", RX - 5.6, 2.2, -3.85, 0, 2.6);
+    pontos.oitiva = { x: RX - 5.6, z: -2.2 };
+
+    /* ---- INVESTIGAÇÃO (canto oeste-norte): mesas, monitores e o
+       quadro da operação na parede ---- */
+    parede(RX - 14, -4, RX - 11, -4, matDeleg);
+    parede(RX - 10, -4, RX - 10, -2.2, matDeleg);   // vão de entrada ao sul
+    caixa(1.6, 0.74, 0.7, RX - 12.6, 0.37, -2.4, mat(0x4a4f57));
+    caixa(0.55, 0.38, 0.05, RX - 12.6, 1.0, -2.6, mat(0x15110c), { colide: false, semSombra: true });
+    caixa(0.5, 0.5, 0.5, RX - 12.6, 0.25, -1.6, mat(0x2a2d33), { colide: false });
+    if (TOGA.texturas3d.letreiro) {
+      const quadroOp = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.2),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.letreiro(
+          "OPERAÇÃO MARESIA", "#33373d", "#e8e6da", "EM APURAÇÃO — SIGILOSO") }));
+      quadroOp.position.set(RX - 13.85, 1.8, -1.4);
+      quadroOp.rotation.y = Math.PI / 2;
+      scene.add(quadroOp);
+    }
+    pontos.investigacao = { x: RX - 12.4, z: -1.2 };
+    pontos.quadroOperacao = { x: RX - 13.2, z: -1.4 };
+
+    // mural DISQUE 181 + cantinho do café do plantão (na recepção)
+    if (TOGA.texturas3d.letreiro) {
+      const m181 = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.9),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.letreiro(
+          "DISQUE 181", "#2a3d7c", "#f4ecd9", "DENÚNCIA ANÔNIMA — SIGILO ABSOLUTO") }));
+      m181.position.set(RX - 4.15, 1.8, -0.5);
+      m181.rotation.y = -Math.PI / 2;
+      scene.add(m181);
+    }
+    caixa(0.9, 0.9, 0.5, RX - 6.6, 0.45, 1.6, mat(0x55585e));
+    caixa(0.24, 0.34, 0.24, RX - 6.6, 1.07, 1.6, mat(0x222222), { colide: false }); // a garrafa eterna
+    pontos.cafeDelegacia = { x: RX - 6.6, z: 0.8 };
+    // kit de lacres da cadeia de custódia, na sala de provas
+    caixa(0.5, 0.18, 0.36, RX - 6.6, 0.9, -7.6, mat(0xd8c84a), { colide: false, semSombra: true });
+    pontos.kitLacres = { x: RX - 6.6, z: -7.0 };
+    pontos.salaProvas = { x: RX - 6, z: -6.6 };
+
     pontos.delegaciaPorta = { x: RX - 8.4, z: 2.6 };
     pontos.delegada = { x: RX - 8.5, z: -1.6 };
 
@@ -185,9 +236,79 @@ TOGA.cidade3d = (function () {
     placaEm("4º ANO A", RX + 9, 2.4, 19.8, 0, 1.2);
     // carteiras da sala (3×2) + quadro-negro
     for (let cx = 0; cx < 3; cx++) for (let cz = 0; cz < 2; cz++) {
-      caixa(0.8, 0.62, 0.5, RX + 6.6 + cx * 1.7, 0.31, 22.4 + cz * 1.5, mat(0xb98b4a));
+      caixa(0.8, 0.62, 0.5, RX + 6.0 + cx * 1.6, 0.31, 22.4 + cz * 1.5, mat(0xb98b4a));
     }
-    caixa(3.4, 1.4, 0.1, RX + 9, 1.6, 25.8, mat(0x2f4a3e), { colide: false });
+    caixa(2.6, 1.4, 0.1, RX + 8, 1.6, 25.8, mat(0x2f4a3e), { colide: false });
+
+    /* ---- CANTINHO DE LEITURA (divisória a leste da sala) ---- */
+    parede(RX + 10.6, 20, RX + 10.6, 22.4, mat(0xe8e6da));
+    parede(RX + 10.6, 23.6, RX + 10.6, 26, mat(0xe8e6da));   // vão z 22.4..23.6
+    piso(RX + 10.7, 20, RX + 14, 26, mat(0xc96a4a), 0.055);  // tapete terracota
+    caixa(1.8, 0.9, 0.4, RX + 13.4, 0.45, 25.4, mat(0xd8a44a));  // estante baixa
+    [[-0.5, 0x7c3030], [0, 0x2a3d7c], [0.5, 0x2f4a3e]].forEach(function (l) {
+      caixa(0.3, 0.24, 0.1, RX + 13.4 + l[0], 1.02, 25.4, mat(l[1]), { colide: false, semSombra: true });
+    });
+    // almofadas coloridas no tapete
+    [[RX + 11.8, 22.2, 0xc94f4f], [RX + 12.8, 23.0, 0x4a6ab8], [RX + 11.6, 24.2, 0xd8a44a]].forEach(function (p) {
+      const alm = new THREE.Mesh(new THREE.SphereGeometry(0.34, 10, 6), mat(p[2]));
+      alm.scale.y = 0.42;
+      alm.position.set(p[0], 0.16, p[1]);
+      scene.add(alm);
+    });
+    placaEm("CANTINHO DE LEITURA", RX + 12.3, 2.2, 20.2, 0, 2.0);
+    pontos.cantinhoLeitura = { x: RX + 12.2, z: 23.2 };
+
+    /* ---- o pátio ganha vida: amarelinha, horta, mural, varal ---- */
+    // amarelinha pintada no chão
+    [[0, 0], [0, 0.85], [-0.45, 1.7], [0.45, 1.7], [0, 2.55], [-0.45, 3.4], [0.45, 3.4], [0, 4.25]].forEach(function (c, i) {
+      caixa(0.74, 0.015, 0.74, RX + 9.6 + c[0], 0.045, 15.2 + c[1], mat(0xe8e6da), { colide: false, semSombra: true });
+      caixa(0.6, 0.018, 0.6, RX + 9.6 + c[0], 0.05, 15.2 + c[1], mat([0xc94f4f, 0x4a6ab8, 0xd8a44a, 0x2f4a3e][i % 4]), { colide: false, semSombra: true });
+    });
+    pontos.amarelinha = { x: RX + 9.6, z: 17.2 };
+    // horta do 4º ano, junto ao muro leste
+    [[14.7], [18.4]].forEach(function (h) {
+      caixa(1.8, 0.3, 0.9, RX + 12.9, 0.15, h[0], mat(0x6e3a26));
+      for (let i = 0; i < 3; i++) {
+        const pe = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 6), mat(0x2f4a3e));
+        pe.position.set(RX + 12.3 + i * 0.6, 0.5, h[0]);
+        scene.add(pe);
+      }
+    });
+    pontos.horta = { x: RX + 11.2, z: 14.7 };
+    // mural de desenhos das crianças, na parede da sala
+    if (TOGA.texturas3d.quadro) {
+      [[RX + 5.8, 3], [RX + 6.9, 4], [RX + 11.2, 1]].forEach(function (q) {
+        const des = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.55),
+          new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.quadro(q[1]) }));
+        des.position.set(q[0], 1.5, 19.84);
+        scene.add(des);
+      });
+      const desJuiz = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.desenhoSuperJuiz
+          ? TOGA.texturas3d.desenhoSuperJuiz() : null }));
+      desJuiz.position.set(RX + 10.0, 1.55, 19.84);
+      scene.add(desJuiz);
+    }
+    pontos.muralDesenhos = { x: RX + 9, z: 19.2 };
+    // varal de bandeirinhas cruzando o pátio
+    const fio = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 9.6, 4), mat(0x55585e));
+    fio.rotation.z = Math.PI / 2;
+    fio.rotation.y = 0.32;
+    fio.position.set(RX + 9, 2.7, 17);
+    scene.add(fio);
+    for (let i = 0; i < 9; i++) {
+      const band = new THREE.Mesh(new THREE.CircleGeometry(0.2, 3),
+        new THREE.MeshBasicMaterial({ color: [0xc94f4f, 0x4a6ab8, 0xd8a44a, 0x2f4a3e][i % 4], side: THREE.DoubleSide }));
+      band.position.set(RX + 4.8 + i * 1.05, 2.5, 17 - (i - 4) * 0.34);
+      band.rotation.z = Math.PI;
+      scene.add(band);
+    }
+    // bebedouro baixinho (altura de criança)
+    caixa(0.4, 0.7, 0.35, RX + 4.7, 0.35, 18.6, mat(0x9aa8b0));
+    pontos.bebedouroEscola = { x: RX + 4.7, z: 18.0 };
+    // mesa da merenda
+    caixa(2.0, 0.8, 0.8, RX + 7.4, 0.4, 14.8, mat(0xb98b4a));
+    pontos.merenda = { x: RX + 7.4, z: 15.7 };
     // balanço e gangorra no pátio
     caixa(0.1, 1.8, 0.1, RX + 5.8, 0.9, 16.5, mat(0x8a8f96));
     caixa(0.1, 1.8, 0.1, RX + 7.0, 0.9, 16.5, mat(0x8a8f96));
@@ -234,19 +355,117 @@ TOGA.cidade3d = (function () {
       vivos.push(b);
       return b;
     }
-    // a delegada Dra. Socorro Andrade, atrás do balcão
+    // a delegada Dra. Socorro Andrade — circula entre o balcão,
+    // o quadro da operação e a cela (a casa é dela)
     pontos.npcDelegada = npc("delegada",
       { pele: "#a86a48", cabelo: "coque", corCabelo: "#241a10",
         traje: "blazer", corTraje: "#2b3340", corBlusa: "#cfd8cf" },
       RX - 8.5, -1.4, Math.PI);
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(pontos.npcDelegada, [
+        { esperar: 12 },
+        { segurar: ["autos", "esq"] },
+        { ir: [{ x: RX - 12.2, z: -1.2 }] },         // confere o quadro da operação
+        { acao: "lerPapel" },
+        { segurar: [null, "esq"] },
+        { ir: [{ x: RX - 9.4, z: -5.4 }] },          // olha a custódia
+        { esperar: 6 },
+        { ir: [{ x: RX - 8.5, z: -1.4 }] },
+        { esperar: 14 }
+      ]);
+    }
     // plantonista na recepção
     npc("plantonista",
       { pele: "#c98e66", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#2b3340" },
       RX - 11.5, -1.2, Math.PI / 2, { quepe: true });
-    // a professora Francisca no pátio
+    // a escrivã da investigação, digitando
+    const escriva = npc("escrivaInvest",
+      { pele: "#d8a87f", cabelo: "longo", corCabelo: "#3a2a1a", traje: "camisa", corTraje: "#4a5a6e", oculos: true },
+      RX - 12.6, -1.7, Math.PI, { sentado: true });
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(escriva, [
+        { esperar: 8 },
+        { acao: "lerPapel" },
+        { esperar: 11 }
+      ]);
+    }
+    // o policial de RONDA: recepção → provas → cela → volta
+    const ronda = npc("policialRonda",
+      { pele: "#8a5436", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#2b3340" },
+      RX - 9.5, 0.8, Math.PI, { quepe: true });
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(ronda, [
+        { esperar: 9 },
+        { ir: [{ x: RX - 6.2, z: -1.0 }, { x: RX - 6.0, z: -5.6 }] },   // sala de provas
+        { esperar: 5 },
+        { ir: [{ x: RX - 9.5, z: -5.4 }] },                              // frente da cela
+        { esperar: 7 },
+        { ir: [{ x: RX - 11.4, z: -2.2 }, { x: RX - 9.5, z: 0.8 }] },
+        { esperar: 11 }
+      ]);
+    }
+    // um cidadão registrando ocorrência no balcão
+    const queixoso = npc("queixosoBO",
+      { pele: "#c98e66", cabelo: "calvo", corCabelo: "#9a9388", traje: "camisa", corTraje: "#7a6248", barba: true },
+      RX - 8.5, 0.4, Math.PI);
+    queixoso.setEmocao("triste");
+    // a professora Francisca — vai e volta entre a sala e o pátio
     pontos.npcProfessora = npc("professora",
       { pele: "#8a5436", cabelo: "coque", corCabelo: "#3a2a1a", traje: "vestido", corTraje: "#7a4a3a", oculos: true },
       RX + 9, 21.2, Math.PI);
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(pontos.npcProfessora, [
+        { esperar: 13 },
+        { ir: [{ x: RX + 9, z: 18.6 }, { x: RX + 6.6, z: 17.6 }] },   // olha o recreio
+        { esperar: 8 },
+        { ir: [{ x: RX + 9, z: 18.6 }, { x: RX + 9, z: 21.2 }] },
+        { rot: Math.PI },
+        { esperar: 15 }
+      ]);
+    }
+    // a merendeira, tia Zefinha, com o tabuleiro
+    const merendeira = npc("merendeira",
+      { pele: "#a86a48", cabelo: "coque", corCabelo: "#b9b3a6", traje: "vestido", corTraje: "#2f4a3e" },
+      RX + 7.4, 14.2, 0);
+    merendeira.segurar("pao", "esq");
+    // a diretora circula entre o portão e a sala
+    const diretora = npc("diretoraEscola",
+      { pele: "#8a5436", cabelo: "longo", corCabelo: "#241a10", traje: "blazer", corTraje: "#5a4a52", oculos: true },
+      RX + 9, 14.6, Math.PI);
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(diretora, [
+        { esperar: 10 },
+        { ir: [{ x: RX + 11.6, z: 18.0 }] },          // confere a horta
+        { esperar: 7 },
+        { ir: [{ x: RX + 9.0, z: 16.4 }, { x: RX + 9, z: 14.6 }] },
+        { rot: Math.PI },
+        { esperar: 12 }
+      ]);
+    }
+    // o PEGA-PEGA: duas crianças correndo em circuito no pátio
+    [["#c94f4f", 0], ["#4a6ab8", 4]].forEach(function (cfg, i) {
+      const correndo = npc("criancaCorrendo" + i,
+        { pele: ["#d8a87f", "#8a5436"][i], cabelo: i ? "curto" : "longo",
+          corCabelo: "#241a10", traje: "camisa", corTraje: cfg[0] },
+        RX + 5.4 + i * 2, 18.6, 0);
+      correndo.grupo.scale.setScalar(0.62);
+      correndo.setEmocao("feliz");
+      if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+        TOGA.rotinas3d.adicionarRotina(correndo, [
+          { esperar: 2 + cfg[1] },
+          { ir: [{ x: RX + 5.2, z: 15.6 }, { x: RX + 8.6, z: 16.2 }, { x: RX + 10.6, z: 18.8 }] },
+          { esperar: 1 },
+          { ir: [{ x: RX + 7.8, z: 19.2 }, { x: RX + 5.4, z: 18.6 }] },
+          { esperar: 2 }
+        ]);
+      }
+    });
+    // uma criança lendo no cantinho
+    const lendo = npc("criancaLendo",
+      { pele: "#c98e66", cabelo: "coque", corCabelo: "#241a10", traje: "camisa", corTraje: "#2f4a3e" },
+      RX + 11.9, 22.4, 0.8, { sentado: true });
+    lendo.grupo.scale.setScalar(0.62);
+    lendo.segurar("autos", "esq");
     // crianças no pátio e na sala
     [[RX + 6.4, 17.4, 0.4, "#c94f4f"], [RX + 11.4, 17.2, -0.7, "#4a6ab8"],
      [RX + 7.4, 22.0, 0, "#2f4a3e"], [RX + 10.6, 22.0, 0, "#d8a44a"]].forEach(function (p, i) {
@@ -256,10 +475,21 @@ TOGA.cidade3d = (function () {
       c.grupo.scale.setScalar(0.62);
       c.setEmocao("feliz");
     });
-    // um transeunte esperando na faixa
+    // um transeunte esperando na faixa e um casal passeando na calçada
     npc("transeunte",
       { pele: "#d8a87f", cabelo: "calvo", corCabelo: "#9a9388", traje: "camisa", corTraje: "#54453a", barba: true },
       RX - 1.6, 12.8, 0);
+    const passeante = npc("passeanteRua",
+      { pele: "#a86a48", cabelo: "longo", corCabelo: "#3a2a1a", traje: "vestido", corTraje: "#5a4a52" },
+      RX - 18, 13, Math.PI / 2);
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(passeante, [
+        { ir: [{ x: RX + 16, z: 13 }] },
+        { esperar: 6 },
+        { ir: [{ x: RX - 18, z: 13 }] },
+        { esperar: 8 }
+      ]);
+    }
 
     info = { colisores: colisores, paredesCamera: paredesCamera, pontos: pontos, vivos: vivos };
     return info;

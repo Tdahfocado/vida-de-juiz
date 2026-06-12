@@ -397,6 +397,114 @@ TOGA.atividades = (function () {
     }
   };
 
+  MISSOES.flagrante = {
+    titulo: "🚔 Plantão do flagrante",
+    gatilho: "plantao-flagrante",
+    passos: [
+      { texto: "A Dra. Socorro abre o auto de prisão em flagrante da madrugada sobre a mesa de provas: “furto qualificado, preso às 3h12. Quero o olhar do fórum em três pontos antes de fechar — o senhor topa o exercício? Aqui dentro a gente chama de ‘plantão do flagrante’.”" },
+      { texto: "PONTO 1 — as comunicações. O carimbo do relógio marca 3h12. “Prendi. E agora, quem fica sabendo — e até quando?”",
+        decisao: {
+          prompt: "O que o CPP exige da prisão das 3h12?",
+          opcoes: [
+            { rotulo: "Comunicar o juiz no expediente seguinte — madrugada não corre prazo.",
+              tom: "ruim",
+              feedback: "“Se madrugada não corresse prazo, ninguém era preso de dia!”, ri a delegada. A comunicação ao juiz é IMEDIATA (CPP, art. 306, caput) — e o plantão judiciário existe exatamente para as 3h12." },
+            { rotulo: "Imediatamente: juiz, Ministério Público e família ou pessoa indicada — e o auto ao juiz em até 24h, com a nota de culpa ao preso.",
+              tom: "otimo",
+              feedback: "“Fechou o circuito: ninguém preso em segredo neste país.” Juiz, MP e família sabem NA HORA (art. 306, caput); em 24h o auto sobe e o preso recebe a nota de culpa (§§ 1º e 2º). A liberdade de um lado, o controle do outro." },
+            { rotulo: "Comunicar só a família — o juiz verá tudo na audiência de custódia mesmo.",
+              tom: "ruim",
+              feedback: "“E quem marca a custódia, o destino?” Sem a comunicação imediata ao juiz não há controle judicial da prisão — a audiência é a SEGUNDA proteção, não a primeira.” " }
+          ]
+        } },
+      { texto: "PONTO 2 — a delegada ergue um saco lacrado: “o celular do investigado. A perícia precisa abrir AGORA, e o lacre original vai romper. Como se faz sem estragar a prova?”",
+        decisao: {
+          prompt: "O lacre vai romper. O que a cadeia de custódia manda?",
+          opcoes: [
+            { rotulo: "Qualquer policial rompe, fotografa e pronto — o que vale é a boa-fé.",
+              tom: "ruim",
+              feedback: "“Boa-fé não assina laudo.” O recipiente só pode ser aberto pelo PERITO ou por pessoa autorizada, com registro de tudo (CPP, art. 158-F, parágrafo único). Fora disso, a defesa derruba — com razão." },
+            { rotulo: "O perito rompe, registra a abertura, examina e RELACRA com novo lacre — tudo documentado, elo por elo.",
+              tom: "otimo",
+              feedback: "“Elo por elo — é assim que a prova chega inteira na frente do senhor.” Do reconhecimento ao descarte, cada passo documentado (CPP, arts. 158-A a 158-F). O lacre novo entra no auto; a história do vestígio não tem buraco." },
+            { rotulo: "Devolver ao fórum e deixar o juiz decidir quem abre.",
+              tom: "ruim",
+              feedback: "“O senhor ia adorar mais esse processo, né?” A lei já decidiu quem abre: o perito (art. 158-F). Judicializar o que a lei resolve é atrasar a investigação — e o juiz não é gestor de lacre." }
+          ]
+        } },
+      { texto: "PONTO 3 — a delegada cruza os braços, meio sorrindo: “amanhã esse moço senta na frente de um juiz na audiência de custódia. Me diga, de lá de dentro: o que o senhor olha NAQUELES dez minutos?”",
+        decisao: {
+          prompt: "A pergunta da delegada: o que a audiência de custódia examina?",
+          opcoes: [
+            { rotulo: "Se o preso é culpado — aproveitando que está ali, já se adianta o mérito.",
+              tom: "ruim",
+              feedback: "“Cuidado, doutor — essa resposta reprova juiz!” Custódia NÃO julga o crime (Res. CNJ 213, art. 8º, §1º): mérito ali contamina o processo inteiro. O fato espera; a liberdade e o corpo do preso, não." },
+            { rotulo: "Três coisas: a legalidade da prisão, a necessidade real de alguma cautelar — e, olhando nos olhos, se houve tortura ou maus-tratos.",
+              tom: "otimo",
+              feedback: "“É por isso que eu mando os meus autos REDONDOS.” Relaxar a ilegal, só manter prisão se nenhuma cautelar do art. 319 bastar, e perguntar — sempre — como o preso foi tratado (CPP, art. 310; Res. CNJ 213). Dez minutos que vigiam todo o resto." },
+            { rotulo: "Se a papelada está completa — estando, homologa-se e a pauta anda.",
+              tom: "ruim",
+              feedback: "“Papelada minha SEMPRE está completa”, pisca a delegada, “e nem por isso o juiz deve assinar de olho fechado.” Custódia de carimbo é a que deixa passar a prisão ilegal e o hematoma sob a manga.” " }
+          ]
+        } },
+      { texto: "A delegada fecha o auto, satisfeita: “três de três. Vou contar para o plantão que o fórum sabe o que faz com o que a gente manda.” No corredor, o policial da ronda finge que não estava ouvindo — e endireita o quepe.” " }
+    ]
+  };
+
+  MISSOES.cidadania = {
+    titulo: "🧒 Pergunta de criança, resposta de juiz",
+    gatilho: "perguntas-criancas",
+    passos: [
+      { texto: "A tia Chica bate palmas duas vezes: “turma, o juiz topou o nosso ‘pergunta tudo’! Regra da sala: pode perguntar QUALQUER coisa.” Vinte e três mãos sobem ao mesmo tempo. Ela escolhe três." },
+      { texto: "A primeira é da menina da trança, lá do fundo: “moço... POR QUE não pode tudo o que a gente quer?”",
+        decisao: {
+          prompt: "Vinte e três pares de olhos. Sua resposta:",
+          opcoes: [
+            { rotulo: "“Porque os adultos mandam e criança obedece — um dia vocês entendem.”",
+              tom: "ruim",
+              feedback: "A menina abaixa os olhos. A tia Chica disfarça o desgosto. Regra virou capricho de quem é maior — exatamente o que a Justiça NÃO é." },
+            { rotulo: "“Porque se cada um pudesse tudo, valia a lei do mais forte — e o mais forte nunca é a gente. O combinado protege quem é menor: a regra é o jeito de TODO MUNDO poder um pouco.”",
+              tom: "otimo",
+              feedback: "“Tipo na fila do escorregador!”, grita alguém. EXATAMENTE como na fila do escorregador. A menina da trança sorri: entendeu — e quem entende a regra, defende a regra." },
+            { rotulo: "“Pode sim — desde que ninguém veja.”",
+              tom: "ruim",
+              feedback: "A sala gargalha, a tia Chica não. A piada ensina o contrário de tudo: que a regra só vale com plateia. O juiz da comarca acabou de autorizar a arte escondida." }
+          ]
+        } },
+      { texto: "A segunda vem do menino da pergunta famosa, claro: “e se a regra for INJUSTA? Tem que obedecer assim mesmo?”",
+        decisao: {
+          prompt: "A pergunta mais difícil do Direito — na versão do 4º ano:",
+          opcoes: [
+            { rotulo: "“Tem que obedecer calado. Regra é regra.”",
+              tom: "ruim",
+              feedback: "O menino cruza os braços, inconformado — e ele TEM razão. ‘Regra é regra’ já protegeu muita injustiça na história; obediência sem pergunta não é cidadania, é treino." },
+            { rotulo: "“Regra injusta a gente luta para MUDAR — reclamando, votando, indo ao juiz. Mas muda pelos caminhos certos, porque se cada um rasgar a regra que não gosta, a primeira rasgada vai ser a que protege você.”",
+              tom: "otimo",
+              feedback: "Silêncio de processamento — e então o menino assente devagar, do jeito de quem vai pensar nisso por uma semana. A tia Chica escreve no quadro: MUDAR ≠ DESCUMPRIR." },
+            { rotulo: "“Não — cada um decide a regra que vale para si.”",
+              tom: "ruim",
+              feedback: "“Então amanhã eu decido que dever de casa não vale!”, testa um esperto na segunda fileira. A sala vira assembleia. Foi exatamente assim que a resposta desmontou a própria sala de aula." }
+          ]
+        } },
+      { texto: "A última pergunta vem baixinha, da criança que não tinha falado nada o dia inteiro: “senhor juiz... o senhor já ERROU?”",
+        decisao: {
+          prompt: "A sala inteira prende o fôlego — a tia Chica também.",
+          opcoes: [
+            { rotulo: "“Juiz não pode errar — por isso estuda tanto.”",
+              tom: "ruim",
+              feedback: "A criança encolhe: errar virou coisa de gente fraca. E o dia em que ela errar — porque vai — vai achar que não serve. A resposta heroica é a mais covarde." },
+            { rotulo: "“Já errei, erro e vou errar — juiz é gente. A diferença é o que se faz depois: eu conserto no papel, peço desculpa quando é de pedir, e tento errar menos amanhã. Errar não é vergonha. Esconder é.”",
+              tom: "otimo",
+              feedback: "A criança baixinha sorri pela primeira vez. A tia Chica anota a frase inteira para o mural. Vinte e três crianças acabaram de aprender que errar tem conserto — do juiz da comarca, ao vivo." },
+            { rotulo: "“Essa pergunta a gente pula — segredo de justiça.”",
+              tom: "ruim",
+              feedback: "Risos nervosos, pergunta no ar. A única criança que criou coragem de falar hoje aprendeu que pergunta difícil se desvia. Era a pergunta mais importante da visita." }
+          ]
+        } },
+      { texto: "O sinal toca e ninguém levanta — “MAIS UMA, tia!”. A tia Chica encerra com a régua na mão: “a turma agradece a aula, e o mural de sexta vai se chamar ‘O dia em que a gente perguntou tudo’.” No corredor, a diretora cochicha: “volte no semestre que vem. Eles NÃO vão esquecer.”" }
+    ]
+  };
+
   function executarMissao(id, aoTerminar) {
     const m = MISSOES[id];
     if (!m || emVisita) return false;
