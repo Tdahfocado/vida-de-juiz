@@ -1,0 +1,19 @@
+SONS DO TOGA — pasta opcional
+=============================
+
+O jogo funciona SEM nenhum arquivo aqui: todos os sons têm uma
+versão sintetizada pelo navegador (js/audio.js).
+
+Se você colocar os arquivos abaixo nesta pasta, eles passam a
+ser usados automaticamente no lugar da síntese:
+
+  papel.mp3            folhear de papéis (abrir autos / trocar aba)
+  passos.mp3           um passo curto (andar no fórum 3D)
+  murmurio.mp3         burburinho da sala (decisões ruins/graves)
+  sino.mp3             sino de apregoar as partes
+  forum-ambiente.mp3   ambiente do fórum em loop (modo 3D)
+
+Dicas:
+- Use sons CURTOS (menos de 2 s), exceto o ambiente (loop).
+- O volume é controlado pelo jogo; exporte em volume "normal".
+- Formatos aceitos: .mp3 (use exatamente os nomes acima).

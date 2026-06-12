@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOGA — A Vida de um Juiz</title>
+  <meta name="description" content="Simulador de audiências judiciais: decida com fundamento, sinta as consequências no ato.">
+
+  <!-- Tipografia do jogo (Google Fonts). Sem internet, o navegador
+       usa as fontes substitutas definidas no CSS — o jogo funciona igual. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+  <!-- ============ O MUNDO 3D (canvas atrás de tudo) ============
+       Só aparece quando o body recebe a classe "modo-3d".
+       As telas viram "overlays" transparentes sobre este canvas. -->
+  <div id="mundo-3d" aria-hidden="true"></div>
+
+  <!-- ================= TELA: MENU ================= -->
+  <section class="tela ativa" id="tela-menu">
+    <div class="miolo" style="margin:auto; text-align:center;">
+      <svg class="brasao" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="47" fill="none" stroke="#c9a35c" stroke-width="2.5"/>
+        <line x1="50" y1="16" x2="50" y2="70" stroke="#c9a35c" stroke-width="4"/>
+        <line x1="22" y1="28" x2="78" y2="28" stroke="#c9a35c" stroke-width="4"/>
+        <path d="M 22 28 l -9 18 a 10 7 0 0 0 18 0 z" fill="none" stroke="#c9a35c" stroke-width="2.5"/>
+        <path d="M 78 28 l -9 18 a 10 7 0 0 0 18 0 z" fill="none" stroke="#c9a35c" stroke-width="2.5"/>
+        <rect x="36" y="70" width="28" height="7" rx="2" fill="#c9a35c"/>
+      </svg>
+
+      <div class="eyebrow">um jogo sobre decidir</div>
+      <h1 class="titulo-jogo"><span class="palavra-toga">TOGA</span></h1>
+      <p class="subtitulo-jogo">A vida de um juiz — módulo: Dia de Audiências</p>
+
+      <div class="menu-acoes" id="lista-dias"><!-- cartões de dia gerados pelo main.js --></div>
+      <div id="linha-carreira" class="linha-carreira" hidden></div>
+
+      <div class="linha-extras">
+        <button class="btn-secundario" id="btn-juiz">👤 &nbsp;Personalizar juiz(a)</button>
+        <button class="btn-secundario" id="btn-conquistas">🏅 &nbsp;Conquistas</button>
+      </div>
+
+      <div class="linha-config">
+        <button class="chave ligada" id="chave-estudo" aria-label="Alternar Modo Estudo"></button>
+        <span>Modo Estudo — exibe a fundamentação jurídica após cada decisão</span>
+      </div>
+      <div class="linha-config">
+        <button class="chave" id="chave-prova" aria-label="Alternar Modo Prova"></button>
+        <span>Modo Prova — sem dicas durante o jogo; nota e gabarito ao final</span>
+      </div>
+      <div class="linha-config">
+        <button class="chave ligada" id="chave-som" aria-label="Alternar som"></button>
+        <span>Som do martelo</span>
+      </div>
+      <div class="linha-config">
+        <button class="chave" id="chave-3d" aria-label="Alternar modo 3D"></button>
+        <span id="rotulo-3d">Modo 3D — ande pelo fórum (experimental)</span>
+      </div>
+      <div class="linha-config">
+        <button class="chave ligada" id="chave-qualidade" aria-label="Alternar qualidade do modo 3D"></button>
+        <span>Sombras e detalhes no 3D — desligue se o jogo engasgar</span>
+      </div>
+      <div class="linha-config">
+        <button class="chave" id="chave-narracao" aria-label="Alternar narração por voz"></button>
+        <span id="rotulo-narracao">Narração por voz das falas (experimental)</span>
+      </div>
+      <div class="linha-config">
+        <button class="chave" id="chave-contraste" aria-label="Alternar alto contraste"></button>
+        <span>Alto contraste</span>
+      </div>
+
+      <p class="rodape-menu">
+        Obra de ficção com finalidade educativa. Pessoas, comarca e processos são inventados;
+        os fundamentos jurídicos citados são reais e podem ser conferidos no Modo Estudo.
+        <br><button class="link-sobre" id="btn-sobre">Sobre o jogo e sua missão ›</button>
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= TELA: PAUTA DO DIA ================= -->
+  <section class="tela" id="tela-pauta">
+    <div class="miolo">
+      <div class="cabecalho-pauta">
+        <div>
+          <div class="eyebrow">Fórum da Comarca · Gabinete</div>
+          <h2>Pauta do dia</h2>
+        </div>
+        <div class="suave" id="pauta-data">—</div>
+      </div>
+
+      <div class="linha-pausas" id="linha-pausas">
+        <span class="pilula-estresse" id="estresse-pauta">🫀 18</span>
+        <button class="btn-pausa" id="btn-agua">🚰 Beber água <small>+2 min</small></button>
+        <button class="btn-pausa" id="btn-lanche">🥪 Frigobar <small>+6 min</small></button>
+        <button class="btn-pausa" id="btn-saude" hidden>🩺 Setor de saúde <small>+15 min</small></button>
+        <button class="btn-pausa" id="btn-conclusos" hidden>📥 Conclusos <span id="qtd-conclusos"></span></button>
+      </div>
+
+      <div class="lista-pauta" id="lista-pauta"><!-- cartões gerados pelo ui.js --></div>
+
+      <p class="suave" style="margin-top:18px; font-family:var(--f-texto);">
+        As audiências são chamadas na ordem da pauta. Conclua uma para liberar a seguinte —
+        e lembre-se: o relógio do fórum não espera.
+      </p>
+      <div class="acoes-desfecho">
+        <button class="btn-secundario" id="btn-menu-pauta">‹ Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: AUTOS (preparação) ================= -->
+  <section class="tela" id="tela-autos">
+    <div class="miolo">
+      <div class="eyebrow" id="autos-area">—</div>
+      <h2 id="autos-titulo">—</h2>
+      <p class="suave" id="autos-resumo" style="max-width:70ch; margin:8px 0 20px;">—</p>
+
+      <div class="bloco-autos">
+        <div>
+          <div class="abas-pecas" id="abas-pecas"><!-- abas geradas --></div>
+          <div class="papel-autos" id="corpo-peca"><!-- peça aberta --></div>
+        </div>
+
+        <aside class="painel-focos">
+          <h3>Estratégia da audiência</h3>
+          <p class="suave" style="font-size:.9rem; margin:6px 0 12px;">
+            Leia as peças e marque até <strong>2 pontos de estudo</strong>. Cada ponto
+            estudado desbloqueia decisões mais bem fundamentadas durante a audiência —
+            quem entra preparado, decide melhor.
+          </p>
+          <div id="lista-focos"><!-- cartões de foco --></div>
+          <p class="eyebrow" id="contagem-focos" style="margin:10px 0 16px;">0 / 2 pontos marcados</p>
+          <button class="btn" id="btn-iniciar-audiencia" style="width:100%;">🔔 &nbsp;Apregoar as partes</button>
+          <button class="btn-secundario" id="btn-voltar-pauta-autos" style="width:100%; margin-top:10px;">‹ Voltar à pauta</button>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: DESPACHO DE GABINETE ================= -->
+  <section class="tela" id="tela-despacho">
+    <div class="miolo">
+      <div class="eyebrow" id="despacho-area">—</div>
+      <h2 id="despacho-titulo">—</h2>
+      <div class="papel-autos papel-despacho" id="despacho-texto" style="margin:18px 0;"></div>
+      <div class="painel-decisao" id="despacho-opcoes"></div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: AUDIÊNCIA ================= -->
+  <section class="tela" id="tela-audiencia">
+    <header class="hud">
+      <div class="identificacao">
+        <strong id="hud-caso">—</strong>
+        <span class="suave" id="hud-area" style="font-size:.76rem;">—</span>
+      </div>
+      <div class="relogio" id="hud-relogio">—</div>
+      <div class="barras">
+        <div class="barra-eixo" role="meter" aria-label="Técnica" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="rotulo"><span>⚖ Técnica</span><span id="barra-tec-val">50</span></div>
+          <div class="trilho"><div class="preenchimento tec" id="barra-tec" style="width:50%"></div></div>
+        </div>
+        <div class="barra-eixo" role="meter" aria-label="Humanidade" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="rotulo"><span>❤ Humanidade</span><span id="barra-hum-val">50</span></div>
+          <div class="trilho"><div class="preenchimento hum" id="barra-hum" style="width:50%"></div></div>
+        </div>
+        <div class="barra-eixo" role="meter" aria-label="Celeridade" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="rotulo"><span>⏱ Celeridade</span><span id="barra-cel-val">50</span></div>
+          <div class="trilho"><div class="preenchimento cel" id="barra-cel" style="width:50%"></div></div>
+        </div>
+        <div class="barra-eixo" role="meter" aria-label="Imparcialidade" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="rotulo"><span>🛡 Imparcialidade</span><span id="barra-imp-val">50</span></div>
+          <div class="trilho"><div class="preenchimento imp" id="barra-imp" style="width:50%"></div></div>
+        </div>
+        <div class="barra-eixo barra-estresse" role="meter" aria-label="Estresse" aria-valuemin="0" aria-valuemax="100" aria-valuenow="18">
+          <div class="rotulo"><span>🫀 Estresse</span><span id="barra-est-val">18</span></div>
+          <div class="trilho"><div class="preenchimento est" id="barra-est" style="width:18%"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="palco">
+      <div id="palco-svg"><!-- a sala de audiências (SVG) entra aqui --></div>
+      <div class="area-toasts" id="area-toasts" aria-live="polite"></div>
+    </div>
+
+    <div class="mesa-dialogo">
+      <div class="caixa-fala" id="caixa-fala" title="Clique para avançar">
+        <div class="quem-fala" id="quem-fala">—</div>
+        <div class="texto-fala" id="texto-fala" aria-live="polite"></div>
+        <div class="dica-continuar" id="dica-continuar">clique para continuar ▸</div>
+      </div>
+      <div class="painel-decisao" id="painel-decisao"><!-- opções / fundamentação --></div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: DESFECHO DO CASO ================= -->
+  <section class="tela" id="tela-desfecho">
+    <div class="miolo">
+      <div class="cartao-desfecho" id="cartao-desfecho">
+        <div class="eyebrow">Encerrada a audiência</div>
+        <h2 style="margin:6px 0 14px;"><span class="selo-grande">—</span></h2>
+        <p class="texto-desfecho">—</p>
+        <div class="acoes-desfecho">
+          <button class="btn" id="btn-continuar-desfecho">Seguir o expediente ›</button>
+          <button class="btn-secundario" id="btn-cartao-caso">🖼 &nbsp;Cartão deste caso</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: INTERLÚDIO ================= -->
+  <section class="tela" id="tela-interludio">
+    <div class="miolo">
+      <div class="cartao-desfecho cartao-interludio" id="cartao-interludio">
+        <div class="eyebrow">Entre uma audiência e outra</div>
+        <h2 class="titulo-interludio" style="margin:6px 0 12px;">—</h2>
+        <p class="texto-interludio">—</p>
+        <div class="acoes-desfecho">
+          <button class="btn" id="btn-continuar-interludio">Continuar ›</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: MUNDO (free-roam 3D) ================= -->
+  <section class="tela" id="tela-mundo">
+    <div class="hud-mundo">
+      <div class="relogio" id="hud-relogio-mundo">—</div>
+      <div class="pilula-estresse" id="estresse-mundo" title="Estresse">🫀 18</div>
+      <div id="objetivo-mundo" class="objetivo-mundo" hidden>—</div>
+    </div>
+    <div id="prompt-interacao" class="prompt-interacao" hidden>
+      <kbd>E</kbd> <span id="prompt-interacao-texto">interagir</span>
+    </div>
+    <div class="dica-controles" id="dica-controles">
+      W A S D / setas — andar &nbsp;·&nbsp; ← → ou arrastar o mouse — girar &nbsp;·&nbsp; E — interagir
+    </div>
+  </section>
+
+  <!-- ================= TELA: EPÍLOGO ================= -->
+  <section class="tela" id="tela-epilogo">
+    <div class="miolo">
+      <div class="eyebrow">Fim do expediente</div>
+      <h2>Como a comarca viu o seu dia</h2>
+
+      <p style="margin:18px 0 6px;"><span class="selo-grande" id="veredito-selo">—</span></p>
+      <p id="veredito-texto" style="max-width:72ch;">—</p>
+
+      <h3 style="margin-top:28px;">Recortes do dia seguinte</h3>
+      <div class="mural-manchetes" id="mural-manchetes"></div>
+
+      <h3>Sua reputação ao fim do dia</h3>
+      <div class="quadro-final" id="quadro-final"></div>
+
+      <div class="acoes-desfecho">
+        <button class="btn" id="btn-gabarito">📖 &nbsp;Revisão comentada (gabarito)</button>
+        <button class="btn" id="btn-cartao">🖼 &nbsp;Baixar meu cartão do dia</button>
+        <button class="btn-secundario" id="btn-codigo">📋 &nbsp;Copiar código do resultado (para o professor)</button>
+        <button class="btn" id="btn-nova-carreira">⚖ &nbsp;Recomeçar o dia (nova carreira)</button>
+        <button class="btn-secundario" id="btn-epilogo-menu">Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: SOBRE O JOGO ================= -->
+  <section class="tela" id="tela-sobre">
+    <div class="miolo" style="max-width:760px;">
+      <div class="eyebrow">por que este jogo existe</div>
+      <h2>Sobre o TOGA</h2>
+
+      <h3 style="margin-top:24px;">A missão</h3>
+      <p>A maioria das pessoas só encontra um juiz no pior dia da sua vida — e raramente entende
+      o que acontece naquela sala. O TOGA existe para mostrar, por dentro, <strong>o que a
+      magistratura faz pela sociedade</strong>: cada decisão bem fundamentada protege alguém de
+      verdade — a mulher que volta a dormir com a porta destrancada, a criança que não passa a
+      noite num abrigo, o trabalhador que recebe o benefício no mês em que precisa. E cada
+      decisão mal fundamentada também tem rosto. Aqui, você sente os dois lados da caneta.</p>
+
+      <h3 style="margin-top:24px;">O método</h3>
+      <p>Todos os casos são <strong>ficção construída sobre Direito de verdade</strong>: os artigos,
+      súmulas, temas repetitivos e resoluções do CNJ citados existem e podem ser conferidos —
+      no Modo Estudo durante o jogo, e na <strong>revisão comentada (gabarito)</strong> ao final,
+      com links para a legislação. As decisões mexem em quatro eixos (Técnica, Humanidade,
+      Celeridade, Imparcialidade) e no seu estresse — porque a toga pesa, e isso também é real.</p>
+
+      <h3 style="margin-top:24px;">O que é inventado, o que é lei</h3>
+      <p><strong>Inventados:</strong> a comarca, as pessoas, os processos e os desfechos.
+      <strong>Reais:</strong> os fundamentos jurídicos, os procedimentos (audiência de custódia,
+      escuta especializada, e-NatJus, competência delegada...) e os dilemas — qualquer
+      magistrado os reconhecerá. Nenhum caso retrata processo ou pessoa existente.</p>
+
+      <h3 style="margin-top:24px;">Para professores e escolas judiciais</h3>
+      <p>O jogo funciona offline, sem cadastro e <strong>sem coleta de dados</strong> (tudo fica
+      no aparelho do jogador) — pode ser usado em escolas sem qualquer preocupação com
+      privacidade. O <strong>Modo Prova</strong> suprime as dicas durante a partida e entrega
+      nota por eixo + gabarito ao final — pronto para uso em sala.</p>
+
+      <p style="margin-top:12px;"><strong>Roteiro de aula sugerido (2 encontros):</strong></p>
+      <p><strong>1º encontro — jogar (60–90 min):</strong> apresente a proposta sem revelar os
+      casos (“hoje vocês são o juiz”); cada aluno joga um dia completo, com Modo Estudo ligado
+      (primeira turma) ou Modo Prova (avaliação); ao final, baixa o cartão do dia e abre a
+      revisão comentada. <strong>2º encontro — comparar e debater (50 min):</strong> em duplas,
+      comparar gabaritos; em plenária, debater 2 decisões polêmicas (a “decisão de referência”
+      do jogo é defensável? há tese contrária?); fechar com a pergunta-síntese — <em>o que cada
+      decisão devolveu (ou tirou) das pessoas do processo?</em></p>
+
+      <p style="margin-top:12px;">No epílogo, cada aluno pode <strong>copiar o código do
+      resultado</strong> e enviá-lo ao professor: a página
+      <code>tools/painel-professor.html</code> (na pasta do jogo, abre com 2 cliques) tabula
+      os códigos da turma — distribuição das escolhas por decisão e médias por eixo — para a
+      discussão em plenária. Para eventos e estandes, abra o jogo com
+      <code>?demo=1</code> no endereço: um caso curto, sem tutorial, que volta sozinho à tela
+      inicial. O roteiro completo, os objetivos de aprendizagem por caso e o FAQ estão no
+      <strong>Guia do Educador</strong> (arquivo <code>docs/GUIA-DO-EDUCADOR.md</code>).</p>
+
+      <div class="acoes-desfecho">
+        <button class="btn-secundario" id="btn-sobre-voltar">‹ Voltar ao menu</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= TELA: GABARITO (revisão comentada) ================= -->
+  <section class="tela" id="tela-gabarito">
+    <div class="miolo">
+      <div class="eyebrow">depois da toga, o estudo</div>
+      <h2>Revisão comentada do dia</h2>
+      <div id="gabarito-conteudo"></div>
+      <div class="acoes-desfecho">
+        <button class="btn-secundario" id="btn-voltar-epilogo">‹ Voltar ao epílogo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================
+       ORDEM DOS SCRIPTS (importa!):
+       1. cena.js   — desenha a sala
+       2. motor.js  — regras e estado
+       3. ui.js     — interface
+       4. casos     — os dados de cada audiência, na ordem da pauta
+       5. main.js   — liga tudo e dá a partida
+       Para ADICIONAR um caso novo: crie o arquivo em js/casos/
+       e acrescente uma linha <script> abaixo, antes do main.js.
+       ================================================= -->
+  <script src="js/vendor/three.min.js"></script>
+  <script src="js/arte.js"></script>
+  <script src="js/lembrancas.js"></script>
+  <script src="js/juiz.js"></script>
+  <script src="js/conquistas.js"></script>
+  <script src="js/cena.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/3d/nucleo3d.js"></script>
+  <script src="js/3d/texturas3d.js"></script>
+  <script src="js/3d/rosto.js"></script>
+  <script src="js/3d/boneco.js"></script>
+  <script src="js/3d/props3d.js"></script>
+  <script src="js/3d/mundo.js"></script>
+  <script src="js/3d/rotinas3d.js"></script>
+  <script src="js/3d/prisao3d.js"></script>
+  <script src="js/3d/controles.js"></script>
+  <script src="js/3d/toque3d.js"></script>
+  <script src="js/3d/diretor3d.js"></script>
+  <script src="js/3d/interacao.js"></script>
+  <script src="js/3d/caramelo3d.js"></script>
+  <script src="js/3d/cena3d.js"></script>
+  <script src="js/3d/lembrancas3d.js"></script>
+  <script src="js/3d/debug3d.js"></script>
+  <script src="js/motor.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/narrador.js"></script>
+  <script src="js/casos/caso-protetiva.js"></script>
+  <script src="js/casos/caso-guarda.js"></script>
+  <script src="js/casos/caso-vizinhos.js"></script>
+  <script src="js/casos/caso-thor.js"></script>
+  <script src="js/casos/caso-gatos.js"></script>
+  <script src="js/casos/caso-juri.js"></script>
+  <script src="js/casos/caso-custodia.js"></script>
+  <script src="js/casos/caso-saude.js"></script>
+  <script src="js/casos/caso-acolhimento.js"></script>
+  <script src="js/casos/caso-despejo.js"></script>
+  <script src="js/casos/caso-beneficio.js"></script>
+  <script src="js/casos/caso-instrucao.js"></script>
+  <script src="js/casos/caso-entrega.js"></script>
+  <script src="js/casos/caso-transfusao.js"></script>
+  <script src="js/casos/caso-internacao.js"></script>
+  <script src="js/casos/caso-madrugada.js"></script>
+  <script src="js/casos/caso-feminicidio.js"></script>
+  <script src="js/pautas.js"></script>
+  <script src="js/despachos.js"></script>
+  <script src="js/gabarito.js"></script>
+  <script src="js/cartao.js"></script>
+  <script src="js/resultado.js"></script>
+  <script src="js/epilogo.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

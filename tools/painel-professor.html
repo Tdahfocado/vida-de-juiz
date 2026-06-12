@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOGA — Painel do Professor</title>
+  <style>
+    :root {
+      --mogno: #2a1d12; --latao: #c9a35c; --papel: #f4ecd9;
+      --texto: #ede6d6; --verde: #2f4a3e; --vinho: #7a2e2e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--mogno); color: var(--texto);
+      padding: 28px clamp(14px, 4vw, 60px) 80px;
+    }
+    h1 { font-size: clamp(1.5rem, 4vw, 2.2rem); color: #e7cf9a; }
+    .eyebrow { font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: #b9ad96; font-family: Arial, sans-serif; }
+    .suave { color: #b9ad96; }
+    p { max-width: 78ch; margin: 10px 0; }
+    textarea {
+      width: 100%; min-height: 140px; margin: 14px 0 10px;
+      background: #1e150c; color: var(--texto); border: 1px solid #5a4128;
+      border-radius: 8px; padding: 12px; font: 13px/1.5 "Courier New", monospace;
+    }
+    button {
+      background: var(--verde); color: var(--texto); border: 1px solid var(--latao);
+      border-radius: 8px; padding: 10px 22px; font-size: 1rem; cursor: pointer;
+      font-family: Arial, sans-serif;
+    }
+    button:hover { filter: brightness(1.15); }
+    .aviso { color: #d9a05c; margin-top: 8px; }
+    .medias { display: flex; flex-wrap: wrap; gap: 14px; margin: 18px 0; }
+    .metrica {
+      background: rgba(0,0,0,.25); border: 1px solid #5a4128; border-radius: 10px;
+      padding: 12px 20px; text-align: center; min-width: 120px;
+    }
+    .metrica .valor { font-size: 1.8rem; color: #e7cf9a; font-weight: bold; }
+    .metrica .nome { font-size: .72rem; font-family: Arial, sans-serif; color: #b9ad96; }
+    section.caso-painel {
+      background: rgba(0,0,0,.18); border: 1px solid #4a3622; border-radius: 12px;
+      padding: 16px 20px; margin: 18px 0;
+    }
+    section.caso-painel h2 { font-size: 1.15rem; color: #e7cf9a; margin-bottom: 4px; }
+    .decisao-painel { margin: 14px 0 6px; border-top: 1px dashed #4a3622; padding-top: 10px; }
+    .decisao-painel .prompt { font-style: italic; color: #d8cdb4; }
+    .opcao-linha { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-family: Arial, sans-serif; font-size: .85rem; }
+    .opcao-rotulo { flex: 0 0 min(46%, 420px); }
+    .ref { color: #9fc3ae; }
+    .trilho { flex: 1; height: 16px; background: #1a140d; border-radius: 8px; overflow: hidden; }
+    .preench { height: 100%; background: var(--latao); border-radius: 8px; min-width: 2px; }
+    .preench.e-ref { background: #7fa08f; }
+    .pct { flex: 0 0 84px; text-align: right; color: #d8cdb4; }
+    .rodape { margin-top: 30px; font-size: .8rem; color: #8a7d65; }
+    code { background: rgba(0,0,0,.3); padding: 1px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="eyebrow">TOGA · ferramenta do educador · nada sai deste aparelho</div>
+  <h1>Painel do Professor</h1>
+  <p>Cole abaixo os <strong>códigos de resultado</strong> da turma — um por linha (cada aluno
+  copia o seu no epílogo do jogo, botão <em>“📋 Copiar código do resultado”</em>). O painel
+  mostra como a turma decidiu, decisão por decisão, e a média das notas por eixo. Tudo roda
+  localmente: nenhum dado é enviado a lugar nenhum.</p>
+
+  <textarea id="entrada" placeholder="TOGA1.eyJ2IjoxLC...&#10;TOGA1.eyJ2IjoxLC...&#10;TOGA1.eyJ2IjoxLC..."></textarea>
+  <button id="btn-tabular">⚖ Tabular a turma</button>
+  <div class="aviso" id="aviso"></div>
+  <div id="saida"></div>
+
+  <p class="rodape">Casos novos: este painel carrega a mesma lista de casos do jogo. Se você
+  criou um caso novo, acrescente a linha <code>&lt;script&gt;</code> dele aqui também, como fez
+  no <code>index.html</code>.</p>
+
+  <!-- os mesmos DADOS do jogo (casos, pautas, despachos) + o leitor de códigos -->
+  <script>window.TOGA = window.TOGA || {};</script>
+  <script src="../js/casos/caso-protetiva.js"></script>
+  <script src="../js/casos/caso-guarda.js"></script>
+  <script src="../js/casos/caso-vizinhos.js"></script>
+  <script src="../js/casos/caso-thor.js"></script>
+  <script src="../js/casos/caso-gatos.js"></script>
+  <script src="../js/casos/caso-juri.js"></script>
+  <script src="../js/casos/caso-custodia.js"></script>
+  <script src="../js/casos/caso-saude.js"></script>
+  <script src="../js/casos/caso-acolhimento.js"></script>
+  <script src="../js/casos/caso-despejo.js"></script>
+  <script src="../js/casos/caso-beneficio.js"></script>
+  <script src="../js/casos/caso-instrucao.js"></script>
+  <script src="../js/casos/caso-entrega.js"></script>
+  <script src="../js/casos/caso-transfusao.js"></script>
+  <script src="../js/casos/caso-internacao.js"></script>
+  <script src="../js/casos/caso-madrugada.js"></script>
+  <script src="../js/casos/caso-feminicidio.js"></script>
+  <script src="../js/pautas.js"></script>
+  <script src="../js/despachos.js"></script>
+  <script src="../js/resultado.js"></script>
+
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (s) { return document.querySelector(s); };
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    }
+
+    function casoPorId(id) {
+      return (TOGA.casos || []).find(function (c) { return c.id === id; }) || null;
+    }
+
+    function localizarOpcoes(item) {
+      if (item.caso === "gabinete") {
+        var d = (TOGA.despachos || []).find(function (x) { return x.id === item.cena; });
+        return d ? { prompt: "Concluso: " + d.titulo, opcoes: d.opcoes } : null;
+      }
+      var caso = casoPorId(item.caso);
+      var cena = caso && caso.cenas[item.cena];
+      if (!cena || !cena.decisao) return null;
+      return { prompt: cena.decisao.prompt, opcoes: cena.decisao.opcoes };
+    }
+
+    function indiceReferencia(opcoes) {
+      var i = opcoes.findIndex(function (o) { return (o.feedback || {}).acerto === "otimo"; });
+      if (i < 0) i = opcoes.findIndex(function (o) { return (o.feedback || {}).acerto === "bom"; });
+      return i;
+    }
+
+    function tabular() {
+      var linhas = $("#entrada").value.split(/\s+/).filter(Boolean);
+      var resultados = [];
+      var invalidos = 0;
+      linhas.forEach(function (l) {
+        var r = TOGA.resultado.ler(l);
+        if (r) resultados.push(r); else invalidos++;
+      });
+      $("#aviso").textContent = resultados.length
+        ? resultados.length + " resultado(s) lido(s)" + (invalidos ? " · " + invalidos + " código(s) inválido(s) ignorado(s)" : "")
+        : (linhas.length ? "Nenhum código válido — confira se cada linha começa com TOGA1." : "Cole pelo menos um código.");
+      if (!resultados.length) { $("#saida").innerHTML = ""; return; }
+
+      // ---- médias por eixo ----
+      var soma = { tec: 0, hum: 0, cel: 0, imp: 0, est: 0 };
+      resultados.forEach(function (r) {
+        soma.tec += r.reputacao.tec; soma.hum += r.reputacao.hum;
+        soma.cel += r.reputacao.cel; soma.imp += r.reputacao.imp;
+        soma.est += r.estresse;
+      });
+      var n = resultados.length;
+      var medias =
+        '<h2 style="margin-top:22px;">Médias da turma (' + n + ' aluno' + (n > 1 ? 's' : '') + ')</h2>' +
+        '<div class="medias">' +
+        [["⚖ Técnica", soma.tec], ["❤ Humanidade", soma.hum], ["⏱ Celeridade", soma.cel],
+         ["🛡 Imparcialidade", soma.imp], ["🫀 Estresse final", soma.est]].map(function (par) {
+          return '<div class="metrica"><div class="valor">' + Math.round(par[1] / n) +
+                 '</div><div class="nome">' + par[0] + '</div></div>';
+        }).join("") + "</div>";
+
+      // ---- distribuição por decisão (agrupada por caso, na ordem da pauta) ----
+      // chave: caso + "::" + cena → contagem por índice de opção (ou rótulo legado)
+      var porDecisao = {};
+      resultados.forEach(function (r) {
+        r.historico.forEach(function (h) {
+          var chave = h.caso + "::" + h.cena;
+          var d = porDecisao[chave] = porDecisao[chave] || { caso: h.caso, cena: h.cena, votos: {}, total: 0 };
+          var voto = (h.opcao != null) ? String(h.opcao) : "rotulo:" + h.rotulo;
+          d.votos[voto] = (d.votos[voto] || 0) + 1;
+          d.total++;
+        });
+      });
+
+      // ordena os casos como nas pautas (e o gabinete por último)
+      var ordemCasos = [];
+      (TOGA.pautas || []).forEach(function (p) { p.casos.forEach(function (id) {
+        if (ordemCasos.indexOf(id) < 0) ordemCasos.push(id);
+      }); });
+      ordemCasos.push("gabinete");
+
+      var blocos = "";
+      ordemCasos.forEach(function (casoId) {
+        var decisoes = Object.values(porDecisao).filter(function (d) { return d.caso === casoId; });
+        if (!decisoes.length) return;
+        var caso = casoPorId(casoId);
+        var titulo = caso ? (caso.hora + " — " + caso.titulo) : "Gabinete — conclusos";
+        var html = "";
+        decisoes.forEach(function (d) {
+          var loc = localizarOpcoes(d);
+          if (!loc) return;
+          var iRef = indiceReferencia(loc.opcoes);
+          html += '<div class="decisao-painel"><div class="prompt">' + esc(loc.prompt) + "</div>";
+          loc.opcoes.forEach(function (op, i) {
+            var votos = d.votos[String(i)] || 0;
+            // códigos antigos (sem índice): casa pelo rótulo
+            votos += d.votos["rotulo:" + op.rotulo] || 0;
+            var pct = d.total ? Math.round(votos * 100 / d.total) : 0;
+            var ehRef = i === iRef;
+            html += '<div class="opcao-linha">' +
+              '<span class="opcao-rotulo' + (ehRef ? " ref" : "") + '">' +
+              (ehRef ? "⚖ " : "") + esc(op.rotulo) + "</span>" +
+              '<span class="trilho"><span class="preench' + (ehRef ? " e-ref" : "") + '" style="width:' + pct + '%"></span></span>' +
+              '<span class="pct">' + pct + "% (" + votos + ")</span></div>";
+          });
+          html += "</div>";
+        });
+        if (html) blocos += '<section class="caso-painel"><h2>' + esc(titulo) + "</h2>" + html + "</section>";
+      });
+
+      $("#saida").innerHTML = medias +
+        '<p class="suave">⚖ = decisão de referência do gabarito. Use as divergências como pauta do debate — ' +
+        "a referência é defensável, mas a aula acontece quando alguém sustenta a tese contrária.</p>" + blocos;
+    }
+
+    $("#btn-tabular").addEventListener("click", tabular);
+  })();
+  </script>
+</body>
+</html>
