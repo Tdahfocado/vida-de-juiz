@@ -1108,7 +1108,7 @@ TOGA.cena3d = (function () {
      PERSISTENTES e em FILA: o texto fica na tela até o jogador
      apertar E (ou tocar na mensagem) — aí fecha, ou mostra a
      próxima da fila. Ninguém mais perde uma fala por piscar. */
-  let filaToasts = [];
+  let filaToasts = [];          // itens: { texto, auto? (segundos) }
   let toastVisivel = false;
 
   function elToast() {
@@ -1131,19 +1131,32 @@ TOGA.cena3d = (function () {
 
   function exibirToast() {
     const el = elToast();
-    const texto = filaToasts[0];
-    if (texto == null) { el.hidden = true; toastVisivel = false; return; }
+    const item = filaToasts[0];
+    if (timerToast) { clearTimeout(timerToast); timerToast = null; }
+    if (item == null) { el.hidden = true; toastVisivel = false; return; }
     toastVisivel = true;
-    el.querySelector(".texto-balao-mundo").textContent = texto;
+    el.querySelector(".texto-balao-mundo").textContent = item.texto;
     el.querySelector(".dica-balao-mundo").textContent =
-      filaToasts.length > 1 ? "E — próxima (" + (filaToasts.length - 1) + ") ▸" : "E — fechar ▸";
+      filaToasts.length > 1 ? "E — próxima (" + (filaToasts.length - 1) + ") ▸"
+        : (item.auto ? "E — fechar ▸" : "E — fechar ▸");
     el.hidden = false;
+    // descobertas e avisos leves se dispensam sozinhos (o E continua valendo)
+    if (item.auto) {
+      timerToast = setTimeout(function () {
+        if (filaToasts[0] === item) { filaToasts.shift(); exibirToast(); }
+      }, item.auto * 1000);
+    }
   }
 
-  function toastMundo(texto) {
-    filaToasts.push(texto);
-    if (!toastVisivel) exibirToast();
-    else exibirToast();   // atualiza o contador da dica
+  function toastMundo(texto, opts) {
+    filaToasts.push({ texto: texto, auto: (opts && opts.auto) || 0 });
+    exibirToast();   // mostra (ou atualiza o contador da dica)
+  }
+
+  /* troca de cenário: nada de mensagem velha sobre a cena nova */
+  function limparToasts() {
+    filaToasts = [];
+    exibirToast();
   }
 
   /* avança/fecha; devolve true se CONSUMIU o aperto de E */
@@ -1384,7 +1397,8 @@ TOGA.cena3d = (function () {
       TOGA.motor.salvar();
       const feitos = ESPACOS.filter(function (x) { return e.flags["_visita_" + x.id]; }).length;
       toastMundo("🧭 Espaço conhecido: " + s.nome + " (" + feitos + "/" + ESPACOS.length + ")" +
-        (feitos === ESPACOS.length ? " — o fórum inteiro, de porta em porta!" : ""));
+        (feitos === ESPACOS.length ? " — o fórum inteiro, de porta em porta!" : ""),
+        { auto: 6 });
       if (TOGA.conquistas) TOGA.conquistas.avaliar("visita");
     });
   }
@@ -2482,6 +2496,7 @@ TOGA.cena3d = (function () {
 
   function entrarRua() {
     garantirIniciado();
+    limparToasts();
     infoRua = TOGA.cidade3d.construir(TOGA.nucleo3d.scene);
     localAtivo = "rua";
     TOGA.controles3d.setMundo(infoRua);
@@ -2494,6 +2509,7 @@ TOGA.cena3d = (function () {
   }
 
   function entrarEsmecDireto() {
+    limparToasts();
     infoEsmec = TOGA.esmec3d.construir(TOGA.nucleo3d.scene);
     localAtivo = "esmec";
     TOGA.controles3d.setMundo(infoEsmec);
@@ -2506,6 +2522,7 @@ TOGA.cena3d = (function () {
 
   function iniciarViagemEsmec() {
     if (!TOGA.carro3d) return;
+    limparToasts();
     localAtivo = "estrada";
     TOGA.interacao3d.definir([]);
     definirObjetivo("Ao volante — siga a avenida e estacione na vaga verde da ESMEC");
@@ -2531,6 +2548,7 @@ TOGA.cena3d = (function () {
 
   function voltarForum() {
     if (TOGA.carro3d && TOGA.carro3d.ativo) TOGA.carro3d.cancelar();
+    limparToasts();
     localAtivo = "forum";
     TOGA.controles3d.setMundo(mundoInfo);
     const pb = mundoInfo.pontos.portaSaida;
@@ -2552,6 +2570,7 @@ TOGA.cena3d = (function () {
     atualizarObjetivoAutomatico: atualizarObjetivoAutomatico,
     atualizarCorredor: atualizarCorredor,
     toastMundo: toastMundo,
+    limparToasts: limparToasts,
     avancarToast: avancarToast,
     toastAberto: toastAberto,
     aplicarJuiz: aplicarJuiz,

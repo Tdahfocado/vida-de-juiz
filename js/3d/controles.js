@@ -42,6 +42,8 @@ TOGA.controles3d = (function () {
   let aoDefinirDestino = null;  // callback (cena3d desenha o marcador)
   let zoomAlvo = 3.4;           // wheel ajusta; a câmera persegue suavemente
 
+  let interacaoPendente = null;   // clique em objeto: agir ao chegar
+
   function cliqueParaMover(clientX, clientY) {
     if (!ativo || !camera) return;
     const ndc = new THREE.Vector2(
@@ -49,7 +51,26 @@ TOGA.controles3d = (function () {
       -(clientY / window.innerHeight) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     raycaster.far = 80;
+
+    // clique DIRETO num objeto/NPC interagível: se já está no
+    // alcance, age na hora; senão, anda até ele e age ao chegar
+    if (TOGA.interacao3d && TOGA.interacao3d.alvoDoRaio) {
+      const alvo = TOGA.interacao3d.alvoDoRaio(raycaster);
+      if (alvo && jogador) {
+        const dx = alvo.pos.x - jogador.position.x, dz = alvo.pos.z - jogador.position.z;
+        if (Math.sqrt(dx * dx + dz * dz) <= alvo.raio) {
+          TOGA.interacao3d.disparar(alvo.id);
+          return;
+        }
+        interacaoPendente = alvo;
+        destinoClique = { x: alvo.pos.x, z: alvo.pos.z };
+        presoHa = 0;
+        if (aoDefinirDestino) aoDefinirDestino(destinoClique);
+        return;
+      }
+    }
     if (!raycaster.ray.intersectPlane(planoChao, pontoChao)) return;
+    interacaoPendente = null;
     destinoClique = { x: pontoChao.x, z: pontoChao.z };
     presoHa = 0;
     if (aoDefinirDestino) aoDefinirDestino(destinoClique);
@@ -57,6 +78,7 @@ TOGA.controles3d = (function () {
 
   function cancelarDestino() {
     destinoClique = null;
+    interacaoPendente = null;
     if (aoDefinirDestino) aoDefinirDestino(null);
   }
 
@@ -165,8 +187,12 @@ TOGA.controles3d = (function () {
       const ddx = destinoClique.x - jogador.position.x;
       const ddz = destinoClique.z - jogador.position.z;
       const ddist = Math.sqrt(ddx * ddx + ddz * ddz);
-      if (ddist < 0.3) {
+      // chegando num OBJETO clicado: para no raio dele e age
+      const alvoRaio = interacaoPendente ? Math.max(0.5, interacaoPendente.raio - 0.4) : 0.3;
+      if (ddist < alvoRaio) {
+        const pendente = interacaoPendente;
         cancelarDestino();
+        if (pendente && TOGA.interacao3d) TOGA.interacao3d.disparar(pendente.id);
       } else {
         dir.set(ddx / ddist, 0, ddz / ddist);
       }

@@ -133,6 +133,22 @@ TOGA.interacao3d = (function () {
         return { id: it.id, rotulo: rotuloDe(it), visivel: !it.visivel || it.visivel() };
       });
     },
+    /* clique direto no objeto/NPC: dado um Raycaster, devolve o
+       interagível mais próximo do raio (ou null). O controles usa
+       para "andar até e agir" em vez de só mover.            */
+    alvoDoRaio: function (raycaster) {
+      let melhor = null, melhorD = 1.1;     // tolerância lateral do clique
+      for (let i = 0; i < lista.length; i++) {
+        const it = lista[i];
+        if (it.visivel && !it.visivel()) continue;
+        if (!it.pos) continue;
+        const p = new THREE.Vector3(it.pos.x, 0.9, it.pos.z);
+        const d = raycaster.ray.distanceToPoint(p);
+        if (d < melhorD) { melhor = it; melhorD = d; }
+      }
+      return melhor ? { id: melhor.id, pos: melhor.pos, raio: melhor.raio || 1.6 } : null;
+    },
+
     disparar: function (id) {       // usado pelo debug3d/bot
       const it = lista.find(function (x) { return x.id === id; });
       if (!it) return false;

@@ -110,9 +110,24 @@ TOGA.esmec3d = (function () {
     for (let i = 0; i < 6; i++) {
       caixa(0.1, 0.02, 4.4, EX - 12.5 + i * 5, 0.055, 5.8, mat(0xd8d4c8), { colide: false, semSombra: true });
     }
-    pontos.vaga = { x: EX - 10, z: 5.8 };
+    pontos.vaga = { x: EX - 7.6, z: 5.8 };   // ponto de interação ao LADO do carro
     caixa(4.6, 0.015, 4.2, EX - 10, 0.045, 5.8, mat(0x86ab95), { colide: false, semSombra: true });
-    // o carro do juiz já estacionado (a viagem terminou aqui)
+    // o carro do juiz, estacionado de verdade na vaga
+    const carroJ = new THREE.Group();
+    const corpoCJ = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.5, 3.6), mat(0x33424f));
+    corpoCJ.position.y = 0.55; corpoCJ.castShadow = true;
+    const cabineCJ = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.5, 1.8), mat(0x222831));
+    cabineCJ.position.set(0, 1.0, -0.2);
+    carroJ.add(corpoCJ, cabineCJ);
+    [[-0.85, 1.1], [0.85, 1.1], [-0.85, -1.1], [0.85, -1.1]].forEach(function (p) {
+      const rodaCJ = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 10), mat(0x15110c));
+      rodaCJ.rotation.z = Math.PI / 2;
+      rodaCJ.position.set(p[0], 0.3, p[1]);
+      carroJ.add(rodaCJ);
+    });
+    carroJ.position.set(EX - 10, 0, 5.8);
+    scene.add(carroJ);
+    colisores.push({ minX: EX - 11.1, maxX: EX - 8.9, minZ: 3.8, maxZ: 7.8 });
     pontos.carro = { x: EX - 10, z: 5.6 };
 
     // jardim: palmeiras na alameda + vasos brancos na entrada
@@ -199,7 +214,9 @@ TOGA.esmec3d = (function () {
       caixa(0.1, 2.8, 0.2, EX + l[0], 1.4, 14, mat(0x15110c), { colide: false });
     });
     pontos.entrada = { x: EX, z: 13 };
-    pontos.spawnEsmec = { x: EX - 10, z: 7.6, angulo: Math.PI };   // desce do carro
+    // desce do carro pela porta do motorista (o carro agora EXISTE
+    // na vaga, com colisor — nascer no centro dele prendia o jogador)
+    pontos.spawnEsmec = { x: EX - 7.7, z: 7.9, angulo: Math.PI };
 
     /* ============ O HALL (z 14..24) ============ */
     piso(EX - 12, 14, EX + 12, 24,
@@ -239,8 +256,9 @@ TOGA.esmec3d = (function () {
     sanca.position.set(EX - 11.8, 2.75, 19);
     scene.add(sanca);
 
-    // sofás de couro escuro (as fotos do corredor)
-    [[EX - 4.5, 22.9], [EX + 4.5, 22.9]].forEach(function (p) {
+    // sofás de couro escuro (as fotos do corredor) — encostados
+    // na parede, longe do credenciamento e fora das rotas
+    [[EX - 7.6, 23.0], [EX + 7.6, 23.0]].forEach(function (p) {
       caixa(2.2, 0.45, 0.85, p[0], 0.25, p[1], mat(0x2a2d33));
       caixa(2.2, 0.55, 0.2, p[0], 0.78, p[1] + 0.32, mat(0x22252a), { colide: false });
     });
@@ -303,8 +321,11 @@ TOGA.esmec3d = (function () {
     }
     colisores.push({ minX: JX - 4.1, maxX: JX - 3.0, minZ: JZ - 2.3, maxZ: JZ + 2.3 });
     // guarda-corpo de vidro sobre mureta de granito
-    [[JX, JZ - 2.6, 5.2, 0.12], [JX, JZ + 2.6, 5.2, 0.12],
-     [JX + 2.6, JZ, 0.12, 5.2]].forEach(function (g) {
+    // guarda-corpo no SUL e no LESTE (como nas fotos, de um lado
+    // do corredor); o norte fica aberto — é a entrada do jardim
+    // e a passagem do hall para a ala leste
+    [[JX, JZ - 2.6, 5.2, 0.12],
+     [JX + 2.6, JZ - 0.7, 0.12, 3.8]].forEach(function (g) {
       caixa(g[2], 0.22, g[3], g[0], 0.11, g[1],
         TOGA.texturas3d.granitoRosa ? matTex(TOGA.texturas3d.granitoRosa(), 2, 1) : mat(0xb08572));
       const vidro = new THREE.Mesh(new THREE.BoxGeometry(g[2], 0.7, Math.max(g[3], 0.04)),
@@ -663,9 +684,12 @@ TOGA.esmec3d = (function () {
         traje: i % 2 ? "terno" : "blazer", corTraje: ["#2a2a30", "#33424f", "#4a4438"][i % 3] };
     }
     // 16 na plateia da palestra (4 filas × 4)
+    // as 8 colunas REAIS de poltronas (com o corredor central)
+    const COLUNAS_POLTRONA = [];
+    for (let c = 0; c < 8; c++) COLUNAS_POLTRONA.push(EX - 7.7 + c * 2.2 + (c > 3 ? 0.9 : 0));
     sorteados.slice(0, 16).forEach(function (j, i) {
-      const col = i % 4, fila = Math.floor(i / 4);
-      const px = EX - 7.7 + col * 2.2 + 1.1, pz = 26.5 + fila * 1.7;
+      const px = COLUNAS_POLTRONA[i % 8];          // os DOIS blocos, sem ala vazia
+      const pz = 26.5 + Math.floor(i / 8) * 1.7;   // duas primeiras fileiras cheias
       const b = npc("juizReal" + i, avatarJuiz(i), px, pz, 0, { sentado: true });
       b.setEmocao(i % 5 === 3 ? "feliz" : "neutro");
       pontos.plateia.push({ nome: j.nome, lotacao: j.lotacao, x: px, z: pz });
@@ -695,7 +719,7 @@ TOGA.esmec3d = (function () {
       c1.segurar("xicara", "dir");
     }
     // 2 ATRASADOS: chegam pela entrada e sentam na última fileira
-    [[23, EX - 4.4, 33.3], [24, EX + 5.6, 33.3]].forEach(function (cfg, n) {
+    [[23, EX - 5.5, 33.3], [24, EX + 4.2 + 0.9, 33.3]].forEach(function (cfg, n) {
       const j = sorteados[cfg[0]];
       if (!j) return;
       const b = avulso(j, 7 + n, EX - 1 + n * 2, 15.0 + n * 0.8, 0);
@@ -721,8 +745,9 @@ TOGA.esmec3d = (function () {
     montezuma.setEmocao("feliz");
     montezuma.segurar("autos", "esq");   // as anotações da palestra
     pontos.palestrante = { x: EX - 2.2, z: 33.9 };
-    // assento livre do jogador na 1ª fileira (para assistir)
-    pontos.assentoPalestra = { x: EX + 5.0, z: 26.5 };
+    // assento livre do jogador na 3ª fileira (as duas primeiras
+    // estão tomadas pela turma)
+    pontos.assentoPalestra = { x: EX + 2.0 + 0.9, z: 29.9 };
     // funcionário do café, com a bandeja
     const cafe = npc("cafeEsmec",
       { pele: "#a86a48", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#e8e6da" },

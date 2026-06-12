@@ -325,8 +325,10 @@ TOGA.cidade3d = (function () {
     poste(RX - 8, 12.6); poste(RX + 8, 3.4); poste(RX + 16, 12.6);
     carroParado(RX - 15, 5.6, 0xb9b3a6, 0);
     carroParado(RX + 13, 10.4, 0x7c3030, Math.PI);
-    // O CARRO DO JUIZ: sedã sóbrio, estacionado em frente ao fórum
-    pontos.carroJuiz = { x: RX + 4.5, z: 5.8 };
+    // O CARRO DO JUIZ: sedã sóbrio — o ponto de interação fica na
+    // PORTA do motorista (o centro caía dentro do colisor do carro
+    // e o E nunca alcançava)
+    pontos.carroJuiz = { x: RX + 6.2, z: 5.8 };
     carroParado(RX + 4.5, 5.6, 0x33424f, 0);
     placaEm("ESMEC ➔", RX + 19.6, 2.4, 8, -Math.PI / 2, 1.4);
 

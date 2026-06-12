@@ -34,7 +34,7 @@ TOGA.carro3d = (function () {
   let grupoCarro = null, rodas = [];
   let luzSemaforo = null, pedestres = [];
   let trafego = [];                // os carros do sentido contrário
-  let onibus = null, ciclista = null, vendedor = null, lombada = null;
+  let onibus = null, ciclista = null, vendedor = null, lombada = null, farolVaga = null;
   let ativo = false, autopilot = false, turbo = 1;
   let estado = null;
   let aoChegarCb = null;
@@ -190,6 +190,12 @@ TOGA.carro3d = (function () {
       caixa(0.1, 0.02, 5, SX + 5.4, 0.055, 438 + i * 5.2, mat(0xd8d4c8), true);
     }
     caixa(4.8, 0.015, 4.6, SX + 2.9, 0.045, 443.5, mat(0x86ab95), true); // a vaga verde
+    // o FAROL da vaga: coluna translúcida pulsante, visível de longe
+    farolVaga = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.4, 7, 12, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x9fc3ae, transparent: true, opacity: 0.3,
+        side: THREE.DoubleSide, depthWrite: false }));
+    farolVaga.position.set(SX + 2.9, 3.5, 443.5);
+    scene.add(farolVaga);
     [SX - 8, SX + 10].forEach(function (px) {
       const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 3.2, 8), mat(0x8a6a4a));
       tronco.position.set(px, 1.6, FIM - 6);
@@ -336,6 +342,20 @@ TOGA.carro3d = (function () {
     if (estado.infracoes.indexOf(rotulo) >= 0) return;
     estado.infracoes.push(rotulo);
     if (TOGA.cena3d && TOGA.cena3d.toastMundo) TOGA.cena3d.toastMundo(msg);
+    // a Comarca FM noticia NA HORA (a cidade é pequena)
+    const NOTAS = {
+      cinto: "🚨 plantão da Comarca FM: ouvinte jura ter visto o alerta de cinto piscando num sedã conhecido. O painel não mente, doutor.",
+      semaforo: "🚨 plantão da Comarca FM: flagrante no cruzamento da avenida — e o carro era de quem menos se esperava.",
+      faixa: "🚨 plantão da Comarca FM: pedestres relatam susto na faixa. 'A toga passou voando', diz testemunha.",
+      radar: "🚨 plantão da Comarca FM: o radar da avenida registrou velocidade acima do limite. A notificação, dizem, vai no CPF.",
+      buzina: "🚨 plantão da Comarca FM: buzinaço solitário na faixa de pedestres. A cidade inteira ouviu.",
+      ciclista: "🚨 plantão da Comarca FM: ciclista relata 'ventinho de retrovisor' na avenida. O metro e meio é lei, lembra o locutor.",
+      contrafluxo: "🚨 plantão da Comarca FM: 'quase manchete' — dois carros se cruzaram a um fôlego na avenida. Respirem, ouvintes."
+    };
+    if (estado.radio && NOTAS[rotulo]) {
+      estado.radio.playlist.splice(estado.radio.i + 1, 0, NOTAS[rotulo]);
+      estado.radio.t = 99;   // entra no ar imediatamente
+    }
   }
 
   /* ================= A VIAGEM ================= */
@@ -551,7 +571,10 @@ TOGA.carro3d = (function () {
           e.semaforo = "verde";
           luzSemaforo.material.color.set(0x6fbf6f);
           if (!e.semaforoOk) { e.semaforoOk = true;
-            if (TOGA.cena3d) TOGA.cena3d.toastMundo("🚦 Verde. Do carro ao lado, um senhor de bigode reconhece você da audiência dos vizinhos e acena. Juiz parado no sinal ensina mais trânsito que campanha de maio."); }
+            if (TOGA.cena3d) TOGA.cena3d.toastMundo("🚦 Verde. Do carro ao lado, um senhor de bigode reconhece você da audiência dos vizinhos e acena. Juiz parado no sinal ensina mais trânsito que campanha de maio.");
+            if (e.radio) { e.radio.playlist.splice(e.radio.i + 1, 0,
+              "✅ Comarca FM registra: o sinal da avenida foi respeitado até vazio. Tem dia que a cidade dá certo, ouvintes.");
+              e.radio.t = 99; } }
         }
       } else { e.paradoDesde = 0; }
       if (e.z > 137.6) {
@@ -623,7 +646,12 @@ TOGA.carro3d = (function () {
     }
 
     /* ---- 4) a vaga ---- */
-    if (!e.chegou && e.v === 0 && e.z > 439 && e.z < 448 && e.x > SX + 1.8) {
+    if (farolVaga) {
+      farolVaga.material.opacity = 0.22 + Math.abs(Math.sin(performance.now() / 400)) * 0.18;
+      farolVaga.visible = !e.chegou;
+    }
+    if (!e.chegou && Math.abs(e.v) < 0.25 && e.z > 439 && e.z < 448 && e.x > SX + 1.5) {
+      e.v = 0;
       e.chegou = true;
       concluir();
     }
@@ -655,7 +683,8 @@ TOGA.carro3d = (function () {
       else if (e.faixaAtiva) dica("🚶 pedestres na faixa — pare e espere");
       else if (e.evento === 1 && e.z > 260 && e.z < 315) dica("🚲 ciclista à direita — 1,5 m para passar");
       else if (e.z > 310 && e.z < 345) dica("📸 radar 60 km/h");
-      else if (e.z > 420) dica("🅿 estacione na vaga VERDE, à direita, e pare o carro");
+      else if (e.z > 420) dica("🅿 estacione na vaga VERDE (coluna de luz), à direita, e PARE o carro");
+      else dica("ESMEC a " + Math.max(0, Math.round(443 - e.z)) + " m — W/▲ acelera · A/D faixa · B buzina · R rádio");
     }
   }
 
