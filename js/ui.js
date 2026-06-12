@@ -968,9 +968,39 @@ TOGA.ui = (function () {
   }
 
   /* ---------- Epílogo ---------- */
+  /* As atividades externas no epílogo: no modo clássico é a porta
+     de entrada delas; no 3D, um lembrete (lá fora é melhor). */
+  function montarAtividadesEpilogo() {
+    const velho = document.getElementById("atividades-epilogo");
+    if (velho) velho.remove();
+    if (!TOGA.atividades) return;
+    const destravadas = TOGA.atividades.resumo().filter(a => a.destravada);
+    if (!destravadas.length) return;
+    const area = document.createElement("div");
+    area.id = "atividades-epilogo";
+    area.className = "atividades-epilogo";
+    area.innerHTML = "<h3>🌳 Atividades da comarca destravadas</h3>";
+    destravadas.forEach(a => {
+      const b = document.createElement("button");
+      b.className = "btn";
+      b.textContent = a.icone + " " + a.nome + (a.concluida ? " ✓ (rever)" : "");
+      b.addEventListener("click", () => {
+        if (modo3d()) {
+          alert("No modo 3D, saia para a rua pela porta do fórum ao fim da pauta — a cidade espera lá fora.");
+          return;
+        }
+        TOGA.atividades.executarVisita(a.id, () => montarAtividadesEpilogo());
+      });
+      area.appendChild(b);
+    });
+    const ancora = document.getElementById("quadro-final");
+    if (ancora) ancora.after(area);
+  }
+
   function mostrarEpilogo() {
     if (TOGA.audio) TOGA.audio.ambiente(false);
     const ep = M().epilogo();
+    montarAtividadesEpilogo();
     $("#veredito-selo").textContent = ep.veredito.titulo;
     $("#veredito-selo").className = "selo-grande selo-" + ep.veredito.selo;
     $("#veredito-texto").textContent = ep.veredito.texto;

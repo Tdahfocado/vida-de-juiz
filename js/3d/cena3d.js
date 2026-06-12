@@ -496,6 +496,7 @@ TOGA.cena3d = (function () {
   /* Decide sozinho qual é o "próximo passo" e escreve no HUD —
      o jogador nunca fica perdido no fórum. */
   function atualizarObjetivoAutomatico() {
+    if (localAtivo !== "forum") return;   // nos locais externos o objetivo é manual
     const e = TOGA.motor.estado;
     if (!e) { definirObjetivo(null); return; }
     const P = mundoInfo.pontos;
@@ -1049,7 +1050,29 @@ TOGA.cena3d = (function () {
       { id: "saida", pos: P.portaSaida, raio: 2.0,
         rotulo: "encerrar o expediente e sair do fórum",
         visivel: function () { return M().estado && M().fimDaPauta() && semInterludios(); },
-        acao: function () { TOGA.ui.mostrarEpilogo(); } }
+        acao: function () { TOGA.ui.mostrarEpilogo(); } },
+
+      { id: "cidade", pos: { x: P.portaSaida.x, z: P.portaSaida.z - 2.0 }, raio: 1.8,
+        rotulo: function () {
+          const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
+          const tem = TOGA.atividades && TOGA.atividades.LISTA.some(function (a) { return n >= a.limiar; });
+          return tem ? "🌳 sair para a RUA — atividades da comarca"
+                     : "🌳 espiar a rua (atividades destravam com conquistas)";
+        },
+        visivel: function () {
+          return !!(TOGA.atividades && M().estado && M().fimDaPauta() && semInterludios());
+        },
+        acao: function () {
+          const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
+          const prox = TOGA.atividades.LISTA.find(function (a) { return n < a.limiar; });
+          if (!TOGA.atividades.LISTA.some(function (a) { return n >= a.limiar; })) {
+            toastMundo("🔒 A comarca além do fórum destrava com as suas conquistas: " +
+              TOGA.atividades.LISTA.map(function (a) { return a.icone + " " + a.limiar; }).join(" · ") +
+              ". Você tem " + n + (prox ? " — faltam " + (prox.limiar - n) + " para " + prox.nome + "." : "."));
+            return;
+          }
+          entrarRua();
+        } }
     ];
   }
 
@@ -2008,6 +2031,206 @@ TOGA.cena3d = (function () {
     alert("O modo 3D foi interrompido pelo navegador. Continuando no modo clássico — seu progresso está intacto.");
   }
 
+  /* =====================================================
+     A COMARCA ALÉM DO FÓRUM — locais externos
+     -----------------------------------------------------
+     A rua (delegacia + escola), a viagem de carro e a ESMEC
+     vivem no MESMO scene, deslocadas no eixo x; "viajar" é
+     trocar colisores, spawn e interagíveis.
+     ===================================================== */
+  let localAtivo = "forum";
+  let infoRua = null, infoEsmec = null;
+
+  function esconderJogador(sim) {
+    if (jogador) jogador.grupo.visible = !sim;
+  }
+
+  function iniciarVisita3d(id) {
+    if (!TOGA.atividades || TOGA.atividades.emVisita) return;
+    TOGA.controles3d.desativar();
+    TOGA.atividades.executarVisita(id, function (r) {
+      reativarControles();
+      toastMundo(r.exemplar
+        ? "🌟 Visita concluída com nota máxima — a comarca comenta, e comenta bem."
+        : "✔ Visita concluída. Alguns tropeços ficam de lição — instituições também aprendem.");
+    });
+  }
+  function reativarControles() {
+    // os controles religam apontando para o local atual (sem
+    // re-iniciar: iniciar duplicaria listeners e ticks)
+    const info = localAtivo === "rua" ? infoRua
+               : localAtivo === "esmec" ? infoEsmec
+               : mundoInfo;
+    TOGA.controles3d.setMundo(info);
+    TOGA.controles3d.ativar();
+  }
+
+  function rotuloBloqueado(a) {
+    const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
+    return "🔒 " + a.nome + " — " + n + "/" + a.limiar + " conquistas";
+  }
+
+  function interagiveisRua() {
+    const P = TOGA.cidade3d.pontos;
+    const A = TOGA.atividades;
+    function ativ(id) { return A.LISTA.find(function (x) { return x.id === id; }); }
+    return [
+      { id: "voltarForum", pos: P.portaForum, raio: 2.0,
+        rotulo: "entrar no fórum",
+        acao: function () { voltarForum(); } },
+
+      { id: "delegacia", pos: P.delegaciaPorta, raio: 2.2,
+        rotulo: function () {
+          if (!A.destravada("delegacia")) return rotuloBloqueado(ativ("delegacia"));
+          return A.concluida("delegacia")
+            ? "rever a Delegacia (visita já concluída)"
+            : "🚔 visitar a Delegacia de Polícia Civil";
+        },
+        acao: function () {
+          if (!A.destravada("delegacia")) {
+            toastMundo("🔒 A visita à Delegacia destrava com 8 conquistas. A Dra. Socorro avisou na recepção: “quando o doutor fizer por merecer a fama, as portas abrem sozinhas.”");
+            return;
+          }
+          TOGA.controles3d.teleportar(P.delegada.x, P.delegada.z + 1.6, Math.PI);
+          iniciarVisita3d("delegacia");
+        } },
+
+      { id: "escola", pos: P.escolaPorta, raio: 2.2,
+        rotulo: function () {
+          if (!A.destravada("escola")) return rotuloBloqueado(ativ("escola"));
+          return A.concluida("escola")
+            ? "rever a Escola (visita já concluída)"
+            : "🏫 visitar a Escola Municipal";
+        },
+        acao: function () {
+          if (!A.destravada("escola")) {
+            toastMundo("🔒 A visita à Escola destrava com 15 conquistas. No muro, um cartaz de lápis de cor: “VIZITA DO JUIS — EM BREVE?”. A turma do 4º ano está esperando.");
+            return;
+          }
+          TOGA.controles3d.teleportar(P.professora.x, P.professora.z - 1.8, 0);
+          iniciarVisita3d("escola");
+        } },
+
+      { id: "carroJuiz", pos: P.carroJuiz, raio: 2.2,
+        rotulo: function () {
+          if (!A.destravada("esmec")) return rotuloBloqueado(ativ("esmec"));
+          return A.concluida("esmec")
+            ? "🚗 dirigir até a ESMEC (rever a aula)"
+            : "🚗 dirigir até a ESMEC — a aula da Escola da Magistratura";
+        },
+        acao: function () {
+          if (!A.destravada("esmec")) {
+            toastMundo("🔒 O convite da ESMEC vale para quem soma 24 conquistas. O carro espera — e a estrada também.");
+            return;
+          }
+          iniciarViagemEsmec();
+        } },
+
+      { id: "npcDelegada", pos: P.delegada, raio: 1.8,
+        rotulo: "cumprimentar a delegada",
+        acao: function () {
+          toastMundo("🤝 “Excelência! A casa é sua — quer dizer, é do Estado, mas o senhor entendeu.” A Dra. Socorro Andrade aperta a sua mão com a força de quem assina flagrante há vinte anos.");
+        } },
+
+      { id: "npcProfessora", pos: P.professora, raio: 1.8,
+        rotulo: "cumprimentar a professora",
+        acao: function () {
+          toastMundo("🤝 “Tia Chica, para os íntimos e para os pequenos”, sorri a professora Francisca. “O senhor por aqui! As crianças NÃO vão acreditar.”");
+        } }
+    ];
+  }
+
+  function interagiveisEsmec() {
+    const P = TOGA.esmec3d.pontos;
+    return [
+      { id: "coordenadora", pos: P.recepcao, raio: 2.6,
+        rotulo: function () {
+          return TOGA.atividades.concluida("esmec") && !TOGA.atividades.emVisita
+            ? "conversar com a coordenadora"
+            : "🎓 a coordenadora espera — a aula vai começar";
+        },
+        acao: function () { iniciarVisita3d("esmec"); } },
+
+      { id: "memorialEsmec", pos: P.memorial, raio: 2.0,
+        rotulo: "ver o memorial da ESMEC",
+        acao: function () {
+          toastMundo("🏛 Sob o vidro, a história da Escola: o ato de criação, a toga do patrono — Des. Júlio Carlos de Miranda Bezerra —, fotografias das primeiras turmas. Quarenta anos formando quem julga: a magistratura também aprende, sempre.");
+        } },
+
+      { id: "galeriaEsmec", pos: P.galeria, raio: 2.2,
+        rotulo: "olhar a galeria dos diretores",
+        acao: function () {
+          toastMundo("🖼 Os retratos dos diretores, em molduras pretas, um ao lado do outro. Gerações diferentes, o mesmo encargo: ensinar que a toga pesa menos quando se sabe usá-la.");
+        } },
+
+      { id: "carroVolta", pos: P.vaga, raio: 2.6,
+        rotulo: "🚗 dirigir de volta ao fórum",
+        acao: function () {
+          toastMundo("🚗 A volta você dirige mais devagar — sem nenhum motivo de trânsito. Há dias em que a estrada também ensina.");
+          voltarForum();
+        } }
+    ];
+  }
+
+  function entrarRua() {
+    garantirIniciado();
+    infoRua = TOGA.cidade3d.construir(TOGA.nucleo3d.scene);
+    localAtivo = "rua";
+    TOGA.controles3d.setMundo(infoRua);
+    const sp = infoRua.pontos.spawnRua;
+    TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
+    TOGA.interacao3d.definir(interagiveisRua());
+    alvoObjetivo = null;
+    definirObjetivo("A rua do fórum — Delegacia ao norte, Escola ao sul, o carro na vaga");
+    toastMundo("🌳 A rua do fórum. O sol bate diferente do lado de fora do expediente — a Delegacia fica na quadra norte, a Escola Municipal na sul. E o seu carro está na vaga de sempre.");
+  }
+
+  function entrarEsmecDireto() {
+    infoEsmec = TOGA.esmec3d.construir(TOGA.nucleo3d.scene);
+    localAtivo = "esmec";
+    TOGA.controles3d.setMundo(infoEsmec);
+    const sp = infoEsmec.pontos.spawnEsmec;
+    TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
+    TOGA.interacao3d.definir(interagiveisEsmec());
+    alvoObjetivo = { x: infoEsmec.pontos.recepcao.x, z: infoEsmec.pontos.recepcao.z };
+    definirObjetivo("ESMEC — fale com a coordenadora na recepção do hall");
+  }
+
+  function iniciarViagemEsmec() {
+    if (!TOGA.carro3d) return;
+    localAtivo = "estrada";
+    TOGA.interacao3d.definir([]);
+    definirObjetivo("Ao volante — siga a avenida e estacione na vaga verde da ESMEC");
+    alvoObjetivo = null;
+    TOGA.carro3d.iniciarViagem({
+      aoChegar: function (r) {
+        const limpa = r.infracoes.length === 0;
+        const M = TOGA.motor;
+        if (M && M.estado) {
+          if (limpa) M.estado.flags.dirigiuExemplar = true;
+          else M.estado.flags.infracaoTransito = true;
+          M.salvar();
+        }
+        if (TOGA.conquistas && limpa) TOGA.conquistas.avaliar("viagem-limpa");
+        entrarEsmecDireto();
+        toastMundo(limpa
+          ? "🅿 Estacionado na vaga, sem uma única infração: cinto, sinal, faixa e radar — a lei valeu o caminho inteiro. A fachada curva de granito espera por você."
+          : "🅿 Estacionado. A viagem deixou " + r.infracoes.length + " infração(ões) no caminho — o exemplo também dirige, e hoje ele derrapou. A aula, ainda assim, espera.");
+        reativarControles();
+      }
+    });
+  }
+
+  function voltarForum() {
+    if (TOGA.carro3d && TOGA.carro3d.ativo) TOGA.carro3d.cancelar();
+    localAtivo = "forum";
+    TOGA.controles3d.setMundo(mundoInfo);
+    const pb = mundoInfo.pontos.portaSaida;
+    TOGA.controles3d.teleportar(pb.x + 1.2, pb.z, Math.PI / 2);
+    TOGA.interacao3d.definir(montarInteragiveis());
+    atualizarObjetivoAutomatico();
+  }
+
   /* ---------- API ---------- */
   return {
     // a face "cena" (mesma assinatura do 2D)
@@ -2029,6 +2252,10 @@ TOGA.cena3d = (function () {
     get posJogador() { return jogador ? jogador.grupo.position : null; },
     aoPerderContexto: aoPerderContexto,
     garantirIniciado: garantirIniciado,
+    esconderJogador: esconderJogador,
+    entrarRua: entrarRua,
+    voltarForum: voltarForum,
+    get localAtivo() { return localAtivo; },
     alvoDoInterludio: function (p) {
       if (!p) return null;
       if (p.entrega && p.entrega.visita3d) return "visita";

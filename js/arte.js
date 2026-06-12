@@ -566,6 +566,42 @@ TOGA.arte = (function () {
     });
   }
 
+  /* ---------- A foto da turma na entrada da ESMEC ---------- */
+  function fotoTurmaEsmec() {
+    return canvasDe("fotoTurmaEsmec", 256, function (ctx, tam) {
+      // moldura clara, papel fotográfico
+      ctx.fillStyle = "#c9a35c"; ctx.fillRect(0, 0, tam, tam);
+      ctx.fillStyle = "#f2e9d4"; ctx.fillRect(10, 10, tam - 20, tam - 20);
+      // céu e a fachada curva de granito rosado ao fundo
+      ctx.fillStyle = "#a8c8e0"; ctx.fillRect(16, 16, tam - 32, tam * 0.42);
+      ctx.fillStyle = "#b08572";
+      ctx.beginPath();
+      ctx.moveTo(30, tam * 0.52);
+      ctx.quadraticCurveTo(tam / 2, tam * 0.18, tam - 30, tam * 0.52);
+      ctx.lineTo(tam - 30, tam * 0.58); ctx.lineTo(30, tam * 0.58);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#2b2118";
+      ctx.font = "bold 15px Georgia, serif";
+      ctx.textAlign = "center";
+      ctx.fillText("E S M E C", tam / 2, tam * 0.33);
+      ctx.fillStyle = "#8e1f1a";
+      ctx.fillRect(58, tam * 0.46, tam - 116, 9);
+      // a turma: fileira de toguinhas sorrindo (e você no meio)
+      for (let i = 0; i < 9; i++) {
+        const x = 34 + i * ((tam - 68) / 8);
+        const peles = ["#d8a87f", "#c98e66", "#a86a48", "#8a5436", "#e8c39a"];
+        ctx.fillStyle = i === 4 ? "#15110c" : "#2a2a30";   // você de toga
+        ctx.fillRect(x - 8, tam * 0.66, 16, 30);
+        ctx.fillStyle = peles[i % 5];
+        ctx.beginPath(); ctx.arc(x, tam * 0.62, 8, 0, Math.PI * 2); ctx.fill();
+      }
+      // dedicatória à mão
+      ctx.fillStyle = "#2d3a6b";
+      ctx.font = "17px " + FONTE_CURSIVA;
+      ctx.fillText("para os dias difíceis — a turma", tam / 2, tam - 22);
+    });
+  }
+
   /* ---------- A plaquinha do Frajola (em forma de peixe) ---------- */
   function plaquinhaFrajola() {
     return canvasDe("plaquinhaFrajola", 256, function (ctx, tam) {
@@ -1039,6 +1075,7 @@ TOGA.arte = (function () {
     desenhoFoguete: desenhoFoguete,
     comprovanteAluguel: comprovanteAluguel,
     plaquinhaFrajola: plaquinhaFrajola,
-    fotoIracema: fotoIracema
+    fotoIracema: fotoIracema,
+    fotoTurmaEsmec: fotoTurmaEsmec
   };
 })();

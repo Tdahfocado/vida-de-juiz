@@ -100,6 +100,12 @@ TOGA.lembrancas = (function () {
       rotulo: "olhar a fotografia de Iracema",
       arte: "fotoIracema" },
 
+    { id: "fotoTurmaEsmec",
+      se: function () { return !!(TOGA.atividades && TOGA.atividades.concluida("esmec")); },
+      titulo: "A turma da ESMEC",
+      rotulo: "olhar a foto da turma da ESMEC",
+      arte: "fotoTurmaEsmec" },
+
     /* ===== Despachos e reencontros ===== */
     { id: "certidaoSebastiana",
       se: function (f) { return !!f.cidadaVisivel; },

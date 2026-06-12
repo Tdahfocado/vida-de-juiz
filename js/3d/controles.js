@@ -268,6 +268,11 @@ TOGA.controles3d = (function () {
       eixoVirtual.frente = Math.max(-1, Math.min(1, frente || 0));
       eixoVirtual.lado = Math.max(-1, Math.min(1, lado || 0));
     },
+    /* troca o conjunto de colisores/paredes (viagem entre locais) */
+    setMundo: function (info) {
+      colisores = (info && info.colisores) || [];
+      paredesCamera = (info && info.paredesCamera) || [];
+    },
     teleportar: function (x, z, angulo) {
       if (!jogador) return;
       jogador.position.set(x, 0, z);

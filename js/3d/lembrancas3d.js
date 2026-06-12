@@ -72,6 +72,8 @@ TOGA.lembrancas3d = (function () {
                           pos: { x: -12.6, y: 1.95, z: -8.86 } },
     fotoIracema:        { criar: function () { return quadroNaParede("fotoIracema", 0.5); },
                           pos: { x: -13.45, y: 1.95, z: -8.86 } },
+    fotoTurmaEsmec:     { criar: function () { return quadroNaParede("fotoTurmaEsmec", 0.56); },
+                          pos: { x: -6.85, y: 1.95, z: -8.86 } },
     fotoThor:           { criar: function () { return quadroNaParede("fotoThor", 0.62); },
                           pos: { x: -11.4, y: 1.95, z: -8.86 } },
     certidaoSebastiana: { criar: function () { return quadroNaParede("certidaoLembranca", 0.56); },

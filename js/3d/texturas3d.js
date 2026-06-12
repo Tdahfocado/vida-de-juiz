@@ -293,6 +293,117 @@ TOGA.texturas3d = (function () {
     });
   }
 
+  /* ---------- Texturas da CIDADE e da ESMEC ---------- */
+
+  /* granito rosado da fachada da ESMEC (placas com juntas) */
+  function granitoRosa() {
+    return criar("granitoRosa", 128, function (ctx, tam) {
+      ctx.fillStyle = "#b08572";
+      ctx.fillRect(0, 0, tam, tam);
+      for (let i = 0; i < 240; i++) {
+        const x = Math.abs(ruido(i)) * tam, y = Math.abs(ruido(i + 99)) * tam;
+        ctx.fillStyle = i % 3 ? "rgba(140,95,80,.35)" : "rgba(205,170,150,.3)";
+        ctx.fillRect(x, y, 2.2, 2.2);
+      }
+      // juntas das placas
+      ctx.strokeStyle = "rgba(70,45,38,.5)";
+      ctx.lineWidth = 1.4;
+      for (let i = 0; i <= 4; i++) {
+        ctx.beginPath(); ctx.moveTo(0, i * tam / 4); ctx.lineTo(tam, i * tam / 4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(i * tam / 4, 0); ctx.lineTo(i * tam / 4, tam); ctx.stroke();
+      }
+    });
+  }
+
+  /* porcelanato branco do hall da ESMEC, com faixa de granito
+     cinza em diagonal (as fotos do hall) */
+  function pisoEsmec() {
+    return criar("pisoEsmec", 128, function (ctx, tam) {
+      ctx.fillStyle = "#e8e6e0";
+      ctx.fillRect(0, 0, tam, tam);
+      ctx.strokeStyle = "rgba(150,148,140,.45)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        ctx.beginPath(); ctx.moveTo(0, i * tam / 4); ctx.lineTo(tam, i * tam / 4); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(i * tam / 4, 0); ctx.lineTo(i * tam / 4, tam); ctx.stroke();
+      }
+      // a faixa diagonal de granito cinza
+      ctx.save();
+      ctx.translate(tam / 2, tam / 2); ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = "#9a958d";
+      ctx.fillRect(-tam, -7, tam * 2, 14);
+      ctx.restore();
+    });
+  }
+
+  /* granitina cinza do auditório, com a faixa vermelha de corredor */
+  function pisoAuditorioEsmec() {
+    return criar("pisoAudEsmec", 128, function (ctx, tam) {
+      ctx.fillStyle = "#9aa09a";
+      ctx.fillRect(0, 0, tam, tam);
+      for (let i = 0; i < 200; i++) {
+        const x = Math.abs(ruido(i + 7)) * tam, y = Math.abs(ruido(i + 51)) * tam;
+        ctx.fillStyle = i % 2 ? "rgba(70,75,70,.3)" : "rgba(220,220,215,.3)";
+        ctx.fillRect(x, y, 1.8, 1.8);
+      }
+      ctx.fillStyle = "rgba(178,52,52,.85)";
+      ctx.fillRect(0, tam * 0.46, tam, tam * 0.08);
+    });
+  }
+
+  /* letreiro/testeira: texto sobre fundo de cor (fachadas) */
+  function letreiro(texto, corFundo, corTexto, sub) {
+    return criar("letreiro:" + texto + ":" + corFundo, 512, function (ctx, tam) {
+      ctx.fillStyle = corFundo;
+      ctx.fillRect(0, 0, tam, tam);
+      ctx.fillStyle = corTexto;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      if (sub) {
+        ctx.font = "bold " + Math.floor(tam / 22) + "px Georgia, serif";
+        ctx.fillText(sub, tam / 2, tam * 0.34, tam - 30);
+        ctx.font = "bold " + Math.floor(tam / 13) + "px Georgia, serif";
+        ctx.fillText(texto, tam / 2, tam * 0.62, tam - 24);
+      } else {
+        ctx.font = "bold " + Math.floor(tam / (texto.length > 10 ? 7 : 4)) + "px Georgia, serif";
+        ctx.fillText(texto, tam / 2, tam * 0.52, tam - 24);
+      }
+    });
+  }
+
+  /* retrato de galeria (molduras pretas do hall da ESMEC) */
+  function retrato(n) {
+    return criar("retrato" + n, 64, function (ctx, tam) {
+      ctx.fillStyle = "#15110c";
+      ctx.fillRect(0, 0, tam, tam);
+      ctx.fillStyle = "#ddd6c8";
+      ctx.fillRect(5, 5, tam - 10, tam - 10);
+      const pele = ["#d8a87f", "#c98e66", "#a86a48", "#8a5436"][n % 4];
+      ctx.fillStyle = pele;
+      ctx.beginPath(); ctx.arc(tam / 2, tam * 0.42, tam * 0.17, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#2a2a30";
+      ctx.fillRect(tam * 0.28, tam * 0.58, tam * 0.44, tam * 0.3);
+      ctx.fillStyle = "#241a10";
+      ctx.beginPath(); ctx.arc(tam / 2, tam * 0.36, tam * 0.17, Math.PI, 0); ctx.fill();
+    });
+  }
+
+  /* asfalto com faixa central tracejada (a avenida da viagem) */
+  function asfalto() {
+    return criar("asfalto", 128, function (ctx, tam) {
+      ctx.fillStyle = "#3a3d42";
+      ctx.fillRect(0, 0, tam, tam);
+      for (let i = 0; i < 160; i++) {
+        const x = Math.abs(ruido(i + 31)) * tam, y = Math.abs(ruido(i + 77)) * tam;
+        ctx.fillStyle = i % 2 ? "rgba(0,0,0,.25)" : "rgba(255,255,255,.06)";
+        ctx.fillRect(x, y, 2, 2);
+      }
+      ctx.fillStyle = "#d8c84a";
+      ctx.fillRect(tam / 2 - 3, 8, 6, tam * 0.36);
+      ctx.fillRect(tam / 2 - 3, tam * 0.58, 6, tam * 0.36);
+    });
+  }
+
   /* ---------- Material "plástico ABS" (estilo Lego) ----------
      Phong com brilho discreto — compartilhado por TODOS os
      bonecos e móveis (cache por cor). Na qualidade "baixa",
@@ -319,6 +430,12 @@ TOGA.texturas3d = (function () {
     mural: mural,
     quadro: quadro,
     placa: placa,
+    granitoRosa: granitoRosa,
+    pisoEsmec: pisoEsmec,
+    pisoAuditorioEsmec: pisoAuditorioEsmec,
+    letreiro: letreiro,
+    retrato: retrato,
+    asfalto: asfalto,
     deArte: deArte,
     fotoThor: fotoThor,
     desenhoSuperJuiz: desenhoSuperJuiz,

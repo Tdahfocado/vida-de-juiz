@@ -133,6 +133,22 @@ TOGA.conquistas = (function () {
       desc: "Depois do júri, atenda a imprensa na sala nova e explique o veredicto em linguagem que qualquer pessoa entende.",
       se: c => c.gatilho === "coletiva" },
 
+    { id: "pontesNaoMuros", icone: "🚔", nome: "Pontes, não muros",
+      desc: "Visite a Delegacia da comarca e converse de instituição para instituição — flagrante bem documentado protege todo mundo.",
+      se: c => c.gatilho === "visita-delegacia" },
+
+    { id: "sementeCidadania", icone: "🏫", nome: "Semente de cidadania",
+      desc: "Visite a Escola Municipal e explique às crianças o que um juiz faz — sem virar bicho-papão.",
+      se: c => c.gatilho === "visita-escola" },
+
+    { id: "professorMagistratura", icone: "🎓", nome: "Professor(a) da magistratura",
+      desc: "Dirija até a ESMEC e ministre a aula para os juízes que estão chegando — a coroação da carreira.",
+      se: c => c.gatilho === "aula-esmec" },
+
+    { id: "cidadaoAoVolante", icone: "🚗", nome: "Cidadão(ã) ao volante",
+      desc: "Faça a viagem até a ESMEC sem uma única infração: cinto, sinal, faixa de pedestres e radar.",
+      se: c => c.gatilho === "viagem-limpa" },
+
     { id: "amigoDoCaramelo", icone: "🐕", nome: "Amigo(a) do Razumikin",
       desc: "Faça carinho no cachorro do fórum. Ele já gostava de você antes.",
       se: c => c.gatilho === "caramelo" },
@@ -220,6 +236,10 @@ TOGA.conquistas = (function () {
       novas.push(m);
       anunciar(m);
     });
+    // medalha nova pode destravar atividade externa (atividades.js)
+    if (TOGA.atividades && TOGA.atividades.checarDesbloqueios) {
+      TOGA.atividades.checarDesbloqueios();
+    }
   }
 
   /* ---------- o toast dourado ---------- */
@@ -285,6 +305,7 @@ TOGA.conquistas = (function () {
       modal.id = "modal-conquistas";
       modal.innerHTML = '<div class="cartao-tutorial"><div class="eyebrow">o que a comarca já viu você fazer</div>' +
         '<h2>Conquistas</h2><div class="nivel-vitrine" id="nivel-vitrine"></div>' +
+        '<div class="atividades-vitrine" id="atividades-vitrine"></div>' +
         '<div class="grade-conquistas" id="grade-conquistas"></div>' +
         '<div class="acoes-desfecho"><button class="btn-secundario" id="btn-conquistas-fechar">‹ Voltar</button></div></div>';
       document.body.appendChild(modal);
@@ -298,6 +319,21 @@ TOGA.conquistas = (function () {
       (n.proximoTitulo ? `<span class="suave"> · faltam ${n.faltam} selos ótimos para “${n.proximoTitulo}”</span>` : "") +
       `<span class="total-conquistas">🏅 ${obtidas} de ${LISTA.length} conquistas obtidas` +
       (obtidas >= LISTA.length ? " — a vitrine está completa, Excelência" : "") + `</span>`;
+    const areaAtiv = modal.querySelector("#atividades-vitrine");
+    if (areaAtiv && TOGA.atividades) {
+      areaAtiv.innerHTML = "<h3>🌳 Atividades da comarca</h3>" +
+        TOGA.atividades.resumo().map(function (a) {
+          const pct = Math.round(100 * a.progresso / a.limiar);
+          const estado = a.concluida ? "✓ concluída"
+            : a.destravada ? "destravada — saia do fórum ao fim da pauta"
+            : a.progresso + "/" + a.limiar + " conquistas";
+          return '<div class="ativ-linha' + (a.destravada ? " destravada" : "") + '" title="' + a.hint + '">' +
+            '<span class="ativ-icone">' + (a.destravada ? a.icone : "🔒") + "</span>" +
+            '<span class="ativ-nome">' + a.nome + "</span>" +
+            '<span class="ativ-barra"><i style="width:' + pct + '%"></i></span>' +
+            '<span class="ativ-estado">' + estado + "</span></div>";
+        }).join("");
+    }
     const grade = modal.querySelector("#grade-conquistas");
     grade.innerHTML = LISTA.map(m => {
       const ok = tem(m.id);

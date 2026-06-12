@@ -719,7 +719,29 @@ TOGA.manchetes = [
 
   { condicao: function (f) { return !!f.explodiuBalcao; }, pauta: "*", tom: "grave",
     fonte: "Portal Jurídico Regional",
-    titulo: "Vídeo de magistrado exaltado no balcão da secretaria circula em grupos da OAB" }
+    titulo: "Vídeo de magistrado exaltado no balcão da secretaria circula em grupos da OAB" },
+
+  /* ===== A comarca além do fórum (atividades externas) ===== */
+
+  { condicao: function (f) { return !!f.visitaDelegaciaExemplar; }, pauta: "*",
+    fonte: "Gazeta da Comarca",
+    titulo: "Juiz visita a Delegacia e alinha fluxo de flagrantes: “prova bem documentada protege todo mundo”, diz delegada" },
+
+  { condicao: function (f) { return !!f.visitaEscolaExemplar; }, pauta: "*",
+    fonte: "Folha do Bairro",
+    titulo: "“Juiz é mais quebra-galho que carcereiro”: visita à escola municipal vira a redação da semana do 4º ano" },
+
+  { condicao: function (f) { return !!f.aulaEsmecExemplar; }, pauta: "*",
+    fonte: "Portal Jurídico Regional",
+    titulo: "Na ESMEC, magistrado abre a própria pauta para ensinar juízes novos: “errar faz parte; esconder é que não”" },
+
+  { condicao: function (f) { return !!f.dirigiuExemplar; }, pauta: "*",
+    fonte: "Folha do Bairro",
+    titulo: "Flagrado pelo bem: juiz dirige o próprio carro, para na faixa e espera o sinal — sem assessor, sem pressa, sem placa fria" },
+
+  { condicao: function (f) { return !!f.infracaoTransito; }, pauta: "*", tom: "grave",
+    fonte: "Diário do Sertão",
+    titulo: "A caminho de palestra, magistrado comete infração de trânsito; leitores perguntam: a toga para no vermelho?" }
 ];
 
 /* ---------------------------------------------------------
