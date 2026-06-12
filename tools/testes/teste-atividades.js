@@ -106,14 +106,37 @@ async function cliqueVisita(page) {
   ok("viagem em piloto automático chega sem infrações", v.limpa && v.flag);
 
   // a palestra Simples e Mágico (juízes reais na plateia)
-  const plateia = await page.evaluate(() => (TOGA.esmec3d.pontos.plateia || []).length);
-  ok("plateia com 10 juízes reais sorteados", plateia === 10);
+  const censo = await page.evaluate(() => ({
+    plateia: (TOGA.esmec3d.pontos.plateia || []).length,
+    avulsos: (TOGA.esmec3d.pontos.juizesAvulsos || []).length,
+    salas: ["salaAula", "oficina", "mediacao", "coordenacao", "muralCursos"]
+      .every(k => !!TOGA.esmec3d.pontos[k])
+  }));
+  ok("plateia com 16 juízes reais", censo.plateia === 16);
+  ok("9 juízes avulsos pela Escola", censo.avulsos === 9);
+  ok("salas novas registradas (aula/oficina/mediação/coordenação/mural)", censo.salas);
   const cumprimento = await page.evaluate(() => TOGA.interacao3d.disparar("juizPlateia0"));
   ok("juiz da plateia interagível", cumprimento === true);
   await page.evaluate(() => TOGA.interacao3d.disparar("palestra"));
   await page.waitForTimeout(400);
   ok("minigame da palestra concluído (gabaritado)", await cliqueVisita(page));
   ok("conquista Simples e Mágico", await page.evaluate(() => TOGA.conquistas.tem("simplesEMagico")));
+
+  // as missões das salas de capacitação
+  await page.evaluate(() => TOGA.interacao3d.disparar("oficinaEsmec"));
+  await page.waitForTimeout(300);
+  ok("Oficina de Sentenças concluída (gabaritada)", await cliqueVisita(page));
+  ok("conquista Lapidador(a) de sentenças", await page.evaluate(() => TOGA.conquistas.tem("lapidadorSentencas")));
+  await page.evaluate(() => TOGA.interacao3d.disparar("mediacaoEsmec"));
+  await page.waitForTimeout(300);
+  ok("simulação de mediação concluída (gabaritada)", await cliqueVisita(page));
+  ok("conquista Artesão(ã) de consensos", await page.evaluate(() => TOGA.conquistas.tem("artesaoConsensos")));
+
+  // a missão rápida da pauta de cursos (Rejane → Montezuma)
+  await page.evaluate(() => TOGA.interacao3d.disparar("rejaneEsmec"));
+  await page.waitForTimeout(200);
+  const entregou = await page.evaluate(() => TOGA.interacao3d.disparar("palestranteEsmec"));
+  ok("missão da pauta de cursos (Rejane → Montezuma)", entregou === true);
 
   // a aula na ESMEC
   await page.evaluate(() => TOGA.interacao3d.disparar("coordenadora"));

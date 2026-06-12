@@ -471,8 +471,100 @@ TOGA.esmec3d = (function () {
     pontos.pulpito = { x: EX - 2.2, z: 34.6 };
     pontos.auditorio = { x: EX, z: 27 };
 
+    /* ============ AS SALAS DE CAPACITAÇÃO (alas, z 24..38) ============
+       Oeste: SALA DE AULA (formação inicial) e OFICINA DE SENTENÇAS.
+       Leste: SALA DE MEDIAÇÃO e a COORDENAÇÃO da Escola.            */
+
+    // ---- ala OESTE ----
+    piso(EX - 20, 24, EX - 12, 38, mat(0xd8d4c8), 0.04);
+    parede(EX - 20, 24, EX - 20, 38, mat(0xe8e6da));
+    parede(EX - 12, 25, EX - 12, 38, mat(0xe8e6da));
+    // norte da sala de aula (vão [EX-17.2, EX-16])
+    parede(EX - 20, 25, EX - 17.2, 25, mat(0xe8e6da));
+    parede(EX - 16, 25, EX - 12, 25, mat(0xe8e6da));
+    // divisória sala de aula / oficina (vão [EX-17.2, EX-16])
+    parede(EX - 20, 31, EX - 17.2, 31, mat(0xe8e6da));
+    parede(EX - 16, 31, EX - 12, 31, mat(0xe8e6da));
+
+    // SALA DE AULA — FORMAÇÃO INICIAL (z 25..31)
+    placaEmRot("SALA 1 — FORMAÇÃO INICIAL", EX - 16.6, 2.4, 25.2, 0, 2.4);
+    // quadro branco + projetor
+    caixa(3.0, 1.5, 0.08, EX - 16, 1.7, 30.7, mat(0xf4f2ec), { colide: false });
+    caixa(3.2, 1.7, 0.04, EX - 16, 1.7, 30.74, mat(0x55585e), { colide: false, semSombra: true });
+    caixa(0.4, 0.18, 0.5, EX - 16, 2.9, 28, mat(0x33373d), { colide: false, semSombra: true });
+    for (let cx = 0; cx < 3; cx++) for (let cz = 0; cz < 2; cz++) {
+      caixa(0.85, 0.74, 0.55, EX - 18.2 + cx * 1.9, 0.37, 26.6 + cz * 1.6, mat(0xb9b3a6));
+    }
+    pontos.salaAula = { x: EX - 16, z: 28.6 };
+    pontos.quadroAula = { x: EX - 16, z: 30 };
+
+    // OFICINA DE SENTENÇAS (z 31..38)
+    placaEmRot("OFICINA DE SENTENÇAS", EX - 16.6, 2.4, 31.2, 0, 2.2);
+    caixa(3.6, 0.78, 1.4, EX - 16, 0.39, 34.6, mat(0x6a4a2a));   // o mesão
+    [[-1.2, 33.6], [0, 33.6], [1.2, 33.6], [-1.2, 35.6], [0, 35.6], [1.2, 35.6]].forEach(function (c) {
+      caixa(0.5, 0.5, 0.5, EX - 16 + c[0], 0.25, c[1], mat(0x2a2d33), { colide: false });
+    });
+    [[-0.9], [0.2], [0.9]].forEach(function (p) {
+      caixa(0.3, 0.012, 0.42, EX - 16 + p[0], 0.8, 34.6, mat(0xf4ecd9), { colide: false, semSombra: true });
+    });
+    pontos.oficina = { x: EX - 16, z: 33.2 };
+
+    // ---- ala LESTE ----
+    piso(EX + 12, 24, EX + 20, 38, mat(0xd8d4c8), 0.04);
+    parede(EX + 20, 24, EX + 20, 38, mat(0xe8e6da));
+    parede(EX + 12, 25, EX + 12, 38, mat(0xe8e6da));
+    parede(EX + 12, 25, EX + 16, 25, mat(0xe8e6da));
+    parede(EX + 17.2, 25, EX + 20, 25, mat(0xe8e6da));
+    parede(EX + 12, 31, EX + 16, 31, mat(0xe8e6da));
+    parede(EX + 17.2, 31, EX + 20, 31, mat(0xe8e6da));
+
+    // SALA DE MEDIAÇÃO (z 25..31)
+    placaEmRot("SALA DE MEDIAÇÃO E CONCILIAÇÃO", EX + 16.6, 2.4, 25.2, 0, 2.6);
+    const mesaRedonda = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.08, 18), mat(0x6a4a2a));
+    mesaRedonda.position.set(EX + 16, 0.76, 28.2);
+    mesaRedonda.castShadow = true;
+    scene.add(mesaRedonda);
+    const peMesa = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.76, 10), mat(0x4a3018));
+    peMesa.position.set(EX + 16, 0.38, 28.2);
+    scene.add(peMesa);
+    colisores.push({ minX: EX + 14.9, maxX: EX + 17.1, minZ: 27.1, maxZ: 29.3 });
+    [[0, -1.5], [0, 1.5], [-1.5, 0], [1.5, 0]].forEach(function (c) {
+      caixa(0.5, 0.5, 0.5, EX + 16 + c[0], 0.25, 28.2 + c[1], mat(0x556a55), { colide: false });
+    });
+    vasoBranco(EX + 13, 26);
+    pontos.mediacao = { x: EX + 16, z: 30 };
+
+    // COORDENAÇÃO (z 31..38)
+    placaEmRot("COORDENAÇÃO — JUÍZA ANA PAULA FEITOSA OLIVEIRA", EX + 16.6, 2.4, 31.2, 0, 3.2);
+    caixa(2.4, 0.78, 1.0, EX + 16.5, 0.39, 35.5, mat(0x6a4a2a));    // mesa
+    caixa(0.5, 0.55, 0.5, EX + 16.5, 0.27, 36.4, mat(0x2a2d33), { colide: false });
+    caixa(0.5, 0.5, 0.5, EX + 16.5, 0.25, 34.4, mat(0x556a55), { colide: false });
+    caixa(0.4, 0.05, 0.3, EX + 16, 0.83, 35.5, mat(0xf4ecd9), { colide: false, semSombra: true }); // a pauta de cursos
+    caixa(0.5, 1.9, 0.4, EX + 19.4, 0.95, 36.8, mat(0x6a4a2a));     // estante
+    // bandeira do Ceará no canto
+    const mastroCE = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 2.4, 8), mat(0x8a8378));
+    mastroCE.position.set(EX + 13, 1.2, 36.8);
+    scene.add(mastroCE);
+    const panoCE = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.5),
+      new THREE.MeshLambertMaterial({ color: 0x2d7a3a, side: THREE.DoubleSide }));
+    panoCE.position.set(EX + 13.37, 2.1, 36.8);
+    scene.add(panoCE);
+    pontos.coordenacao = { x: EX + 16, z: 33.6 };
+
+    // mural da programação de cursos, no hall
+    if (TOGA.texturas3d.letreiro) {
+      const mural = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.2),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.letreiro(
+          "CURSOS DESTA SEMANA", "#2f4a3e", "#e7cf9a", "FORMAÇÃO CONTINUADA — ESMEC") }));
+      mural.position.set(EX + 11.85, 1.8, 21.5);
+      mural.rotation.y = -Math.PI / 2;
+      scene.add(mural);
+    }
+    pontos.muralCursos = { x: EX + 10.8, z: 21.5 };
+
     /* ============ TETOS (forro branco dos interiores) ============ */
-    [[EX - 12, 14, EX + 12, 24], [EX - 11, 24, EX + 11, 38]].forEach(function (t) {
+    [[EX - 12, 14, EX + 12, 24], [EX - 11, 24, EX + 11, 38],
+     [EX - 20, 14, EX - 12, 38], [EX + 12, 14, EX + 20, 38]].forEach(function (t) {
       const teto = new THREE.Mesh(
         new THREE.PlaneGeometry(Math.abs(t[2] - t[0]), Math.abs(t[3] - t[1])),
         new THREE.MeshLambertMaterial({ color: 0xe8e6e0 }));
@@ -490,31 +582,134 @@ TOGA.esmec3d = (function () {
       vivos.push(b);
       return b;
     }
-    // a coordenadora, Juíza Ana Paula Feitosa Oliveira, no hall
+    const PELES_J = ["#d8a87f", "#c98e66", "#a86a48", "#8a5436", "#e8c39a"];
+    // a coordenadora, Juíza Ana Paula Feitosa Oliveira — circula
+    // entre a recepção, o credenciamento e a porta do auditório
     pontos.npcCoordenadora = npc("coordenadoraEsmec",
       { pele: "#c98e66", cabelo: "longo", corCabelo: "#3a2a1a",
         traje: "blazer", corTraje: "#4a3a55", corBlusa: "#e8e2d2" },
       EX - 1.6, 17.4, 0.6);
-    // recepcionista
-    npc("recepcionistaEsmec",
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(pontos.npcCoordenadora, [
+        { esperar: 14 },
+        { ir: [{ x: EX - 3.4, z: 21.6 }] },          // confere o credenciamento
+        { esperar: 8 },
+        { segurar: ["pastas", "esq"] },
+        { ir: [{ x: EX - 0.5, z: 22.8 }] },          // espia o auditório
+        { esperar: 7 },
+        { segurar: [null, "esq"] },
+        { ir: [{ x: EX - 5.5, z: 16.4 }] },          // volta pela recepção
+        { esperar: 10 },
+        { ir: [{ x: EX - 1.6, z: 17.4 }] },
+        { esperar: 12 }
+      ]);
+    }
+    // recepcionista (organiza papéis em ciclos)
+    const recep = npc("recepcionistaEsmec",
       { pele: "#d8a87f", cabelo: "coque", corCabelo: "#241a10", traje: "camisa", corTraje: "#556a55" },
       EX - 7, 15.4, 0);
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(recep, [
+        { esperar: 9 },
+        { segurar: ["autos", "esq"] },
+        { acao: "lerPapel" },
+        { segurar: [null, "esq"] },
+        { esperar: 16 }
+      ]);
+    }
+
+    // a assessora da coordenação, Rejane (a missão da pauta)
+    pontos.npcRejane = npc("rejaneEsmec",
+      { pele: "#a86a48", cabelo: "coque", corCabelo: "#241a10", traje: "blazer", corTraje: "#556a55", oculos: true },
+      EX + 15.2, 33.4, Math.PI * 0.8);
+
+    // o professor da sala de formação inicial
+    const profSala = npc("professorSala1",
+      { pele: "#8a5436", cabelo: "calvo", corCabelo: "#9a9388", traje: "terno", corTraje: "#33424f", barba: true },
+      EX - 16, 29.8, Math.PI);
+    profSala.segurar("autos", "esq");
+    // dois juízes novos assistindo
+    [[EX - 18.2, 26.6], [EX - 14.4, 28.2]].forEach(function (p, i) {
+      const aluno = npc("alunoSala1_" + i,
+        { pele: PELES_J[(i * 2 + 1) % 5], cabelo: i ? "coque" : "curto", corCabelo: "#241a10",
+          traje: "terno", corTraje: "#2a2a30" },
+        p[0], p[1] + 0.7, 0, { sentado: true });
+      aluno.setEmocao("neutro");
+    });
+
+    // dois servidores digitando no laboratório
+    [[EX + 14.4, 17.0], [EX + 17.8, 20.0]].forEach(function (p, i) {
+      const tec = npc("tecLab" + i,
+        { pele: PELES_J[(i + 2) % 5], cabelo: i ? "longo" : "curto", corCabelo: "#3a2a1a",
+          traje: "camisa", corTraje: i ? "#4a5a6e" : "#7a6248" },
+        p[0], p[1], 0, { sentado: true });
+      if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+        TOGA.rotinas3d.adicionarRotina(tec, [
+          { esperar: 6 + i * 5 },
+          { acao: "lerPapel" },
+          { esperar: 9 }
+        ]);
+      }
+    });
     /* a PLATEIA DE JUÍZES REAIS, sorteada da Relação de Magistrados
        do TJCE — homenagem institucional: nome + lotação de verdade */
     pontos.plateia = [];
+    pontos.juizesAvulsos = [];
     const sorteados = (TOGA.juizesTJCE && TOGA.juizesTJCE.sortearJuizes)
-      ? TOGA.juizesTJCE.sortearJuizes(10) : [];
-    const PELES_J = ["#d8a87f", "#c98e66", "#a86a48", "#8a5436", "#e8c39a"];
-    sorteados.forEach(function (j, i) {
+      ? TOGA.juizesTJCE.sortearJuizes(25) : [];
+    function avatarJuiz(i) {
+      return { pele: PELES_J[i % 5],
+        cabelo: ["curto", "coque", "longo", "calvo"][i % 4], corCabelo: "#241a10",
+        traje: i % 2 ? "terno" : "blazer", corTraje: ["#2a2a30", "#33424f", "#4a4438"][i % 3] };
+    }
+    // 16 na plateia da palestra (4 filas × 4)
+    sorteados.slice(0, 16).forEach(function (j, i) {
       const col = i % 4, fila = Math.floor(i / 4);
       const px = EX - 7.7 + col * 2.2 + 1.1, pz = 26.5 + fila * 1.7;
-      const b = npc("juizReal" + i,
-        { pele: PELES_J[i % 5],
-          cabelo: ["curto", "coque", "longo", "calvo"][i % 4], corCabelo: "#241a10",
-          traje: i % 2 ? "terno" : "blazer", corTraje: "#2a2a30" },
-        px, pz, 0, { sentado: true });
-      b.setEmocao("neutro");
+      const b = npc("juizReal" + i, avatarJuiz(i), px, pz, 0, { sentado: true });
+      b.setEmocao(i % 5 === 3 ? "feliz" : "neutro");
       pontos.plateia.push({ nome: j.nome, lotacao: j.lotacao, x: px, z: pz });
+    });
+    function avulso(j, i, x, z, rotY, opcoes) {
+      const b = npc("juizAvulso" + i, avatarJuiz(i + 7), x, z, rotY, opcoes || {});
+      pontos.juizesAvulsos.push({ nome: j.nome, lotacao: j.lotacao, x: x, z: z, boneco: b });
+      return b;
+    }
+    // 2 debatendo na OFICINA DE SENTENÇAS
+    if (sorteados[16]) {
+      const a1 = avulso(sorteados[16], 0, EX - 17.2, 33.6, Math.PI * 0.9, { sentado: true });
+      a1.segurar("autos", "esq");
+    }
+    if (sorteados[17]) avulso(sorteados[17], 1, EX - 14.8, 35.6, -Math.PI * 0.2, { sentado: true });
+    // 2 treinando na MEDIAÇÃO (frente a frente)
+    if (sorteados[18]) avulso(sorteados[18], 2, EX + 16, 26.7, 0, { sentado: true });
+    if (sorteados[19]) {
+      const m2 = avulso(sorteados[19], 3, EX + 16, 29.7, Math.PI, { sentado: true });
+      m2.setEmocao("firme");
+    }
+    // 1 contemplando o jardim, 1 na galeria, 1 no coffee
+    if (sorteados[20]) avulso(sorteados[20], 4, EX + 3.4, 19, Math.PI / 2);
+    if (sorteados[21]) avulso(sorteados[21], 5, EX - 10.9, 18.2, -Math.PI / 2);
+    if (sorteados[22]) {
+      const c1 = avulso(sorteados[22], 6, EX + 9.2, 16.8, Math.PI);
+      c1.segurar("xicara", "dir");
+    }
+    // 2 ATRASADOS: chegam pela entrada e sentam na última fileira
+    [[23, EX - 4.4, 33.3], [24, EX + 5.6, 33.3]].forEach(function (cfg, n) {
+      const j = sorteados[cfg[0]];
+      if (!j) return;
+      const b = avulso(j, 7 + n, EX - 1 + n * 2, 15.0 + n * 0.8, 0);
+      // o ponto de interação é o ASSENTO final, não a porta
+      const reg = pontos.juizesAvulsos[pontos.juizesAvulsos.length - 1];
+      reg.x = cfg[1]; reg.z = cfg[2];
+      if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+        TOGA.rotinas3d.adicionarRotina(b, [
+          { esperar: 4 + n * 6 },
+          { ir: [{ x: EX - 0.4 + n * 0.8, z: 22 }, { x: EX, z: 25.5 }, { x: cfg[1], z: cfg[2] - 0.9 }] },
+          { sentar: { x: cfg[1], z: cfg[2], rot: 0, dur: 9999 } },
+          { esperar: 9999 }
+        ]);
+      }
     });
 
     /* o PALESTRANTE: Juiz Luis Gustavo Montezuma Herbster, no
@@ -533,6 +728,16 @@ TOGA.esmec3d = (function () {
       { pele: "#a86a48", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#e8e6da" },
       EX + 9.0, 16.6, -0.4);
     cafe.segurar("xicara", "dir");
+    if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+      TOGA.rotinas3d.adicionarRotina(cafe, [
+        { esperar: 11 },
+        { ir: [{ x: EX + 4, z: 17.2 }, { x: EX + 0.5, z: 22.6 }] },  // serve a porta do auditório
+        { acao: "entregar" },
+        { esperar: 6 },
+        { ir: [{ x: EX + 4, z: 16.6 }, { x: EX + 9.0, z: 16.6 }] },
+        { esperar: 14 }
+      ]);
+    }
 
     info = { colisores: colisores, paredesCamera: paredesCamera, pontos: pontos, vivos: vivos };
     return info;

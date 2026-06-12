@@ -2144,6 +2144,13 @@ TOGA.cena3d = (function () {
     ];
   }
 
+  let pautaCursosNaMao = false, pautaCursosEntregue = false;
+
+  function tituloJuiz(nome) {
+    return nome.match(/^(Ana|Adriana|Alda|Alexsandra|Amaiara|Andréa|Anna|Antonia|Ariana|Bruna|Candice|Carla|Carolina|Cláudia|Cynthia|Daniela|Danielle|Dayana|Débora|Fabiana|Fabrícia|Fátima|Fernanda|Flávia|Francisca|Gabriela|Gerana|Gesília|Giselli|Harbelia|Helga|Iclea|Janaina|Juliana|Julianne|Karla|Kathleen|Larissa|Leila|Leopoldina|Leslie|Lia|Liana|Luciana|Lucimeire|Luzia|Mabel|Márcia)/)
+      ? "Juíza " : "Juiz ";
+  }
+
   function interagiveisEsmec() {
     const P = TOGA.esmec3d.pontos;
     const COMENTARIOS_JUIZ = [
@@ -2237,6 +2244,93 @@ TOGA.cena3d = (function () {
           toastMundo("🖋 Você assina o livro de visitas com a caneta da recepção — a mesma letra dos despachos, um pouco mais solta. Abaixo do nome, escreve: “honrado por aprender onde tantos ensinaram.”" + (dia ? " A data é a do seu " + dia + "." : ""));
         } },
 
+      { id: "oficinaEsmec", pos: P.oficina, raio: 2.4,
+        rotulo: function () {
+          return TOGA.atividades.missaoFeita("oficina")
+            ? "📝 rever a Oficina de Sentenças"
+            : "📝 entrar na Oficina de Sentenças (missão)";
+        },
+        acao: function () {
+          if (!TOGA.atividades || TOGA.atividades.emVisita) return;
+          TOGA.controles3d.desativar();
+          TOGA.atividades.executarMissao("oficina", function (r) {
+            reativarControles();
+            toastMundo(r.exemplar
+              ? "📝 Três cortes perfeitos! A dupla da oficina fixa a sentença enxuta no mural como exemplo do mês — com as suas iniciais no rodapé."
+              : "✔ Oficina concluída. Alguns cortes saíram tortos — “bisturi se afia errando”, consola o colega. A sentença saiu melhor do que entrou, e você também.");
+          });
+        } },
+
+      { id: "mediacaoEsmec", pos: P.mediacao, raio: 2.4,
+        rotulo: function () {
+          return TOGA.atividades.missaoFeita("mediacao")
+            ? "🤝 rever a simulação de mediação"
+            : "🤝 conduzir a simulação de mediação (missão)";
+        },
+        acao: function () {
+          if (!TOGA.atividades || TOGA.atividades.emVisita) return;
+          TOGA.controles3d.desativar();
+          TOGA.atividades.executarMissao("mediacao", function (r) {
+            reativarControles();
+            toastMundo(r.exemplar
+              ? "🤝 Sessão de manual: escuta, reformulação e o acordo nascendo das partes. A facilitadora anota seu nome para a próxima turma — como instrutor."
+              : "✔ Simulação concluída. Algumas intervenções atropelaram o consenso — “mediar é desaprender a sentenciar”, sorri a facilitadora. Na próxima, flui.");
+          });
+        } },
+
+      { id: "quadroAulaEsmec", pos: P.quadroAula, raio: 2.2,
+        rotulo: "espiar a aula de formação inicial",
+        acao: function () {
+          toastMundo("🧑‍🏫 No quadro branco: “AUDIÊNCIA DE CUSTÓDIA — roteiro dos 10 minutos que definem tudo”. O professor repete aos juízes novos: “decorem a lei em casa; aqui a gente aprende a OLHAR para a pessoa algemada.”");
+        } },
+
+      { id: "rejaneEsmec", pos: { x: TOGA.esmec3d.pontos.npcRejane ? P.coordenacao.x - 0.8 : P.coordenacao.x, z: P.coordenacao.z }, raio: 2.2,
+        rotulo: function () {
+          if (pautaCursosEntregue) return "conversar com Rejane (coordenação)";
+          return pautaCursosNaMao
+            ? "Rejane — a pauta já está com você: leve ao Juiz Montezuma"
+            : "🗂 falar com Rejane, assessora da coordenação (missão rápida)";
+        },
+        acao: function () {
+          if (pautaCursosEntregue) {
+            toastMundo("🗂 “A pauta chegou ao palestrante, doutor — a coordenadora agradece. Aqui na Escola, recado entregue é curso que acontece.”");
+            return;
+          }
+          if (pautaCursosNaMao) {
+            toastMundo("🗂 “O senhor ainda está com a pauta! O Juiz Montezuma está no púlpito do auditório — é rapidinho.”");
+            return;
+          }
+          pautaCursosNaMao = true;
+          if (jogador) jogador.segurar("pastas", "esq");
+          toastMundo("🗂 Rejane entrega uma pasta com a programação do semestre: “doutor, faça uma caridade — leve a pauta de cursos ao Juiz Montezuma, no auditório? A coordenadora precisa do OK dele hoje, e eu não posso largar o telefone.”");
+        } },
+
+      { id: "palestranteEsmec", pos: P.palestrante, raio: 2.2,
+        rotulo: function () {
+          return pautaCursosNaMao
+            ? "🗂 entregar a pauta de cursos ao Juiz Montezuma"
+            : "cumprimentar o Juiz Montezuma Herbster";
+        },
+        acao: function () {
+          if (pautaCursosNaMao) {
+            pautaCursosNaMao = false;
+            pautaCursosEntregue = true;
+            if (jogador) jogador.segurar(null, "esq");
+            encenarJogador({ acao: "entregar", dur: 1.2 });
+            if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-1); TOGA.motor.salvar(); }
+            if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+            toastMundo("🗂 Montezuma folheia a pauta entre um slide e outro: “aprovadíssima — e diga à Rejane que o curso de linguagem simples vai precisar de turma extra.” Missão da coordenação cumprida.");
+            return;
+          }
+          toastMundo("🤝 “Colega! Fique para o café depois — quero saber como anda a linguagem das SUAS sentenças.” O Juiz Luis Gustavo Montezuma Herbster, 2ª Vara Criminal de Quixadá, aperta sua mão sem soltar as anotações.");
+        } },
+
+      { id: "muralCursosEsmec", pos: P.muralCursos, raio: 2.0,
+        rotulo: "ler o mural de cursos",
+        acao: function () {
+          toastMundo("📋 A programação da semana: SEG — Linguagem Simples (Montezuma Herbster) · TER — Oficina de Sentenças · QUA — Mediação e Conciliação · QUI — Protocolo CNJ 492 na prática · SEX — Gestão de gabinete com o Núcleo 4.0. Embaixo, a caneta de alguém: “tem café em todos”.");
+        } },
+
       { id: "credenciamentoEsmec", pos: P.credenciamento, raio: 2.0,
         rotulo: "pegar o crachá do evento",
         acao: function () {
@@ -2244,14 +2338,25 @@ TOGA.cena3d = (function () {
         } }
     ];
 
+    // os juízes REAIS espalhados pela Escola (salas, jardim, galeria)
+    (P.juizesAvulsos || []).forEach(function (j, i) {
+      lista.push({
+        id: "juizAvulsoInt" + i, pos: { x: j.x, z: j.z }, raio: 1.6,
+        rotulo: "cumprimentar — " + j.nome.split(" ")[0],
+        acao: function () {
+          toastMundo("🤝 " + tituloJuiz(j.nome) + j.nome + ", " + j.lotacao + " — " +
+            COMENTARIOS_JUIZ[(i + 2) % COMENTARIOS_JUIZ.length]);
+        }
+      });
+    });
+
     // os juízes REAIS da plateia, um interagível para cada
     (P.plateia || []).forEach(function (j, i) {
       lista.push({
         id: "juizPlateia" + i, pos: { x: j.x, z: j.z }, raio: 1.5,
         rotulo: "cumprimentar — " + j.nome.split(" ")[0],
         acao: function () {
-          toastMundo("🤝 " + (j.nome.match(/^(Ana|Adriana|Alda|Alexsandra|Amaiara|Andréa|Anna|Antonia|Ariana|Bruna|Candice|Carla|Carolina|Cláudia|Cynthia|Daniela|Danielle|Débora|Fabiana|Fátima|Fernanda|Flávia|Gabriela|Gerana|Gesília|Giselli|Harbelia|Helga|Iclea|Janaina|Juliana|Julianne|Karla|Kathleen|Larissa|Leila|Leopoldina|Leslie|Lia|Liana|Luciana|Lucimeire|Luzia|Mabel|Márcia)/) ? "Juíza " : "Juiz ") +
-            j.nome + ", " + j.lotacao + " — " +
+          toastMundo("🤝 " + tituloJuiz(j.nome) + j.nome + ", " + j.lotacao + " — " +
             COMENTARIOS_JUIZ[i % COMENTARIOS_JUIZ.length]);
         }
       });

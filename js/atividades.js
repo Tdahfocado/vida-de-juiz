@@ -284,6 +284,136 @@ TOGA.atividades = (function () {
   };
 
   /* ============================================================
+     MISSÕES DA ESMEC — minigames curtos nas salas de capacitação.
+     ============================================================ */
+  const MISSOES = {
+
+    oficina: {
+      titulo: "📝 Oficina de Sentenças",
+      gatilho: "oficina-sentencas",
+      passos: [
+        { texto: "No mesão da oficina, uma sentença real (anonimizada) espera cirurgia. A dupla de colegas abre espaço: “chegou reforço! A regra da casa é uma só: o que não ajuda a decidir, atrapalha. Vamos por partes — relatório, fundamentação, dispositivo.”" },
+        { texto: "PARTE 1 — o relatório tem catorze páginas: transcreve a inicial inteira, a contestação inteira e cada despacho de mero expediente.",
+          decisao: {
+            prompt: "O que fazer com o relatório?",
+            opcoes: [
+              { rotulo: "Manter tudo: relatório completo nunca anulou sentença — e mostra trabalho.",
+                tom: "ruim",
+                feedback: "“Mostra trabalho de quem? O leitor se perde na página três”, ri a colega. Relatório é síntese do essencial (CPC, art. 489, I) — copiar e colar não relata: empilha." },
+              { rotulo: "Resumir em uma página: pedido, defesa e os incidentes que importam para a decisão.",
+                tom: "otimo",
+                feedback: "“Catorze páginas viraram uma — e ficou MAIS claro de onde o processo veio e para onde vai.” O essencial relatado, o resto referido. A sentença começa a respirar." },
+              { rotulo: "Cortar o relatório por inteiro: ninguém lê mesmo.",
+                tom: "ruim",
+                feedback: "“Calma, bisturi!” O relatório é elemento essencial da sentença (CPC, art. 489, I) — salvo nos juizados (Lei 9.099, art. 38). Suprimir não é simplificar: é amputar." }
+            ]
+          } },
+        { texto: "PARTE 2 — na fundamentação, o colega aponta um parágrafo: “Nesse sentido, a jurisprudência pacífica dos tribunais pátrios, aplicável ao caso em tela.” Sem ementa, sem número, sem dizer POR QUE se aplica.",
+          decisao: {
+            prompt: "O parágrafo fica ou sai?",
+            opcoes: [
+              { rotulo: "Fica: invocar a jurisprudência dá peso e ninguém impugna o que é pacífico.",
+                tom: "ruim",
+                feedback: "O CPC chama isso pelo nome: NÃO é fundamentada a decisão que invoca precedente sem identificá-lo nem demonstrar que o caso se ajusta a ele (art. 489, §1º, V). Peso de papel, não de razão." },
+              { rotulo: "Sai — e entra o precedente IDENTIFICADO, com a ementa e a ponte expressa com o caso concreto.",
+                tom: "otimo",
+                feedback: "“Agora sim: qual julgado, o que ele decidiu e por que este caso é igual. Três linhas a mais que blindam a sentença inteira.” A dupla anota a fórmula no quadro." },
+              { rotulo: "Fica, mas com 'mutatis mutandis' antes — cobre qualquer diferença.",
+                tom: "ruim",
+                feedback: "Gargalhada geral: “mutatis mutandis é o tapete onde a fundamentação esconde a poeira!” Latim não substitui a demonstração que o art. 489, §1º, V, exige." }
+            ]
+          } },
+        { texto: "PARTE 3 — o dispositivo: “Ante o exposto, julgo PARCIALMENTE PROCEDENTE o pedido, nos termos da fundamentação supra.”",
+          decisao: {
+            prompt: "O que está faltando aí?",
+            opcoes: [
+              { rotulo: "Nada — a fundamentação já explicou tudo; repetir seria redundante.",
+                tom: "ruim",
+                feedback: "“E o oficial de justiça cumpre O QUÊ? E a parte executa O QUÊ?” Dispositivo que manda procurar a resposta no meio da sentença gera embargos, dúvida na execução e mais trabalho para todo mundo." },
+              { rotulo: "Tudo: o dispositivo deve dizer EXATAMENTE o que foi deferido — quem paga, quanto, a quem, com quais juros e prazos.",
+                tom: "otimo",
+                feedback: "“É o endereço de entrega da sentença!” Dispositivo líquido e certo: condeno R$ X, corrigido desde Y, juros desde Z. Quem lê só o final — e quase todo mundo lê só o final — sai sabendo o resultado." },
+              { rotulo: "Falta o resumo dos fundamentos, parágrafo por parágrafo.",
+                tom: "ruim",
+                feedback: "Aí viraria uma segunda sentença dentro da primeira. O dispositivo não repete os PORQUÊS — entrega o QUÊ, completo e executável." }
+            ]
+          } },
+        { texto: "A sentença lapidada cabe agora em quatro páginas que qualquer parte entende. O colega da oficina estende a mão: “volta sempre — sentença boa é igual cuscuz: o segredo está no que se tira, não no que se põe.”" }
+      ]
+    },
+
+    mediacao: {
+      titulo: "🤝 Sala de Mediação — técnica de consenso",
+      gatilho: "mediacao",
+      passos: [
+        { texto: "Na mesa redonda, dois colegas simulam uma conciliação: um faz o consumidor exaltado (“paguei e não recebi!”), o outro, o lojista na defensiva (“o fornecedor me deixou na mão!”). A facilitadora aponta a cadeira vazia: “conduza a sessão, doutor. Regra de ouro: acordo não se impõe — se constrói.”" },
+        { texto: "O 'consumidor' desabafa há dois minutos e não parece perto de terminar. O 'lojista' revira os olhos.",
+          decisao: {
+            prompt: "Primeira decisão de quem conduz: o que fazer com o desabafo?",
+            opcoes: [
+              { rotulo: "Interromper com firmeza: “vamos ao que interessa, o tempo de todos é curto.”",
+                tom: "ruim",
+                feedback: "O 'consumidor' cruza os braços — e a facilitadora congela a cena: “acabou de comprar dez minutos a mais de resistência. Quem não termina de falar, não começa a ouvir.”" },
+              { rotulo: "Deixar concluir, sinalizando escuta — e então resumir: “deixe-me ver se entendi o que mais pesou para o senhor...”",
+                tom: "otimo",
+                feedback: "“ISSO é escuta ativa.” O desabafo termina sozinho, trinta segundos depois — e o resumo faz o 'consumidor' assentir pela primeira vez. Quem se sente ouvido baixa a guarda." },
+              { rotulo: "Aproveitar o embalo e já propor: “que tal 50% de desconto e encerramos?”",
+                tom: "ruim",
+                feedback: "Proposta antes da escuta tem cheiro de linha de produção. Os dois recusam — por princípio. “O número podia até ser bom”, observa a facilitadora, “mas chegou antes da confiança.”" }
+            ]
+          } },
+        { texto: "O 'lojista' dispara: “ele só quer dinheiro fácil!” — e o 'consumidor' se levanta da cadeira.",
+          decisao: {
+            prompt: "A sessão ameaça descarrilar. Sua intervenção:",
+            opcoes: [
+              { rotulo: "Advertir o 'lojista': a provocação foi dele, que se retrate.",
+                tom: "ruim",
+                feedback: "A facilitadora balança a cabeça: “virou juiz de novo! Na mediação, apontar culpado da ofensa só muda o réu da briga.” O 'lojista' agora também cruzou os braços." },
+              { rotulo: "Reformular sem o veneno: “o senhor teme um pedido além do prejuízo; e o senhor quer apenas o que pagou. É isso?”",
+                tom: "otimo",
+                feedback: "“A reformulação tirou o ferrão e deixou o conteúdo.” Os dois assentem — descobrem que discordam de MENOS do que gritavam. A cadeira volta a ser ocupada." },
+              { rotulo: "Suspender a sessão por dez minutos para os ânimos baixarem.",
+                tom: "ruim",
+                feedback: "Pausa tem hora — e essa não era. “O conflito estava finalmente NA MESA; você o mandou para o corredor”, lamenta a facilitadora. A energia da sessão se perde." }
+            ]
+          } },
+        { texto: "Os ânimos serenos, os interesses claros: ele quer o produto ou o dinheiro; o lojista pode entregar em dez dias ou devolver em trinta.",
+          decisao: {
+            prompt: "Como se fecha?",
+            opcoes: [
+              { rotulo: "Decidir o meio-termo: entrega em vinte dias, e está homologado.",
+                tom: "ruim",
+                feedback: "“Vinte dias não atende NENHUM dos dois — é a média aritmética da insatisfação.” Acordo imposto descumpre-se na primeira esquina; voltariam ao fórum em um mês." },
+              { rotulo: "Devolver a palavra: “dos caminhos na mesa, qual funciona para os dois?” — e deixar que escolham.",
+                tom: "otimo",
+                feedback: "Eles escolhem a entrega em dez dias — com multa diária sugerida POR ELES. A facilitadora sorri: “acordo de autor tem dono; acordo de juiz tem recurso. O senhor entendeu o ofício.”" },
+              { rotulo: "Encerrar sem acordo e marcar instrução: já se avançou bastante por hoje.",
+                tom: "ruim",
+                feedback: "Desistir com o consenso a um passo da mesa! “A audiência de instrução custa meses — e a solução estava a uma pergunta de distância.”" }
+            ]
+          } },
+        { texto: "Aplausos curtos da dupla de 'partes'. No quadro da sala, alguém escreveu há muito tempo, e ninguém apagou: “Sentença encerra o processo. Acordo encerra o conflito.”" }
+      ]
+    }
+  };
+
+  function executarMissao(id, aoTerminar) {
+    const m = MISSOES[id];
+    if (!m || emVisita) return false;
+    return rodarRoteiro(m, function (r) {
+      carregar().missoes = carregar().missoes || {};
+      carregar().missoes[id] = true;
+      salvar();
+      if (TOGA.conquistas) TOGA.conquistas.avaliar(m.gatilho, { gabaritou: r.exemplar });
+      if (aoTerminar) aoTerminar(r);
+    });
+  }
+  function missaoFeita(id) {
+    const d = carregar();
+    return !!(d.missoes && d.missoes[id]);
+  }
+
+  /* ============================================================
      O EXECUTOR — painel DOM por cima de qualquer tela.
      ============================================================ */
   let painel = null;
@@ -429,6 +559,8 @@ TOGA.atividades = (function () {
     executarVisita: executarVisita,
     executarPalestra: executarPalestra,
     palestraFeita: palestraFeita,
+    executarMissao: executarMissao,
+    missaoFeita: missaoFeita,
     resumo: resumo,
     get emVisita() { return emVisita; }
   };

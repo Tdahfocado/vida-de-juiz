@@ -149,6 +149,14 @@ TOGA.conquistas = (function () {
       desc: "Na palestra do Juiz Montezuma Herbster, na ESMEC, traduza os três trechos de juridiquês para a língua de gente — sem perder um grama de precisão.",
       se: c => c.gatilho === "linguagem-simples" && !!c.gabaritou },
 
+    { id: "lapidadorSentencas", icone: "📝", nome: "Lapidador(a) de sentenças",
+      desc: "Na Oficina de Sentenças da ESMEC, enxugue relatório, fundamentação e dispositivo sem errar um corte (CPC, art. 489).",
+      se: c => c.gatilho === "oficina-sentencas" && !!c.gabaritou },
+
+    { id: "artesaoConsensos", icone: "🤝", nome: "Artesão(ã) de consensos",
+      desc: "Na Sala de Mediação da ESMEC, conduza a simulação inteira sem impor nada: escuta, reformulação e o acordo que nasce das partes.",
+      se: c => c.gatilho === "mediacao" && !!c.gabaritou },
+
     { id: "cidadaoAoVolante", icone: "🚗", nome: "Cidadão(ã) ao volante",
       desc: "Faça a viagem até a ESMEC sem uma única infração: cinto, sinal, faixa de pedestres e radar.",
       se: c => c.gatilho === "viagem-limpa" },
