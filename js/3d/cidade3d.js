@@ -54,11 +54,13 @@ TOGA.cidade3d = (function () {
       return caixa(w, ALTURA, d, (x1 + x2) / 2, ALTURA / 2, (z1 + z2) / 2,
                    material, { bloqueiaCamera: true });
     }
-    function piso(x1, z1, x2, z2, material) {
+    function piso(x1, z1, x2, z2, material, y) {
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(Math.abs(x2 - x1), Math.abs(z2 - z1)), material);
       m.rotation.x = -Math.PI / 2;
-      m.position.set((x1 + x2) / 2, 0.01, (z1 + z2) / 2);
+      // camadas: terreno < asfalto < interiores — alturas distintas
+      // matam o z-fighting ("chão tremendo") entre planos sobrepostos
+      m.position.set((x1 + x2) / 2, y || 0.005, (z1 + z2) / 2);
       m.receiveShadow = true;
       scene.add(m);
       return m;
@@ -109,9 +111,9 @@ TOGA.cidade3d = (function () {
 
     /* ================= O CHÃO DA QUADRA ================= */
     // terreno geral (concreto claro) e a rua asfaltada no meio
-    piso(RX - 22, -14, RX + 22, 30, mat(0x6e6a60));
+    piso(RX - 22, -14, RX + 22, 30, mat(0x55514a));
     piso(RX - 22, 4, RX + 22, 12,
-      TOGA.texturas3d.asfalto ? matTex(TOGA.texturas3d.asfalto(), 8, 2) : mat(0x3a3d42));
+      TOGA.texturas3d.asfalto ? matTex(TOGA.texturas3d.asfalto(), 8, 2) : mat(0x3a3d42), 0.02);
     // meio-fio
     caixa(44, 0.14, 0.3, RX, 0.07, 4, mat(0xb9b3a6), { colide: false, semSombra: true });
     caixa(44, 0.14, 0.3, RX, 0.07, 12, mat(0xb9b3a6), { colide: false, semSombra: true });
@@ -125,7 +127,9 @@ TOGA.cidade3d = (function () {
     // escadinha da entrada
     caixa(2.4, 0.16, 1.0, RX, 0.08, 2.7, mat(0xb9b3a6), { colide: false, semSombra: true });
     pontos.portaForum = { x: RX, z: 2.8 };
-    pontos.spawnRua = { x: RX, z: 3.4, angulo: 0 };
+    // spawn afastado da fachada: com a câmera 3,4 m atrás do juiz,
+    // nascer colado na parede enfiava a lente dentro da marquise
+    pontos.spawnRua = { x: RX, z: 6.2, angulo: 0 };
 
     /* ================= DELEGACIA (quadra norte, oeste) ================= */
     const matDeleg = mat(0x8a8f96);
@@ -139,7 +143,7 @@ TOGA.cidade3d = (function () {
     placaEm("DELEGACIA DE POLÍCIA CIVIL", RX - 8.4, 2.6, 2.2, Math.PI, 2.4);
     caixa(0.4, 1.4, 0.4, RX - 13.4, 0.7, 2.6, mat(0x2a3d7c), { colide: false }); // totem azul
     // interior: piso frio
-    piso(RX - 14, -10, RX - 4, 2, mat(0x7d8186));
+    piso(RX - 14, -10, RX - 4, 2, mat(0x5e6166), 0.04);
     // recepção: balcão + bandeira
     caixa(3.2, 1.05, 0.6, RX - 8.5, 0.52, -0.6, mat(0x4a4f57));
     // cela de custódia digna (grade ao fundo oeste)
@@ -174,8 +178,8 @@ TOGA.cidade3d = (function () {
       scene.add(peixe);
     });
     // pátio (piso colorido) + sala ao fundo
-    piso(RX + 4, 14, RX + 14, 26, mat(0x7fa05a));
-    piso(RX + 5, 20, RX + 13, 26, mat(0xc9a35c));
+    piso(RX + 4, 14, RX + 14, 26, mat(0x5e7a44), 0.04);
+    piso(RX + 5, 20, RX + 13, 26, mat(0xa07f44), 0.055);
     parede(RX + 5, 20, RX + 8.4, 20, mat(0xe8e6da));
     parede(RX + 9.6, 20, RX + 13, 20, mat(0xe8e6da));
     placaEm("4º ANO A", RX + 9, 2.4, 19.8, 0, 1.2);
@@ -207,7 +211,7 @@ TOGA.cidade3d = (function () {
 
     // faixa de pedestres ligando as duas calçadas
     for (let i = 0; i < 5; i++) {
-      caixa(0.5, 0.02, 7.6, RX - 0.0 + (i - 2) * 0.95, 0.03, 8, mat(0xe8e6da),
+      caixa(0.5, 0.02, 7.6, RX - 0.0 + (i - 2) * 0.95, 0.045, 8, mat(0xd8d4c8),
         { colide: false, semSombra: true });
     }
 

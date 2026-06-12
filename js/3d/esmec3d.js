@@ -63,11 +63,12 @@ TOGA.esmec3d = (function () {
       return caixa(w, h, d, (x1 + x2) / 2, h / 2, (z1 + z2) / 2,
                    material, { bloqueiaCamera: true });
     }
-    function piso(x1, z1, x2, z2, material) {
+    function piso(x1, z1, x2, z2, material, y) {
       const m = new THREE.Mesh(
         new THREE.PlaneGeometry(Math.abs(x2 - x1), Math.abs(z2 - z1)), material);
       m.rotation.x = -Math.PI / 2;
-      m.position.set((x1 + x2) / 2, 0.012, (z1 + z2) / 2);
+      // alturas em camadas (terreno < asfalto < interiores): sem z-fighting
+      m.position.set((x1 + x2) / 2, y || 0.005, (z1 + z2) / 2);
       m.receiveShadow = true;
       scene.add(m);
       return m;
@@ -102,15 +103,15 @@ TOGA.esmec3d = (function () {
       color: 0x10141c, shininess: 90, specular: 0x6a7a96 });
 
     /* ============ TERRENO E ESTACIONAMENTO (frente, z<14) ============ */
-    piso(EX - 26, -6, EX + 26, 40, mat(0x9a9588));                       // calçadão claro
+    piso(EX - 26, -6, EX + 26, 40, mat(0x6b675f));                       // calçadão
     piso(EX - 22, -4, EX + 22, 8,
-      TOGA.texturas3d.asfalto ? matTex(TOGA.texturas3d.asfalto(), 8, 2) : mat(0x3a3d42));
+      TOGA.texturas3d.asfalto ? matTex(TOGA.texturas3d.asfalto(), 8, 2) : mat(0x3a3d42), 0.02);
     // vagas demarcadas (a vaga do juiz é a pintada de verde-claro)
     for (let i = 0; i < 6; i++) {
-      caixa(0.1, 0.02, 4.4, EX - 12.5 + i * 5, 0.04, 5.8, mat(0xe8e6da), { colide: false, semSombra: true });
+      caixa(0.1, 0.02, 4.4, EX - 12.5 + i * 5, 0.055, 5.8, mat(0xd8d4c8), { colide: false, semSombra: true });
     }
     pontos.vaga = { x: EX - 10, z: 5.8 };
-    caixa(4.6, 0.015, 4.2, EX - 10, 0.035, 5.8, mat(0x9fc3ae), { colide: false, semSombra: true });
+    caixa(4.6, 0.015, 4.2, EX - 10, 0.045, 5.8, mat(0x86ab95), { colide: false, semSombra: true });
     // o carro do juiz já estacionado (a viagem terminou aqui)
     pontos.carro = { x: EX - 10, z: 5.6 };
 
@@ -202,7 +203,7 @@ TOGA.esmec3d = (function () {
 
     /* ============ O HALL (z 14..24) ============ */
     piso(EX - 12, 14, EX + 12, 24,
-      TOGA.texturas3d.pisoEsmec ? matTex(TOGA.texturas3d.pisoEsmec(), 6, 3) : mat(0xe8e6e0));
+      TOGA.texturas3d.pisoEsmec ? matTex(TOGA.texturas3d.pisoEsmec(), 6, 3) : mat(0xe8e6e0), 0.04);
     parede(EX - 12, 14, EX - 12, 24, mat(0xe8e6da));
     parede(EX + 12, 14, EX + 12, 24, mat(0xe8e6da));
     // parede do fundo do hall com o VÃO para o auditório [EX-1, EX+1]
@@ -251,7 +252,7 @@ TOGA.esmec3d = (function () {
 
     /* ============ O AUDITÓRIO (z 24..38) ============ */
     piso(EX - 11, 24, EX + 11, 38,
-      TOGA.texturas3d.pisoAuditorioEsmec ? matTex(TOGA.texturas3d.pisoAuditorioEsmec(), 5, 4) : mat(0x9aa09a));
+      TOGA.texturas3d.pisoAuditorioEsmec ? matTex(TOGA.texturas3d.pisoAuditorioEsmec(), 5, 4) : mat(0x9aa09a), 0.04);
     parede(EX - 11, 24, EX - 11, 38, mat(0xd8d4c8));
     parede(EX + 11, 24, EX + 11, 38, mat(0xd8d4c8));
     // (fundo em z=38 é o muro do lote, já erguido)

@@ -59,7 +59,7 @@ TOGA.carro3d = (function () {
     pista.position.set(SX, 0.01, FIM / 2 - 10);
     pista.receiveShadow = true;
     scene.add(pista);
-    const grama = new THREE.Mesh(new THREE.PlaneGeometry(60, FIM + 60), mat(0x5a7a4a));
+    const grama = new THREE.Mesh(new THREE.PlaneGeometry(60, FIM + 60), mat(0x47603c));
     grama.rotation.x = -Math.PI / 2;
     grama.position.set(SX, -0.02, FIM / 2 - 10);
     scene.add(grama);
