@@ -473,7 +473,7 @@ TOGA.ui = (function () {
   function mostrarArco(arco) {
     M().marcarArco(arco.caso.id);
     const card = $("#cartao-interludio");
-    card.className = "cartao-desfecho cartao-interludio tom-" + (arco.ramo.tom || "neutro");
+    card.className = "cartao-desfecho cartao-interludio tom-" + ((arco.ramo && arco.ramo.tom) || "neutro");
     card.querySelector(".titulo-interludio").textContent = "No corredor — " + arco.caso.titulo;
     [".cena-entrega", ".rostos-corredor"].forEach(sel => {
       const velho = card.querySelector(sel);
@@ -481,7 +481,7 @@ TOGA.ui = (function () {
     });
     $("#btn-continuar-interludio").hidden = false;
 
-    const falas = arco.ramo.falas || [];
+    const falas = (arco.ramo && arco.ramo.falas) || [];
     card.querySelector(".texto-interludio").innerHTML =
       falas.map(f => {
         const p = (arco.caso.personagens || []).find(x => x.id === f.quem);

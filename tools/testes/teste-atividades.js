@@ -105,6 +105,16 @@ async function cliqueVisita(page) {
   }));
   ok("viagem em piloto automático chega sem infrações", v.limpa && v.flag);
 
+  // a palestra Simples e Mágico (juízes reais na plateia)
+  const plateia = await page.evaluate(() => (TOGA.esmec3d.pontos.plateia || []).length);
+  ok("plateia com 10 juízes reais sorteados", plateia === 10);
+  const cumprimento = await page.evaluate(() => TOGA.interacao3d.disparar("juizPlateia0"));
+  ok("juiz da plateia interagível", cumprimento === true);
+  await page.evaluate(() => TOGA.interacao3d.disparar("palestra"));
+  await page.waitForTimeout(400);
+  ok("minigame da palestra concluído (gabaritado)", await cliqueVisita(page));
+  ok("conquista Simples e Mágico", await page.evaluate(() => TOGA.conquistas.tem("simplesEMagico")));
+
   // a aula na ESMEC
   await page.evaluate(() => TOGA.interacao3d.disparar("coordenadora"));
   await page.waitForTimeout(400);

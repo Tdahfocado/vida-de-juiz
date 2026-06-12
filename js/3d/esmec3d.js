@@ -204,8 +204,11 @@ TOGA.esmec3d = (function () {
     /* ============ O HALL (z 14..24) ============ */
     piso(EX - 12, 14, EX + 12, 24,
       TOGA.texturas3d.pisoEsmec ? matTex(TOGA.texturas3d.pisoEsmec(), 6, 3) : mat(0xe8e6e0), 0.04);
-    parede(EX - 12, 14, EX - 12, 24, mat(0xe8e6da));
-    parede(EX + 12, 14, EX + 12, 24, mat(0xe8e6da));
+    // paredes laterais com VÃOS: biblioteca a oeste, laboratório a leste
+    parede(EX - 12, 14, EX - 12, 18.4, mat(0xe8e6da));
+    parede(EX - 12, 19.6, EX - 12, 24, mat(0xe8e6da));
+    parede(EX + 12, 14, EX + 12, 18.4, mat(0xe8e6da));
+    parede(EX + 12, 19.6, EX + 12, 24, mat(0xe8e6da));
     // parede do fundo do hall com o VÃO para o auditório [EX-1, EX+1]
     parede(EX - 12, 24, EX - 1, 24, mat(0xe8e6da));
     parede(EX + 1, 24, EX + 12, 24, mat(0xe8e6da));
@@ -221,14 +224,177 @@ TOGA.esmec3d = (function () {
       new THREE.MeshBasicMaterial({ color: 0xffe2a8 }));
     nicho.position.set(EX + 11.72, 1.7, 19); nicho.rotation.y = -Math.PI / 2;
     scene.add(nicho);
-    // galeria de retratos dos diretores (molduras pretas)
-    for (let i = 0; i < 6; i++) {
-      const q = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.62),
+    // galeria de retratos (alturas variadas, como nas fotos) com
+    // SANCA DE LED quente correndo a parede inteira
+    for (let i = 0; i < 7; i++) {
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55),
         new THREE.MeshLambertMaterial({
           map: TOGA.texturas3d.retrato ? TOGA.texturas3d.retrato(i) : null }));
-      q.position.set(EX - 11.85, 1.9, 15.6 + i * 1.4);
+      q.position.set(EX - 11.85, 1.65 + (i % 2) * 0.55, 15.2 + i * 1.25);
       q.rotation.y = Math.PI / 2;
       scene.add(q);
+    }
+    const sanca = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 9.6),
+      new THREE.MeshBasicMaterial({ color: 0xffe2a8 }));
+    sanca.position.set(EX - 11.8, 2.75, 19);
+    scene.add(sanca);
+
+    // sofás de couro escuro (as fotos do corredor)
+    [[EX - 4.5, 22.9], [EX + 4.5, 22.9]].forEach(function (p) {
+      caixa(2.2, 0.45, 0.85, p[0], 0.25, p[1], mat(0x2a2d33));
+      caixa(2.2, 0.55, 0.2, p[0], 0.78, p[1] + 0.32, mat(0x22252a), { colide: false });
+    });
+    // mesas expositoras pretas, finas, com documentos (exposição 40 anos)
+    [[EX - 8.5, 20.6], [EX - 8.5, 17.2]].forEach(function (p) {
+      caixa(1.5, 0.06, 0.7, p[0], 0.95, p[1], mat(0x1d2024));
+      [[-0.4], [0.1], [0.45]].forEach(function (d) {
+        caixa(0.3, 0.012, 0.42, p[0] + d[0], 0.99, p[1], mat(0xf4ecd9), { colide: false, semSombra: true });
+      });
+      [[-0.6], [0.6]].forEach(function (l) {
+        caixa(0.05, 0.95, 0.05, p[0] + l[0], 0.47, p[1], mat(0x1d2024), { colide: false });
+      });
+    });
+    // o quadro dos 40 anos
+    if (TOGA.texturas3d.letreiro) {
+      const q40 = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.letreiro("40 ANOS", "#2a3d7c", "#e7cf9a", "ESMEC — 1985–2025") }));
+      q40.position.set(EX + 11.85, 1.9, 16.2);
+      q40.rotation.y = -Math.PI / 2;
+      scene.add(q40);
+    }
+
+    /* ---- o JARDIM INTERNO DE SEIXOS (o coração do prédio real):
+       pedras, vasos brancos, banco de madeira ripada CURVO e
+       guarda-corpo de vidro com corrimão ---- */
+    const JX = EX + 7, JZ = 19;
+    // leito rebaixado de seixos
+    caixa(4.6, 0.1, 4.6, JX, 0.06, JZ, mat(0x8a8378), { colide: false, semSombra: true });
+    for (let i = 0; i < 34; i++) {
+      const sx = JX - 2 + ((i * 37) % 40) / 10, sz = JZ - 2 + ((i * 53) % 40) / 10;
+      const seixo = new THREE.Mesh(new THREE.SphereGeometry(0.16 + (i % 3) * 0.05, 7, 5),
+        mat([0xb9b3a6, 0x9a958c, 0xcfc9bc][i % 3]));
+      seixo.scale.y = 0.55;
+      seixo.position.set(sx, 0.14, sz);
+      seixo.castShadow = false;
+      scene.add(seixo);
+    }
+    // vasos cilíndricos brancos com plantas
+    [[JX - 1.3, JZ - 1.2], [JX + 1.2, JZ - 0.2], [JX - 0.2, JZ + 1.3]].forEach(function (p) {
+      const vaso = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.6, 12), mat(0xe8e6da));
+      vaso.position.set(p[0], 0.36, p[1]);
+      vaso.castShadow = true;
+      scene.add(vaso);
+      for (let f = 0; f < 4; f++) {
+        const folha = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.85, 5), mat(0x3f6a3e));
+        folha.position.set(p[0] + Math.cos(f * 1.6) * 0.13, 1.0, p[1] + Math.sin(f * 1.6) * 0.13);
+        folha.rotation.z = Math.cos(f * 1.6) * 0.35;
+        scene.add(folha);
+      }
+    });
+    // banco de madeira ripada em ARCO suave, de frente para o jardim
+    for (let i = 0; i < 5; i++) {
+      const t = (i - 2) / 2;                          // −1 … +1
+      const bx = JX - 3.35 - (1 - Math.abs(t)) * 0.35; // barriga para oeste
+      const bz = JZ + t * 1.85;
+      const ripa = caixa(0.55, 0.07, 0.92, bx, 0.42, bz, mat(0x6a4a2a), { colide: false });
+      ripa.rotation.y = -t * 0.3;
+      const pe = caixa(0.4, 0.4, 0.08, bx, 0.2, bz, mat(0x55585e), { colide: false, semSombra: true });
+      pe.rotation.y = -t * 0.3;
+    }
+    colisores.push({ minX: JX - 4.1, maxX: JX - 3.0, minZ: JZ - 2.3, maxZ: JZ + 2.3 });
+    // guarda-corpo de vidro sobre mureta de granito
+    [[JX, JZ - 2.6, 5.2, 0.12], [JX, JZ + 2.6, 5.2, 0.12],
+     [JX + 2.6, JZ, 0.12, 5.2]].forEach(function (g) {
+      caixa(g[2], 0.22, g[3], g[0], 0.11, g[1],
+        TOGA.texturas3d.granitoRosa ? matTex(TOGA.texturas3d.granitoRosa(), 2, 1) : mat(0xb08572));
+      const vidro = new THREE.Mesh(new THREE.BoxGeometry(g[2], 0.7, Math.max(g[3], 0.04)),
+        new THREE.MeshPhongMaterial({ color: 0xcfd8df, transparent: true, opacity: 0.25, shininess: 90 }));
+      vidro.position.set(g[0], 0.6, g[1]);
+      scene.add(vidro);
+      const corrimao = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.035, Math.max(g[2], g[3]), 8), mat(0xc9ccd2));
+      if (g[2] > g[3]) corrimao.rotation.z = Math.PI / 2;
+      else corrimao.rotation.x = Math.PI / 2;
+      corrimao.position.set(g[0], 1.0, g[1]);
+      scene.add(corrimao);
+    });
+    pontos.jardim = { x: JX - 3.4, z: JZ };
+
+    /* ---- BIBLIOTECA (ala oeste, x −20..−12) ---- */
+    piso(EX - 20, 14, EX - 12, 24, mat(0xd8d4c8), 0.04);
+    parede(EX - 20, 14, EX - 20, 24, mat(0xe8e6da));
+    // estantes com "livros" coloridos
+    [[EX - 19.4, 16.5], [EX - 19.4, 19.5], [EX - 19.4, 22.5]].forEach(function (p, ei) {
+      caixa(0.5, 2.1, 2.4, p[0], 1.05, p[1], mat(0x6a4a2a));
+      for (let n = 0; n < 9; n++) {
+        caixa(0.34, 0.26, 0.12, p[0] + 0.1, 0.5 + Math.floor(n / 3) * 0.6, p[1] - 0.9 + (n % 3) * 0.9,
+          mat([0x7c3030, 0x2f4a3e, 0x2a3d7c, 0x8a6240, 0x5e2424][((n + ei) % 5)]), { colide: false, semSombra: true });
+      }
+    });
+    caixa(2.0, 0.78, 1.0, EX - 15, 0.39, 19, mat(0x6a4a2a));   // mesa de leitura
+    caixa(0.5, 0.5, 0.5, EX - 15, 0.25, 17.9, mat(0x2a2d33), { colide: false });
+    caixa(0.5, 0.5, 0.5, EX - 15, 0.25, 20.1, mat(0x2a2d33), { colide: false });
+    placaEmRot("BIBLIOTECA", EX - 12.2, 2.4, 19, Math.PI / 2, 1.5);
+    pontos.biblioteca = { x: EX - 16.5, z: 19 };
+
+    /* ---- LABORATÓRIO DE INFORMÁTICA (ala leste, x 12..20) ---- */
+    piso(EX + 12, 14, EX + 20, 24, mat(0xd8d4c8), 0.04);
+    parede(EX + 20, 14, EX + 20, 24, mat(0xe8e6da));
+    // bancadas com monitores e cadeiras giratórias pretas
+    for (let fila = 0; fila < 3; fila++) {
+      const bz = 16 + fila * 3;
+      caixa(5.4, 0.74, 0.7, EX + 16.4, 0.37, bz, mat(0xb9b3a6));
+      for (let m = 0; m < 3; m++) {
+        caixa(0.55, 0.38, 0.05, EX + 14.4 + m * 1.7, 1.0, bz + 0.1, mat(0x15110c), { colide: false, semSombra: true });
+        caixa(0.5, 0.5, 0.5, EX + 14.4 + m * 1.7, 0.25, bz + 1.0, mat(0x22252a), { colide: false });
+      }
+    }
+    // guarda-corpo tubular de inox na frente (as fotos do lab)
+    const tubo = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 7.6, 8), mat(0xc9ccd2));
+    tubo.rotation.x = Math.PI / 2;
+    tubo.position.set(EX + 13.2, 0.95, 19);
+    scene.add(tubo);
+    placaEmRot("LABORATÓRIO — NÚCLEO DE TECNOLOGIA", EX + 12.2, 2.4, 19, -Math.PI / 2, 2.6);
+    pontos.laboratorio = { x: EX + 15.5, z: 19 };
+
+    /* ---- CREDENCIAMENTO + COFFEE BREAK (o evento de hoje) ---- */
+    caixa(2.4, 1.0, 0.6, EX - 3.4, 0.5, 22.8, mat(0xe8e6da));
+    [[-0.7], [0], [0.7]].forEach(function (c) {
+      caixa(0.22, 0.015, 0.3, EX - 3.4 + c[0], 1.02, 22.8, mat(0xd8c84a), { colide: false, semSombra: true });
+    });
+    placaEmRot("CREDENCIAMENTO", EX - 3.4, 1.9, 23.4, Math.PI, 1.8);
+    pontos.credenciamento = { x: EX - 3.4, z: 22 };
+    // coffee break: mesa com toalha, térmicas e xícaras
+    caixa(2.6, 0.9, 0.8, EX + 9.8, 0.45, 15.2, mat(0xe8e6da));
+    [[-0.8], [-0.2]].forEach(function (t) {
+      const termica = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.42, 10), mat(0x9c2b22));
+      termica.position.set(EX + 9.8 + t[0], 1.1, 15.2);
+      scene.add(termica);
+    });
+    [[0.3], [0.6], [0.9]].forEach(function (x) {
+      const xic = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.07, 8), mat(0xf4ecd9));
+      xic.position.set(EX + 9.8 + x[0], 0.94, 15.3);
+      scene.add(xic);
+    });
+    pontos.coffee = { x: EX + 9.8, z: 16.4 };
+
+    /* ---- LIVRO DE VISITAS na recepção ---- */
+    caixa(0.5, 0.05, 0.36, EX - 7, 1.03, 16.0, mat(0x5e2424), { colide: false, semSombra: true });
+    caixa(0.44, 0.012, 0.3, EX - 7, 1.07, 16.0, mat(0xf4ecd9), { colide: false, semSombra: true });
+    pontos.livroVisitas = { x: EX - 7, z: 17.0 };
+
+    // banner do evento na fachada e no hall
+    if (TOGA.texturas3d.letreiro) {
+      const bannerTex = TOGA.texturas3d.letreiro("SIMPLES E MÁGICO", "#4a3a55", "#f4ecd9",
+        "HOJE: LINGUAGEM SIMPLES — JUIZ L. G. MONTEZUMA HERBSTER");
+      const b1 = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 1.4),
+        new THREE.MeshLambertMaterial({ map: bannerTex }));
+      b1.position.set(EX - 8.5, 2.0, 13.84);
+      b1.rotation.y = Math.PI;
+      scene.add(b1);
+      const b2 = b1.clone();
+      b2.position.set(EX + 6.5, 1.9, 23.84);
+      scene.add(b2);
     }
     // recepção + banco de madeira do corredor
     caixa(2.6, 1.0, 0.6, EX - 7, 0.5, 16.2, mat(0xe8e6da));
@@ -245,7 +411,7 @@ TOGA.esmec3d = (function () {
     }
     placaEmRot("MEMORIAL DA ESMEC", EX, 2.2, 18.95, Math.PI, 2.0);
     placaEmRot("GALERIA DOS DIRETORES", EX - 11.8, 2.75, 18.8, Math.PI / 2, 2.2);
-    placaEmRot("AUDITÓRIO", EX, 2.5, 23.8, Math.PI, 1.6);
+    placaEmRot("AUDITÓRIO", EX, 2.85, 23.8, Math.PI, 1.5);
     pontos.memorial = { x: EX, z: 19.6 };
     pontos.galeria = { x: EX - 10.6, z: 18.8 };
     pontos.recepcao = { x: EX - 7, z: 17.2 };
@@ -279,7 +445,10 @@ TOGA.esmec3d = (function () {
     colisores.push({ minX: EX - 2.6, maxX: EX - 1.8, minZ: 35.3, maxZ: 35.9 });
     [[-7.5], [7.5]].forEach(function (l) {
       const telao = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 2.0),
-        new THREE.MeshBasicMaterial({ color: 0xdfe8f2 }));
+        TOGA.texturas3d.letreiro
+          ? new THREE.MeshBasicMaterial({ map: TOGA.texturas3d.letreiro(
+              "SIMPLES E MÁGICO", "#1d2433", "#e7cf9a", "LINGUAGEM SIMPLES NO JUDICIÁRIO") })
+          : new THREE.MeshBasicMaterial({ color: 0xdfe8f2 }));
       telao.position.set(EX + l[0], 2.1, 37.8);
       telao.rotation.y = Math.PI;
       scene.add(telao);
@@ -330,21 +499,39 @@ TOGA.esmec3d = (function () {
     npc("recepcionistaEsmec",
       { pele: "#d8a87f", cabelo: "coque", corCabelo: "#241a10", traje: "camisa", corTraje: "#556a55" },
       EX - 7, 15.4, 0);
-    // a turma de juízes novos, sentada no auditório
-    for (let i = 0; i < 8; i++) {
-      const px = EX - 7.7 + (i % 4) * 2.2 + ((i % 4) > 3 ? 0.9 : 0) + (i >= 4 ? 4.5 : 0);
-      const pz = 26.5 + Math.floor(i / 4) * 1.7;
-      const aluno = npc("alunoEsmec" + i,
-        { pele: ["#d8a87f", "#c98e66", "#a86a48", "#8a5436", "#e8c39a"][i % 5],
+    /* a PLATEIA DE JUÍZES REAIS, sorteada da Relação de Magistrados
+       do TJCE — homenagem institucional: nome + lotação de verdade */
+    pontos.plateia = [];
+    const sorteados = (TOGA.juizesTJCE && TOGA.juizesTJCE.sortearJuizes)
+      ? TOGA.juizesTJCE.sortearJuizes(10) : [];
+    const PELES_J = ["#d8a87f", "#c98e66", "#a86a48", "#8a5436", "#e8c39a"];
+    sorteados.forEach(function (j, i) {
+      const col = i % 4, fila = Math.floor(i / 4);
+      const px = EX - 7.7 + col * 2.2 + 1.1, pz = 26.5 + fila * 1.7;
+      const b = npc("juizReal" + i,
+        { pele: PELES_J[i % 5],
           cabelo: ["curto", "coque", "longo", "calvo"][i % 4], corCabelo: "#241a10",
-          traje: "terno", corTraje: "#2a2a30" },
+          traje: i % 2 ? "terno" : "blazer", corTraje: "#2a2a30" },
         px, pz, 0, { sentado: true });
-      aluno.setEmocao("neutro");
-    }
+      b.setEmocao("neutro");
+      pontos.plateia.push({ nome: j.nome, lotacao: j.lotacao, x: px, z: pz });
+    });
+
+    /* o PALESTRANTE: Juiz Luis Gustavo Montezuma Herbster, no
+       púlpito, apresentando o programa Simples e Mágico */
+    const montezuma = npc("montezuma",
+      { pele: "#d8a87f", cabelo: "curto", corCabelo: "#241a10",
+        traje: "terno", corTraje: "#33424f", corBlusa: "#e8e2d2" },
+      EX - 2.2, 35.0, Math.PI);
+    montezuma.setEmocao("feliz");
+    montezuma.segurar("autos", "esq");   // as anotações da palestra
+    pontos.palestrante = { x: EX - 2.2, z: 33.9 };
+    // assento livre do jogador na 1ª fileira (para assistir)
+    pontos.assentoPalestra = { x: EX + 5.0, z: 26.5 };
     // funcionário do café, com a bandeja
     const cafe = npc("cafeEsmec",
       { pele: "#a86a48", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#e8e6da" },
-      EX + 8.5, 16.2, -0.8);
+      EX + 9.0, 16.6, -0.4);
     cafe.segurar("xicara", "dir");
 
     info = { colisores: colisores, paredesCamera: paredesCamera, pontos: pontos, vivos: vivos };

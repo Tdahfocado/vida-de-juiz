@@ -224,6 +224,66 @@ TOGA.atividades = (function () {
   };
 
   /* ============================================================
+     A PALESTRA "SIMPLES E MÁGICO" — minigame de linguagem
+     simples no auditório da ESMEC, com o Juiz Luis Gustavo
+     Montezuma Herbster. Três rodadas: escolher a tradução
+     SIMPLES E FIEL do juridiquês (nunca em 1º lugar).
+     ============================================================ */
+  const PALESTRA = {
+    titulo: "🪄 Simples e Mágico — Linguagem Simples",
+    gatilho: "linguagem-simples",
+    passos: [
+      { texto: "O Juiz Luis Gustavo Montezuma Herbster apoia as anotações no púlpito de acrílico e sorri para a plateia: “Colegas, o programa chama-se SIMPLES E MÁGICO porque é isso que acontece quando a parte ENTENDE a sentença: a mágica de a Justiça caber na vida das pessoas. Juridiquês não é tradição — é pedágio. Vamos treinar? Eu mostro o trecho, vocês traduzem.”" },
+      { texto: "No telão, o primeiro trecho: “Indefiro o pleito formulado pelo autor, eis que carecedor de supedâneo jurídico, restando cediço que a exordial não se desincumbiu do ônus probatório que lhe competia.”",
+        decisao: {
+          prompt: "Qual é a tradução SIMPLES — e fiel — para a parte que vai ler?",
+          opcoes: [
+            { rotulo: "“Nego o pedido do autor, por absoluta ausência de substrato probatório mínimo apto a corroborar a tese autoral.”",
+              tom: "ruim",
+              feedback: "Montezuma ri com a plateia: “trocamos um juridiquês por outro de gravata nova! ‘Substrato probatório mínimo apto a corroborar’... a dona Maria entende isso?” Simplificar não é trocar o difícil por outro difícil." },
+            { rotulo: "“Nego o pedido. O autor não apresentou as provas do que afirmou — e quem afirma, precisa provar (CPC, art. 373, I).”",
+              tom: "otimo",
+              feedback: "“PERFEITO. Curto, direto, com a regra citada para quem quiser conferir — e a dona Maria entende na primeira leitura. Reparem: não perdemos UM grama de precisão técnica.” A plateia anota. Alguém fotografa o telão." },
+            { rotulo: "“O pedido foi negado porque o juiz achou que não tinha provas suficientes.”",
+              tom: "ruim",
+              feedback: "“Quase! Mas ‘o juiz achou’ esconde a regra do jogo: parece capricho pessoal, e não é. A parte precisa saber que existe uma norma — quem afirma, prova. Simples não pode virar impreciso.”" }
+          ]
+        } },
+      { texto: "Segundo trecho no telão: “Ante o exposto, hei por bem deferir o pedido liminar initio litis e inaudita altera pars, eis que presentes o fumus boni iuris e o periculum in mora.”",
+        decisao: {
+          prompt: "E agora — como fica em português de gente?",
+          opcoes: [
+            { rotulo: "“Defiro a liminar initio litis, presentes os pressupostos autorizadores do provimento de urgência.”",
+              tom: "ruim",
+              feedback: "“Colega, ainda sobrou um ‘initio litis’ aí dentro!”, aponta Montezuma, e o auditório ri junto. “Latim em decisão é tempero: uma pitada explica, duas pitadas escondem.”" },
+            { rotulo: "“Concedo a liminar agora, sem ouvir a outra parte ainda, porque o pedido é bem fundamentado e esperar poderia causar um prejuízo difícil de desfazer. A outra parte será ouvida em seguida.”",
+              tom: "otimo",
+              feedback: "“Olhem a MÁGICA: fumus, periculum e inaudita altera pars — tudo isso está aí dentro, em português, sem perder nada. E a frase final avisa a outra parte do que vem: transparência também é linguagem simples.” Aplausos curtos e sinceros." },
+            { rotulo: "“Dou a liminar porque o caso é urgente.”",
+              tom: "ruim",
+              feedback: "“Simples demais a ponto de sumir o fundamento — a parte contrária vai perguntar POR QUÊ, e a resposta tem que estar na decisão. Linguagem simples encurta a forma, nunca a motivação (CF, art. 93, IX).”" }
+          ]
+        } },
+      { texto: "Último trecho — Montezuma pisca para a plateia: “esse eu peguei de uma intimação de verdade”. No telão: “Fica Vossa Senhoria intimada a comparecer ao átrio do fórum, no dia aprazado, sob as penas da lei, a fim de prestar depoimento pessoal, sob pena de confissão ficta.”",
+        decisao: {
+          prompt: "A intimação que a testemunha precisa entender. Traduza:",
+          opcoes: [
+            { rotulo: "“Compareça ao fórum na data marcada para prestar depoimento, sob pena de aplicação dos efeitos da confissão ficta.”",
+              tom: "ruim",
+              feedback: "“‘Confissão ficta’ continua lá, intacta e incompreensível! Se a consequência é a parte da frase que mais importa, é justamente ela que TEM de estar em português.”" },
+            { rotulo: "“O senhor precisa ir ao fórum no dia marcado para responder a perguntas. ATENÇÃO: se não for, a lei permite que o juiz considere verdadeiros os fatos que a outra parte afirmou (CPC, art. 385, §1º).”",
+              tom: "otimo",
+              feedback: "“É ISSO. A consequência explicada dói mais que o latim — e é assim que a pessoa COMPARECE. Intimação que se entende é audiência que acontece: linguagem simples é gestão de pauta também.” Montezuma fecha as anotações: “era esse o segredo. Simples... e mágico.”" },
+            { rotulo: "“Vá ao fórum no dia marcado, senão o senhor perde o processo.”",
+              tom: "ruim",
+              feedback: "“Opa — ‘perde o processo’ é mais do que a lei diz! A confissão ficta atinge os FATOS, não decide a causa sozinha. Assustar com consequência errada é tão ruim quanto esconder a certa.”" }
+          ]
+        } },
+      { texto: "A plateia se levanta para o café. No telão, o slide final do programa Simples e Mágico: “Se a parte não entendeu, a Justiça ainda não chegou.” Montezuma desce do púlpito e vem apertar a sua mão: “e aí, colega — quantas sentenças suas a dona Maria entenderia hoje?”" }
+    ]
+  };
+
+  /* ============================================================
      O EXECUTOR — painel DOM por cima de qualquer tela.
      ============================================================ */
   let painel = null;
@@ -242,9 +302,44 @@ TOGA.atividades = (function () {
     document.body.classList.remove("em-visita");
   }
 
+  function executarPalestra(aoTerminar) {
+    if (emVisita) return false;
+    return rodarRoteiro(PALESTRA, function (r) {
+      carregar().palestraFeita = true;
+      salvar();
+      if (TOGA.conquistas) {
+        TOGA.conquistas.avaliar(PALESTRA.gatilho, { gabaritou: r.exemplar });
+      }
+      if (aoTerminar) aoTerminar(r);
+    });
+  }
+  function palestraFeita() { return !!carregar().palestraFeita; }
+
   function executarVisita(id, aoTerminar) {
     const roteiro = ROTEIROS[id];
     if (!roteiro || emVisita) return false;
+    return rodarRoteiro(roteiro, function (r) {
+      concluirVisita(id, roteiro, r.exemplar);
+      if (aoTerminar) aoTerminar(r);
+    });
+  }
+
+  function concluirVisita(id, roteiro, exemplar) {
+    marcarConcluida(id);
+    const M = TOGA.motor;
+    if (M && M.estado) {
+      M.estado.flags["_visita_" + id + "Feita"] = true;
+      if (exemplar) M.estado.flags[roteiro.flagBoa] = true;
+      else M.estado.flags["visitaComTropeco"] = true;
+      if (M.aplicarEfeitos) M.aplicarEfeitos(exemplar ? { hum: 3, imp: 2 } : { hum: 1 });
+      M.salvar();
+    }
+    if (TOGA.conquistas) {
+      TOGA.conquistas.avaliar(roteiro.gatilho, { exemplar: exemplar });
+    }
+  }
+
+  function rodarRoteiro(roteiro, aoConcluir) {
     emVisita = true;
     document.body.classList.add("em-visita");
 
@@ -302,21 +397,7 @@ TOGA.atividades = (function () {
 
     function concluir() {
       fecharPainel();
-      const exemplar = tropecos === 0;
-      marcarConcluida(id);
-      // flags do dia (alimentam manchetes do epílogo) + reputação leve
-      const M = TOGA.motor;
-      if (M && M.estado) {
-        M.estado.flags["_visita_" + id + "Feita"] = true;
-        if (exemplar) M.estado.flags[roteiro.flagBoa] = true;
-        else M.estado.flags["visitaComTropeco"] = true;
-        if (M.aplicarEfeitos) M.aplicarEfeitos(exemplar ? { hum: 3, imp: 2 } : { hum: 1 });
-        M.salvar();
-      }
-      if (TOGA.conquistas) {
-        TOGA.conquistas.avaliar(roteiro.gatilho, { exemplar: exemplar });
-      }
-      if (aoTerminar) aoTerminar({ exemplar: exemplar });
+      if (aoConcluir) aoConcluir({ exemplar: tropecos === 0 });
     }
 
     render();
@@ -346,6 +427,8 @@ TOGA.atividades = (function () {
     marcarConcluida: marcarConcluida,
     checarDesbloqueios: checarDesbloqueios,
     executarVisita: executarVisita,
+    executarPalestra: executarPalestra,
+    palestraFeita: palestraFeita,
     resumo: resumo,
     get emVisita() { return emVisita; }
   };

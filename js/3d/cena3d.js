@@ -1165,7 +1165,7 @@ TOGA.cena3d = (function () {
 
   function encenarArco(arco) {
     TOGA.motor.marcarArco(arco.caso.id);
-    if (animacoesRapidas) return;                       // bot: só marca
+    if (animacoesRapidas || !arco.ramo) return;         // bot/sem ramo: só marca
     const falas = arco.ramo.falas || [];
     const ids = [];
     falas.forEach(function (f) {
@@ -2146,7 +2146,15 @@ TOGA.cena3d = (function () {
 
   function interagiveisEsmec() {
     const P = TOGA.esmec3d.pontos;
-    return [
+    const COMENTARIOS_JUIZ = [
+      "“na minha vara, troquei ‘cediço’ por ‘sabido’ e o cartório fez festa.”",
+      "“mandei refazer uma intimação em linguagem simples e a parte COMPARECEU. Mágica, doutor.”",
+      "“o Montezuma tem razão: juridiquês não é tradição, é pedágio.”",
+      "“minha primeira sentença simples voltou da leitura com um ‘obrigado, doutora, agora eu entendi’. Não esqueci mais.”",
+      "“vim de longe só por esta palestra — e já valeu a estrada.”",
+      "“a dona Maria entender a sentença é o verdadeiro trânsito em julgado.”"
+    ];
+    const lista = [
       { id: "coordenadora", pos: P.recepcao, raio: 2.6,
         rotulo: function () {
           return TOGA.atividades.concluida("esmec") && !TOGA.atividades.emVisita
@@ -2167,13 +2175,96 @@ TOGA.cena3d = (function () {
           toastMundo("🖼 Os retratos dos diretores, em molduras pretas, um ao lado do outro. Gerações diferentes, o mesmo encargo: ensinar que a toga pesa menos quando se sabe usá-la.");
         } },
 
+      { id: "palestra", pos: P.assentoPalestra, raio: 2.6,
+        rotulo: function () {
+          return TOGA.atividades.palestraFeita && TOGA.atividades.palestraFeita()
+            ? "🪄 rever a palestra Simples e Mágico"
+            : "🪄 sentar e assistir — Linguagem Simples, com o Juiz Montezuma Herbster";
+        },
+        acao: function () {
+          if (!TOGA.atividades || TOGA.atividades.emVisita) return;
+          TOGA.controles3d.desativar();
+          TOGA.atividades.executarPalestra(function (r) {
+            reativarControles();
+            toastMundo(r.exemplar
+              ? "🪄 Três traduções perfeitas! Montezuma anuncia ao microfone: “colegas, achei o próximo multiplicador do programa.” A plateia aplaude — e você sai falando mais simples do que entrou."
+              : "✔ Palestra concluída. Algumas traduções escorregaram — “acontece nos melhores gabinetes”, consola Montezuma. O slide final fica na memória: se a parte não entendeu, a Justiça ainda não chegou.");
+          });
+        } },
+
+      { id: "jardimEsmec", pos: P.jardim, raio: 2.0,
+        rotulo: "sentar no banco do jardim de seixos",
+        acao: function () {
+          encenarJogador({ acao: "sentar", dur: 2.2 });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-2); TOGA.motor.salvar(); }
+          if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🪨 O banco de ripas serpenteia o jardim de seixos. Dois minutos olhando pedra e bambu — e a pauta, lá longe, parece um problema de outra pessoa. (−2 de estresse)");
+        } },
+
+      { id: "bibliotecaEsmec", pos: P.biblioteca, raio: 2.2,
+        rotulo: "consultar a biblioteca",
+        acao: function () {
+          const CURIOSIDADES = [
+            "📚 Num manual de redação oficial da estante: a palavra “outrossim” apareceu 40 mil vezes em decisões num único ano. Em nenhuma delas era indispensável.",
+            "📚 Um exemplar histórico: o regimento da primeira turma da ESMEC, de 1985 — quarenta anos formando quem julga.",
+            "📚 Aberto sobre a mesa, o Pacto Nacional do Judiciário pela Linguagem Simples: comunicar com clareza não é simplificar o Direito — é respeitar quem depende dele."
+          ];
+          toastMundo(CURIOSIDADES[Math.floor(Math.random() * CURIOSIDADES.length)]);
+        } },
+
+      { id: "labEsmec", pos: P.laboratorio, raio: 2.4,
+        rotulo: "espiar o laboratório de tecnologia",
+        acao: function () {
+          toastMundo("💻 Nas telas, o painel do programa Simples e Mágico: sentenças analisadas, palavras “traduzidas”, um medidor de legibilidade apontando para o verde. Tecnologia a serviço de quem lê — não de quem escreve.");
+        } },
+
+      { id: "coffeeEsmec", pos: P.coffee, raio: 2.0,
+        rotulo: "café do coffee break",
+        acao: function () {
+          jogador.segurar("xicara", "dir");
+          encenarJogador({ acao: "beber", dur: 2.0, aoFim: function () { jogador.segurar(null, "dir"); } });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-3); TOGA.motor.salvar(); }
+          if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("☕ Café de escola de magistratura: forte o bastante para uma tese, doce o bastante para um acordo. (−3 de estresse)");
+        } },
+
+      { id: "livroVisitasEsmec", pos: P.livroVisitas, raio: 1.8,
+        rotulo: "assinar o livro de visitas",
+        acao: function () {
+          encenarJogador({ acao: "entregar", dur: 1.4 });
+          const e = TOGA.motor && TOGA.motor.estado;
+          const dia = e ? (TOGA.motor.pautaAtual() || {}).titulo : "";
+          toastMundo("🖋 Você assina o livro de visitas com a caneta da recepção — a mesma letra dos despachos, um pouco mais solta. Abaixo do nome, escreve: “honrado por aprender onde tantos ensinaram.”" + (dia ? " A data é a do seu " + dia + "." : ""));
+        } },
+
+      { id: "credenciamentoEsmec", pos: P.credenciamento, raio: 2.0,
+        rotulo: "pegar o crachá do evento",
+        acao: function () {
+          toastMundo("🪪 A recepcionista encontra seu nome na lista e entrega o crachá: “Juiz(a) da Comarca — CONVIDADO(A)”. O cordão é roxo, a cor do programa. “O auditório já está cheio, doutor — o senhor chegou em boa hora.”");
+        } }
+    ];
+
+    // os juízes REAIS da plateia, um interagível para cada
+    (P.plateia || []).forEach(function (j, i) {
+      lista.push({
+        id: "juizPlateia" + i, pos: { x: j.x, z: j.z }, raio: 1.5,
+        rotulo: "cumprimentar — " + j.nome.split(" ")[0],
+        acao: function () {
+          toastMundo("🤝 " + (j.nome.match(/^(Ana|Adriana|Alda|Alexsandra|Amaiara|Andréa|Anna|Antonia|Ariana|Bruna|Candice|Carla|Carolina|Cláudia|Cynthia|Daniela|Danielle|Débora|Fabiana|Fátima|Fernanda|Flávia|Gabriela|Gerana|Gesília|Giselli|Harbelia|Helga|Iclea|Janaina|Juliana|Julianne|Karla|Kathleen|Larissa|Leila|Leopoldina|Leslie|Lia|Liana|Luciana|Lucimeire|Luzia|Mabel|Márcia)/) ? "Juíza " : "Juiz ") +
+            j.nome + ", " + j.lotacao + " — " +
+            COMENTARIOS_JUIZ[i % COMENTARIOS_JUIZ.length]);
+        }
+      });
+    });
+
+    lista.push(
       { id: "carroVolta", pos: P.vaga, raio: 2.6,
         rotulo: "🚗 dirigir de volta ao fórum",
         acao: function () {
           toastMundo("🚗 A volta você dirige mais devagar — sem nenhum motivo de trânsito. Há dias em que a estrada também ensina.");
           voltarForum();
-        } }
-    ];
+        } });
+    return lista;
   }
 
   function entrarRua() {

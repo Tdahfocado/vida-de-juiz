@@ -145,6 +145,10 @@ TOGA.conquistas = (function () {
       desc: "Dirija até a ESMEC e ministre a aula para os juízes que estão chegando — a coroação da carreira.",
       se: c => c.gatilho === "aula-esmec" },
 
+    { id: "simplesEMagico", icone: "🪄", nome: "Simples e Mágico",
+      desc: "Na palestra do Juiz Montezuma Herbster, na ESMEC, traduza os três trechos de juridiquês para a língua de gente — sem perder um grama de precisão.",
+      se: c => c.gatilho === "linguagem-simples" && !!c.gabaritou },
+
     { id: "cidadaoAoVolante", icone: "🚗", nome: "Cidadão(ã) ao volante",
       desc: "Faça a viagem até a ESMEC sem uma única infração: cinto, sinal, faixa de pedestres e radar.",
       se: c => c.gatilho === "viagem-limpa" },

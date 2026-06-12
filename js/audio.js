@@ -71,6 +71,21 @@ TOGA.audio = (function () {
   function sintGrave()   { tom(96, 44, 0.55, 0.30, "triangle"); }
   function sintMartelo() { if (TOGA.cena2d && TOGA.cena2d.somMartelo) TOGA.cena2d.somMartelo(); }
   function sintFoco()    { tom(1320, 1100, 0.07, 0.06, "sine"); }   // blip suave ao focar
+  function sintBuzina() {
+    tom(420, 420, 0.28, 0.20, "square");
+    tom(530, 530, 0.28, 0.14, "square");
+  }
+  function sintFreio() {
+    ruido(0.4, 0.16, function (c) {
+      const f = c.createBiquadFilter(); f.type = "bandpass";
+      f.frequency.value = 2400; f.Q.value = 6; return f;
+    });
+  }
+  function sintVinheta() {
+    tom(660, 660, 0.12, 0.12, "sine");
+    setTimeout(function () { tom(880, 880, 0.12, 0.12, "sine"); }, 130);
+    setTimeout(function () { tom(1100, 1100, 0.2, 0.12, "sine"); }, 260);
+  }
   function sintLatido()  {
     tom(520, 380, 0.08, 0.16, "square");
     setTimeout(function () { tom(560, 400, 0.09, 0.14, "square"); }, 130);
@@ -87,6 +102,9 @@ TOGA.audio = (function () {
     martelo:  { sintese: sintMartelo },
     foco:     { sintese: sintFoco },
     latido:   { sintese: sintLatido },
+    buzina:   { sintese: sintBuzina },
+    freio:    { sintese: sintFreio },
+    vinheta:  { sintese: sintVinheta },
     ambiente: { src: "assets/audio/forum-ambiente.mp3", vol: 0.16, loop: true }
   };
 
@@ -153,6 +171,44 @@ TOGA.audio = (function () {
     else if (ambienteLigado) ambiente(true);
   }
 
+  /* ---------- O MOTOR do carro (oscilador contínuo) ----------
+     Ronco grave que sobe de tom com a velocidade; liga ao dar a
+     partida e desliga ao estacionar. Síntese pura, sem arquivo. */
+  let motorOsc = null, motorGain = null;
+  function motor(ligar) {
+    const ctx = audioCtx();
+    if (!ctx) return;
+    if (ligar && !motorOsc && ligado()) {
+      motorOsc = ctx.createOscillator();
+      motorOsc.type = "sawtooth";
+      motorOsc.frequency.value = 42;
+      motorGain = ctx.createGain();
+      motorGain.gain.value = 0.0;
+      const filtro = ctx.createBiquadFilter();
+      filtro.type = "lowpass";
+      filtro.frequency.value = 260;
+      motorOsc.connect(filtro); filtro.connect(motorGain);
+      motorGain.connect(ctx.destination);
+      motorOsc.start();
+      motorGain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.4);
+    } else if (!ligar && motorOsc) {
+      try {
+        motorGain.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 0.3);
+        const osc = motorOsc;
+        setTimeout(function () { try { osc.stop(); } catch (e) {} }, 400);
+      } catch (e) {}
+      motorOsc = null; motorGain = null;
+    }
+  }
+  /* chamado a cada quadro pela direção: 0..1 da velocidade */
+  function motorGiro(fracao) {
+    if (!motorOsc) return;
+    try {
+      motorOsc.frequency.value = 42 + fracao * 95;
+      motorGain.gain.value = 0.035 + fracao * 0.05;
+    } catch (e) {}
+  }
+
   /* ---------- Passos com cadência (modo 3D) ---------- */
   let ultimoPasso = 0;
   function passo() {
@@ -162,5 +218,6 @@ TOGA.audio = (function () {
     tocar("passos");
   }
 
-  return { tocar: tocar, ambiente: ambiente, ducking: ducking, passo: passo, aoMudarSom: aoMudarSom };
+  return { tocar: tocar, ambiente: ambiente, ducking: ducking, passo: passo,
+           motor: motor, motorGiro: motorGiro, aoMudarSom: aoMudarSom };
 })();
