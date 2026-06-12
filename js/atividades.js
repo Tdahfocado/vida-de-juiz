@@ -30,6 +30,38 @@ TOGA.atividades = (function () {
       hint: "Dirija até a Escola Superior da Magistratura e ensine quem está chegando." }
   ];
 
+  /* ---------- MODO DE TESTE (autor) ----------
+     Liberação por senha, SÓ em memória: nada persiste, nada de
+     URL. No código fica apenas o hash — a senha é do autor.   */
+  let liberadas = false;
+  function djb2(txt) {
+    let h = 5381;
+    for (let i = 0; i < txt.length; i++) h = ((h << 5) + h + txt.charCodeAt(i)) | 0;
+    return h >>> 0;
+  }
+  const HASH_TESTE = 2943863176;
+
+  function senhaConfere(senha) {
+    return typeof senha === "string" && djb2(senha) === HASH_TESTE;
+  }
+
+  function liberarTudo(senha) {
+    if (!senhaConfere(senha)) return "nada aconteceu.";
+    liberadas = true;
+    if (TOGA.cena3d && document.body.classList.contains("modo-3d") &&
+        TOGA.cena3d.toastMundo) {
+      TOGA.cena3d.toastMundo("🔓 Modo de teste das atividades LIGADO (só nesta aba — recarregar tranca de novo). A porta da rua aparece a qualquer momento do dia.");
+    }
+    return resumo();
+  }
+
+  function resetar(senha) {
+    if (!senhaConfere(senha)) return "nada aconteceu.";
+    dados = null;
+    try { localStorage.removeItem(CHAVE); } catch (e) {}
+    return "conclusões e avisos das atividades zerados.";
+  }
+
   /* ---------- persistência (fora do save: é da CARREIRA) ---------- */
   let dados = null;
   function carregar() {
@@ -51,7 +83,7 @@ TOGA.atividades = (function () {
 
   function destravada(id) {
     const a = ATIVIDADES.find(x => x.id === id);
-    return !!a && ganhas() >= a.limiar;
+    return !!a && (liberadas || ganhas() >= a.limiar);
   }
   function concluida(id) { return !!carregar().concluidas[id]; }
   function marcarConcluida(id) {
@@ -297,7 +329,7 @@ TOGA.atividades = (function () {
     return ATIVIDADES.map(function (a) {
       return {
         id: a.id, icone: a.icone, nome: a.nome, limiar: a.limiar, hint: a.hint,
-        destravada: n >= a.limiar,
+        destravada: liberadas || n >= a.limiar,
         concluida: concluida(a.id),
         progresso: Math.min(n, a.limiar)
       };
@@ -307,6 +339,9 @@ TOGA.atividades = (function () {
   return {
     LISTA: ATIVIDADES,
     destravada: destravada,
+    liberarTudo: liberarTudo,
+    resetar: resetar,
+    get liberadas() { return liberadas; },
     concluida: concluida,
     marcarConcluida: marcarConcluida,
     checarDesbloqueios: checarDesbloqueios,

@@ -52,3 +52,23 @@ node tools/validar-casos.js
 Confere a integridade dos 12 casos, das pautas e dos despachos
 (cenas órfãs, destinos inexistentes, grifos que não batem com o texto,
 melhor opção previsível em 1º lugar etc.). Deve terminar com `0 erro(s)`.
+
+## Testar as atividades externas à mão (autor)
+
+As atividades (Delegacia/Escola/ESMEC) destravam por conquistas no jogo
+normal. Para inspecioná-las sem progredir, há um modo de teste protegido
+por senha — **só em memória**: recarregar a página tranca tudo de novo.
+
+1. Abra o jogo, inicie qualquer dia e abra o console do navegador (F12).
+2. `TOGA.atividades.liberarTudo("<senha do autor>")` — a porta
+   "sair para a RUA · modo de teste" passa a aparecer a qualquer momento.
+3. Atalhos (após liberar):
+   - `TOGA.debug3d.irLocal("rua")` / `irLocal("esmec")` — salto direto;
+   - `TOGA.debug3d.viagem(5)` — a direção até a ESMEC em turbo ×5;
+   - `TOGA.atividades.resetar("<senha>")` — zera conclusões/avisos para
+     rever os toasts de desbloqueio.
+
+A senha não está neste repositório (no código há apenas o hash). Para
+trocá-la: rode no console
+`(s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h>>>0})("nova-senha")`
+e substitua o número de `HASH_TESTE` em js/atividades.js.

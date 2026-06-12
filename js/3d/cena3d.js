@@ -1054,15 +1054,19 @@ TOGA.cena3d = (function () {
 
       { id: "cidade", pos: { x: P.portaSaida.x, z: P.portaSaida.z - 2.0 }, raio: 1.8,
         rotulo: function () {
+          if (TOGA.atividades.liberadas) return "🌳 sair para a RUA · modo de teste";
           const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
           const tem = TOGA.atividades && TOGA.atividades.LISTA.some(function (a) { return n >= a.limiar; });
           return tem ? "🌳 sair para a RUA — atividades da comarca"
                      : "🌳 espiar a rua (atividades destravam com conquistas)";
         },
         visivel: function () {
-          return !!(TOGA.atividades && M().estado && M().fimDaPauta() && semInterludios());
+          if (!TOGA.atividades || !M().estado) return false;
+          if (TOGA.atividades.liberadas) return true;   // modo de teste do autor
+          return !!(M().fimDaPauta() && semInterludios());
         },
         acao: function () {
+          if (TOGA.atividades.liberadas) { entrarRua(); return; }
           const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
           const prox = TOGA.atividades.LISTA.find(function (a) { return n < a.limiar; });
           if (!TOGA.atividades.LISTA.some(function (a) { return n >= a.limiar; })) {
@@ -2254,6 +2258,8 @@ TOGA.cena3d = (function () {
     garantirIniciado: garantirIniciado,
     esconderJogador: esconderJogador,
     entrarRua: entrarRua,
+    entrarEsmec: entrarEsmecDireto,
+    dirigirEsmec: iniciarViagemEsmec,
     voltarForum: voltarForum,
     get localAtivo() { return localAtivo; },
     alvoDoInterludio: function (p) {

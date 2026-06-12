@@ -122,6 +122,25 @@ TOGA.debug3d = (function () {
       return "botDia rodando — TOGA.debug3d.pararBot() interrompe";
     },
 
+    /* ---- atalhos das atividades externas (exigem o modo de
+       teste liberado por senha: TOGA.atividades.liberarTudo) ---- */
+    irLocal: function (onde) {
+      if (!TOGA.atividades || !TOGA.atividades.liberadas) {
+        return "modo de teste desligado — TOGA.atividades.liberarTudo(senha) primeiro.";
+      }
+      if (onde === "rua") { TOGA.cena3d.entrarRua(); return "na rua."; }
+      if (onde === "esmec") { TOGA.cena3d.entrarEsmec(); return "na ESMEC."; }
+      return 'use "rua" ou "esmec".';
+    },
+    viagem: function (turbo) {
+      if (!TOGA.atividades || !TOGA.atividades.liberadas) {
+        return "modo de teste desligado — TOGA.atividades.liberarTudo(senha) primeiro.";
+      }
+      if (turbo) TOGA.config._turboViagem = turbo;
+      TOGA.cena3d.dirigirEsmec();
+      return "ao volante" + (turbo ? " (turbo ×" + turbo + ")" : "") + ".";
+    },
+
     pararBot: function () {
       if (this._botTimer) { clearInterval(this._botTimer); this._botTimer = null; }
     },
