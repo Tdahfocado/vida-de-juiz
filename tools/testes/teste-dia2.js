@@ -11,7 +11,7 @@ async function botDia(browser, { modo3d, escolha, pauta }) {
   await page.goto(URL);
   await page.waitForFunction(() => window.TOGA && TOGA.ui && TOGA.debug3d);
   await page.evaluate(() => { try { localStorage.setItem("toga.tutorial.v1", "1"); } catch (e) {} });
-  if (modo3d) { await page.click("#chave-3d"); await page.waitForTimeout(300); }
+  await page.evaluate(v => { TOGA.config.modo3d = v; try { localStorage.setItem("toga.modo3d", v ? "1" : "0"); } catch (e) {} }, modo3d);
   await page.evaluate(([e, p]) => TOGA.debug3d.botDia(e, p), [escolha, pauta]);
   try {
     await page.waitForFunction(
@@ -87,7 +87,7 @@ async function botDia(browser, { modo3d, escolha, pauta }) {
   await p.goto(URL);
   await p.waitForFunction(() => window.TOGA && TOGA.debug3d);
   await p.evaluate(() => { try { localStorage.setItem("toga.tutorial.v1", "1"); } catch (e) {} });
-  await p.click("#chave-3d");
+  await p.evaluate(() => { TOGA.config.modo3d = true; try { localStorage.setItem("toga.modo3d", "1"); } catch (e) {} });
   await p.evaluate(() => {
     // save do dia2 com as flags do desenho/foto antes de entrar
     TOGA.motor.novoJogo("dia2");
@@ -117,7 +117,7 @@ async function botDia(browser, { modo3d, escolha, pauta }) {
   await p.goto(URL);
   await p.waitForFunction(() => window.TOGA && TOGA.debug3d);
   await p.evaluate(() => { try { localStorage.setItem("toga.tutorial.v1", "1"); } catch (e) {} });
-  await p.click("#chave-3d");
+  await p.evaluate(() => { TOGA.config.modo3d = true; try { localStorage.setItem("toga.modo3d", "1"); } catch (e) {} });
   await p.click('[data-pauta="dia2"]');
   await p.waitForTimeout(1400);
   await p.evaluate(() => TOGA.debug3d.interagir("autos"));

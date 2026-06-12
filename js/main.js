@@ -753,10 +753,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var chave3d = $("#chave-3d");
 
   /* ----- Modo 3D: preferência fora do save (o MESMO save
-     abre nos dois modos) e chave desligada sem WebGL. ----- */
+     abre nos dois modos) e chave desligada sem WebGL.
+     O 3D é o PADRÃO: o modo clássico (2D) só assume se o
+     jogador desligar a chave explicitamente. ----- */
   var suporta3d = TOGA.nucleo3d && TOGA.nucleo3d.suporta && TOGA.nucleo3d.suporta();
-  try { TOGA.config.modo3d = suporta3d && localStorage.getItem("toga.modo3d") === "1"; }
-  catch (e) { TOGA.config.modo3d = false; }
+  try { TOGA.config.modo3d = suporta3d && localStorage.getItem("toga.modo3d") !== "0"; }
+  catch (e) { TOGA.config.modo3d = !!suporta3d; }
   chave3d.classList.toggle("ligada", TOGA.config.modo3d);
   if (!suporta3d) {
     chave3d.disabled = true;

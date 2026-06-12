@@ -83,7 +83,7 @@ async function botDia4(browser, modo3d) {
   await page.goto(URL);
   await page.waitForFunction(() => window.TOGA && TOGA.ui && TOGA.debug3d);
   await page.evaluate(() => { try { localStorage.setItem("toga.tutorial.v1", "1"); } catch (e) {} });
-  if (modo3d) { await page.click("#chave-3d"); await page.waitForTimeout(300); }
+  await page.evaluate(v => { TOGA.config.modo3d = v; try { localStorage.setItem("toga.modo3d", v ? "1" : "0"); } catch (e) {} }, modo3d);
   await page.evaluate(() => TOGA.debug3d.botDia(0, "dia4"));
   try {
     await page.waitForFunction(

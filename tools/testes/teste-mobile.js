@@ -14,7 +14,7 @@ const URL = "file://" + require("path").resolve(__dirname, "../../index.html");
   await page.goto(URL);
   await page.waitForFunction(() => window.TOGA && TOGA.ui && TOGA.debug3d);
   await page.evaluate(() => { try { localStorage.setItem("toga.tutorial.v1", "1"); } catch (e) {} });
-  await page.tap("#chave-3d");
+  await page.evaluate(v => { TOGA.config.modo3d = v; try { localStorage.setItem("toga.modo3d", v ? "1" : "0"); } catch (e) {} }, true);
   await page.tap("#btn-novo");
   await page.waitForTimeout(1500);
 

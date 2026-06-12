@@ -15,7 +15,7 @@ const URL = "file://" + require("path").resolve(__dirname, "../../index.html");
   await page.goto(URL);
   await page.waitForFunction(() => window.TOGA && TOGA.ui && TOGA.debug3d);
   await page.evaluate(() => localStorage.setItem("toga.tutorial.v1", "1"));
-  await page.click("#chave-3d");
+  await page.evaluate(v => { TOGA.config.modo3d = v; try { localStorage.setItem("toga.modo3d", v ? "1" : "0"); } catch (e) {} }, true);
   await page.click("[data-pauta=dia1]");
   await page.waitForTimeout(800);
   await page.evaluate(() => TOGA.debug3d.interagir("autos"));
