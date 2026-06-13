@@ -292,10 +292,13 @@ TOGA.motor = (function () {
     const variacoes = aplicarEfeitos(op.efeitos);
     if (op.setFlags) Object.assign(estado.flags, op.setFlags);
 
-    // o peso emocional da decisão (salvo se o caso já declarou o seu)
+    // o peso emocional da decisão (salvo se o caso já declarou o seu):
+    // decidir MAL pesa na alma; decidir BEM não "cura" o estresse —
+    // só o autocuidado (café, água, pausa, setor de saúde) faz a barra
+    // descer. Acertar mantém você inteiro, não o repõe.
     if (!op.efeitos || typeof op.efeitos.estresse !== "number") {
       const acerto = (op.feedback && op.feedback.acerto) || "";
-      const peso = { grave: 12, ruim: 6, otimo: -3 }[acerto] || 0;
+      const peso = { grave: 12, ruim: 6 }[acerto] || 0;
       if (peso) {
         alterarEstresse(peso);
         variacoes.push({ rotulo: "🫀 Estresse", delta: peso, estresse: true });

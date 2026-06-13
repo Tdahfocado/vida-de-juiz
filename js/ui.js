@@ -563,7 +563,8 @@ TOGA.ui = (function () {
      de escrever, e ESTENDE o objeto — que o juiz clica para
      receber, vê em tela cheia e guarda no gabinete.          */
   function montarEntrega(card, it, aoConcluir) {
-    const ent = it.entrega;
+    const ent = it.entrega || {};
+    ent.falas = ent.falas || [];
     const cena = document.createElement("div");
     cena.className = "cena-entrega";
     cena.innerHTML = `

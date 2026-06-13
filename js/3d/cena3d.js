@@ -156,22 +156,47 @@ TOGA.cena3d = (function () {
     const e = TOGA.motor.estado;
     if (!e || e.flags._palestraEleitorFeita) return;
     e.flags._palestraEleitorFeita = true;
+    TOGA.motor.salvar();
 
-    // o juiz assume a tribuna; a Lourdes já vem vindo com o café
-    encenarJogador({ falar: true, dur: 14, olharPara: { x: 22.2, z: 5 } });
-    lourdesServeCafe(CAMINHO_COPA_JURI, CAMINHO_JURI_COPA, 16);
+    // o juiz assume a tribuna; a turma reage; a Lourdes vem com o café
+    encenarJogador({ falar: true, dur: 16, olharPara: { x: 22.2, z: 5 } });
+    lourdesServeCafe(CAMINHO_COPA_JURI, CAMINHO_JURI_COPA, 18);
+    reagirTurma("feliz");
 
-    toastMundo("🗳 O Salão do Júri lotado de mochila colorida: as turmas da escola municipal nos bancos, os adolescentes nas cadeiras do Conselho (\u201cas cadeiras de VERDADE?\u201d, conferem três vezes). Você abre: \u201co voto que vocês vão ter na mão custou gerações — e tem gente que vende o dela por uma promessa de wi-fi grátis. Hoje a gente aprende a não ser essa pessoa.\u201d");
+    toastMundo("🗳 O Salão do Júri lotado de mochila colorida: as turmas nos bancos, os adolescentes nas cadeiras do Conselho — “as cadeiras de VERDADE?”, conferem três vezes, e ninguém quer sair delas. A professora, de pé ao lado, segura um cartaz feito à mão: “NOSSA TURMA VAI VOTAR”. Você respira, olha aquela fila de gente pequena que um dia decide o país, e começa.");
+
     setTimeout(function () {
-      toastMundo("🗳 A parte das FAKE NEWS rende: você mostra como uma mentira viaja mais rápido que a correção (\u201cquem aqui já recebeu corrente do zap que a vó mandou?\u201d — floresta de braços). A regra dos três passos vai para o caderno: QUEM disse? QUANDO foi? QUEM GANHA se eu acreditar? Um menino do fundo pergunta se juiz prende quem mente na internet — \u201cdepende: a Justiça Eleitoral derruba a mentira; a vergonha, quem espalhou.\u201d");
+      reagirTurma("surpresa");
+      toastMundo("🗳 “Esse voto que vai caber na mão de vocês” — você ergue dois dedos, como quem segura uma cédula invisível — “custou SANGUE. Teve gente presa, gente exilada, gente que morreu para que um dia vocês pudessem escolher sem pedir licença a ninguém.” O salão silencia de um jeito que arrepia. Até o menino que não parava quieto parou.");
     }, 5500);
+
     setTimeout(function () {
-      TOGA.motor.aplicarEfeitos({ hum: 4, tempo: 30, estresse: -3 });
+      reagirTurma("neutro");
+      toastMundo("🗳 A parte das FAKE NEWS estoura a tensão: “quem aqui já recebeu corrente do zap que a vó mandou?” — floresta de braços e gargalhada geral. A regra dos três passos vai para o caderno de todo mundo: QUEM disse? QUANDO foi? QUEM GANHA se eu acreditar? Um menino do fundo, desconfiado: “e juiz prende quem mente na internet?” — “depende: a Justiça Eleitoral derruba a mentira; a vergonha, quem espalhou.”");
+    }, 11000);
+
+    setTimeout(function () {
+      reagirTurma("feliz");
+      // a palestra restaura um pouco do humor (sem mexer no estresse:
+      // só o autocuidado baixa a barra — mas formar cidadão dá ALMA)
+      TOGA.motor.aplicarEfeitos({ hum: 5, imp: 3, tempo: 30 });
       TOGA.motor.salvar();
       if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
       if (TOGA.conquistas) TOGA.conquistas.avaliar("eleitor");
-      toastMundo("🗳 Dona Lourdes circula servindo café para a professora e suco para a turma (\u201cno MEU fórum ninguém aprende cidadania de garganta seca\u201d). No encerramento, uma adolescente da cadeira do Conselho resume melhor que a sua sentença: \u201centão o voto é tipo... a única vez que mandam a gente decidir de verdade. Aí não dá pra decidir de zoeira.\u201d Constou em ata.");
-    }, 11000);
+      toastMundo("🗳 Dona Lourdes circula servindo café à professora e suco à turma (“no MEU fórum ninguém aprende cidadania de garganta seca”). No encerramento, uma adolescente da cadeira do Conselho resume melhor que qualquer sentença: “então o voto é tipo... a única vez que mandam a gente decidir de verdade. Aí não dá pra decidir de zoeira.” Você manda constar em ata — e quer que conste mesmo.");
+      e.flags.eleitorDoFuturoFeito = true;
+      TOGA.motor.salvar();
+      // CRÍTICO: limpa o objetivo “Ministre a palestra”, que antes
+      // ficava preso no HUD e parecia que nada havia sido concluído
+      atualizarObjetivoAutomatico();
+    }, 16500);
+  }
+
+  /* a turma reage em bloco aos momentos da palestra */
+  function reagirTurma(emocao) {
+    turmaEleitor.forEach(function (b, i) {
+      if (b && b.setEmocao) setTimeout(function () { b.setEmocao(emocao); }, i * 90);
+    });
   }
 
   /* ---------- A VISITA ----------
@@ -538,8 +563,8 @@ TOGA.cena3d = (function () {
     {
       const e2 = TOGA.motor.estado;
       if (e2 && e2.flags.eleitorFuturoAceito && !e2.flags._palestraEleitorFeita) {
-        alvoObjetivo = { x: 26.6, z: 6.0 };
-        definirObjetivo("As turmas chegaram! Ministre a palestra Eleitor do Futuro no SALÃO DO JÚRI");
+        alvoObjetivo = { x: 25.0, z: 6.5 };
+        definirObjetivo("As turmas chegaram! Vá ao centro do SALÃO DO JÚRI e tome a tribuna (E)");
         return;
       }
     }
@@ -865,8 +890,8 @@ TOGA.cena3d = (function () {
         },
         acao: function () { treinarAssistencia(); } },
 
-      { id: "palestraEleitor", pos: { x: 26.6, z: 6.0 }, raio: 2.4,
-        rotulo: "ministrar a palestra Eleitor do Futuro",
+      { id: "palestraEleitor", pos: { x: 25.0, z: 6.5 }, raio: 3.2,
+        rotulo: "tomar a tribuna e abrir a palestra Eleitor do Futuro",
         visivel: function () {
           const e = M().estado;
           return !!(e && e.flags.eleitorFuturoAceito && !e.flags._palestraEleitorFeita);
@@ -899,6 +924,12 @@ TOGA.cena3d = (function () {
 
       { id: "juri", pos: P.juri, raio: 2.6,
         rotulo: "visitar o plenário do júri",
+        visivel: function () {
+          // enquanto a palestra Eleitor do Futuro está pendente, ela
+          // tem prioridade aqui — o tour do plenário sai de cena
+          const e = M().estado;
+          return !(e && e.flags.eleitorFuturoAceito && !e.flags._palestraEleitorFeita);
+        },
         acao: function () {
           const f = (M().estado && M().estado.flags) || {};
           toastMundo((f.pronunciaSolida || f.d1_pronunciaSolida)
@@ -1168,7 +1199,12 @@ TOGA.cena3d = (function () {
     return true;
   }
 
-  function toastAberto() { return toastVisivel; }
+  /* toastAberto: true só para mensagens que o jogador PRECISA ler
+     (conversas). Descobertas auto-dispensáveis ("Espaço conhecido")
+     não bloqueiam o prompt de interação nem o avanço por E. */
+  function toastAberto() {
+    return toastVisivel && !(filaToasts[0] && filaToasts[0].auto);
+  }
 
   /* ---------- Arco emocional encenado no mundo ----------
      Depois do desfecho, as partes procuram o juiz no corredor:
