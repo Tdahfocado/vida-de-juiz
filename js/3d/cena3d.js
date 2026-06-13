@@ -769,13 +769,9 @@ TOGA.cena3d = (function () {
             "🍲 “Tá comendo direito, doutor? Que eu vejo cada um sair daquela sala com uma cara...” Ela empurra um pedaço de bolo sem aceitar recusa. No fórum, a última instância é a dona Lourdes.",
             "🍲 “O senhor sabia que o Razumikin chegou aqui no dia de uma audiência de despejo? Entrou atrás de sombra e ficou. Igualzinho a metade do pessoal — vem resolver uma coisa e a casa adota.”"
           ];
-          if (e && !e.flags._loudesCafe) {
-            e.flags._loudesCafe = true;
-            TOGA.motor.alterarEstresse(-2);
-            TOGA.motor.salvar();
-            if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
-          }
-          toastMundo(FALAS[(e ? (e.historico.length + noticiaIdx) : 0) % FALAS.length]);
+          const aliviou = alivioEmocional("lourdes", 3);
+          const fala = FALAS[(e ? (e.historico.length + noticiaIdx) : 0) % FALAS.length];
+          toastMundo(fala + (aliviou ? " (−" + aliviou + " de estresse)" : ""));
           registrarCumprimento("lourdes");
         } },
 
@@ -795,7 +791,9 @@ TOGA.cena3d = (function () {
             "🧹 “A chave que abre tudo aqui é essa daqui, ó. Mas a que mais uso é a da paciência, que não pendura no molho.” Seu Matias, zelador e filósofo, nessa ordem só por causa do crachá."
           ];
           const e = TOGA.motor.estado;
-          toastMundo(FALAS[(e ? (e.historico.length + noticiaIdx) : 0) % FALAS.length]);
+          const aliviou = alivioEmocional("matias", 3);
+          const fala = FALAS[(e ? (e.historico.length + noticiaIdx) : 0) % FALAS.length];
+          toastMundo(fala + (aliviou ? " (−" + aliviou + " de estresse)" : ""));
           registrarCumprimento("matias");
         } },
 
@@ -1446,6 +1444,25 @@ TOGA.cena3d = (function () {
     TOGA.motor.salvar();
     if (!semAceno) encenarJogador({ acao: "entregar", dur: 1.1 });   // o aceno
     if (TOGA.conquistas) TOGA.conquistas.avaliar("cumprimento");
+  }
+
+  /* ---------- ALÍVIO EMOCIONAL ----------
+     Razumikin, dona Lourdes e seu Matias: o lado humano da casa.
+     Conforta de verdade (−estresse), mas só UM fôlego por vez —
+     depois de decidir algo, conforta de novo. Sem isso, dava para
+     zerar o estresse só insistindo na mesma conversa. Devolve o
+     quanto realmente aliviou (0 se ainda está no "fôlego" anterior). */
+  function alivioEmocional(chave, quanto) {
+    const e = TOGA.motor.estado;
+    if (!e) return 0;
+    const marca = "_alivio_" + chave;
+    const agora = (e.historico ? e.historico.length : 0);
+    if (e.flags[marca] === agora) return 0;   // ainda não houve nova decisão
+    e.flags[marca] = agora;
+    TOGA.motor.alterarEstresse(-quanto);
+    TOGA.motor.salvar();
+    if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+    return quanto;
   }
 
   /* ---------- HORA DO RECREIO (brinquedoteca) ----------
@@ -2612,6 +2629,7 @@ TOGA.cena3d = (function () {
     aplicarJuiz: aplicarJuiz,
     jogadorSegurar: function (prop, lado) { if (jogador) jogador.segurar(prop, lado); },
     encenarJogador: encenarJogador,
+    alivioEmocional: alivioEmocional,
     get posJogador() { return jogador ? jogador.grupo.position : null; },
     aoPerderContexto: aoPerderContexto,
     garantirIniciado: garantirIniciado,

@@ -206,12 +206,15 @@ TOGA.caramelo3d = (function () {
     if (TOGA.audio) TOGA.audio.tocar("latido");
     const fala = FALAS_CARINHO[falaIdx % FALAS_CARINHO.length];
     falaIdx++;
-    if (TOGA.cena3d && TOGA.cena3d.toastMundo) TOGA.cena3d.toastMundo(fala);
-    if (TOGA.motor && TOGA.motor.estado) {
-      TOGA.motor.alterarEstresse(-3);
-      TOGA.motor.salvar();
-      if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+    // alívio com "fôlego" (mesmo padrão de Lourdes/Matias): um cafuné
+    // por vez conforta; insistir sem trabalhar entre um e outro, não
+    const aliviou = (TOGA.cena3d && TOGA.cena3d.alivioEmocional)
+      ? TOGA.cena3d.alivioEmocional("razumikin", 3)
+      : (TOGA.motor && TOGA.motor.estado ? (TOGA.motor.alterarEstresse(-3), TOGA.motor.salvar(), 3) : 0);
+    if (TOGA.cena3d && TOGA.cena3d.toastMundo) {
+      TOGA.cena3d.toastMundo(fala + (aliviou ? " (−" + aliviou + " de estresse)" : ""));
     }
+    if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
     if (TOGA.conquistas) TOGA.conquistas.avaliar("caramelo");
   }
 
