@@ -293,16 +293,15 @@ TOGA.motor = (function () {
     if (op.setFlags) Object.assign(estado.flags, op.setFlags);
 
     // o peso emocional da decisão (salvo se o caso já declarou o seu):
-    // decidir MAL pesa na alma; decidir BEM não "cura" o estresse —
-    // só o autocuidado (café, água, pausa, setor de saúde) faz a barra
-    // descer. Acertar mantém você inteiro, não o repõe.
+    // TODA decisão pesa — o juiz está sempre sob pressão, e decidir,
+    // mesmo certo, cansa. A decisão acertada pesa pouco; a errada pesa
+    // mais; a grave pesa muito. O estresse SÓ desce com autocuidado
+    // (café, água, pausa, setor de saúde) — nunca por acertar.
     if (!op.efeitos || typeof op.efeitos.estresse !== "number") {
       const acerto = (op.feedback && op.feedback.acerto) || "";
-      const peso = { grave: 12, ruim: 6 }[acerto] || 0;
-      if (peso) {
-        alterarEstresse(peso);
-        variacoes.push({ rotulo: "🫀 Estresse", delta: peso, estresse: true });
-      }
+      const peso = { otimo: 2, bom: 3, ruim: 7, grave: 13 }[acerto] || 4;
+      alterarEstresse(peso);
+      variacoes.push({ rotulo: "🫀 Estresse", delta: peso, estresse: true });
     }
 
     // mente exausta decide DEVAGAR: no nível crítico, cada decisão
