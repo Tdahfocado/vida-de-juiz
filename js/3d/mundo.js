@@ -1078,10 +1078,23 @@ TOGA.mundo3d = (function () {
     // sul: vão do CEJUSC em x∈[43.4, 44.6]
     parede(scene, 38, 2, 43.4, 2);
     parede(scene, 44.6, 2, 50, 2);
-    parede(scene, 50, -2, 50, 2);                  // fim da ala
+    // FIM do corredor leste: a PORTA DOS FUNDOS para o PARQUE DA CIDADE
+    // (de propósito longe da entrada principal, p/ não confundir com a
+    //  rua da Delegacia/Escola) — vão central z∈[−0.7, 0.7]
+    parede(scene, 50, -2, 50, -0.7);
+    parede(scene, 50, 0.7, 50, 2);
+    piso(scene, 50, -0.7, 53, 0.7, 0x6b675f);              // soleira de saída (calçada)
+    caixa(scene, 0.12, 2.3, 1.35, 50, 1.15, 0, mat(0x2f5a3e), { colide: false }); // folha de porta verde
+    if (TOGA.texturas3d.letreiro) {
+      const letr = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.8),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.letreiro("PARQUE DA CIDADE", "#2f5a3e", "#e7cf9a", "ACESSO LIVRE · SAÍDA DOS FUNDOS") }));
+      letr.position.set(49.78, 2.55, 0); letr.rotation.y = -Math.PI / 2; scene.add(letr);
+    }
+    pontos.parquePorta = { x: 48.8, z: 0 };
     // placas do corredor (viradas para quem caminha)
     placaAla(scene, "GABINETE — JUIZ(A) DA 2ª VARA", 43.0, 2.55, -1.81, 0, 3.0);
     placaAla(scene, "CEJUSC — SOLUÇÃO DE CONFLITOS", 44.0, 2.55, 1.81, Math.PI, 3.0);
+    placaAla(scene, "➔ PARQUE DA CIDADE", 47.0, 2.55, -1.81, 0, 2.4);
 
     /* ============ GABINETE DA 2ª VARA (norte, x 39–48, z −9–−2) ============ */
     piso(scene, 39, -9, 48, -2, 0x3a2b1b, TOGA.texturas3d.pisoSala && TOGA.texturas3d.pisoSala());

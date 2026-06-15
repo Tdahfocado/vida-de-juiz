@@ -99,6 +99,10 @@ TOGA.conquistas = (function () {
       desc: "No caso eleitoral, rejeite a AIJE sustentada só em gravação ilícita (STF, Tema 979) — decida certo contra a multidão.",
       se: c => !!(c.flags && c.flags.aijeImprocedenteCorreta) },
 
+    { id: "atletaToga", icone: "🏅", nome: "Atleta da toga",
+      desc: "Vença um dos minijogos esportivos da ACM — beach tennis, pênaltis ou natação — com os colegas magistrados.",
+      se: c => c.gatilho === "minijogo-acm" && !!c.venceu },
+
     { id: "maratonista", icone: "🏃", nome: "Maratonista da toga",
       desc: "Conclua os três dias de trabalho.",
       se: c => c.pautasConcluidas >= 3 },

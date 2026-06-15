@@ -331,8 +331,9 @@ TOGA.cidade3d = (function () {
     pontos.carroJuiz = { x: RX + 6.2, z: 5.8 };
     carroParado(RX + 4.5, 5.6, 0x33424f, 0);
     placaEm("ESMEC ➔", RX + 19.6, 2.4, 8, -Math.PI / 2, 1.4);
-    placaEm("◀ PARQUE DA CIDADE", RX - 19.6, 2.4, 8, Math.PI / 2, 2.2);
-    pontos.parqueEntrada = { x: RX - 16, z: 8 };
+    // (o Parque da Cidade NÃO fica na rua: entra-se por uma porta no fim
+    //  do corredor leste do fórum, para não confundir com o estacionamento
+    //  da Delegacia e da Escola)
 
     // faixa de pedestres ligando as duas calçadas
     for (let i = 0; i < 5; i++) {

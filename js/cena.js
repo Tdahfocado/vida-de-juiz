@@ -351,10 +351,32 @@ TOGA.cena = (function () {
     pol.setAttribute("opacity", "1");
   }
 
+  /* o vídeo-prova do caso eleitoral: painel que desce do topo, "roda"
+     a gravação e recolhe (overlay DOM — vale também no modo clássico) */
+  function videoProvaDOM() {
+    if (document.getElementById("video-prova")) return;
+    const ov = document.createElement("div");
+    ov.id = "video-prova"; ov.className = "video-prova";
+    const tela = document.createElement("div");
+    tela.className = "video-prova-tela";
+    if (TOGA.texturas3d && TOGA.texturas3d.videoEleitoralCanvas) {
+      try { tela.style.backgroundImage = "url(" + TOGA.texturas3d.videoEleitoralCanvas().toDataURL() + ")"; } catch (e) {}
+    }
+    const rec = document.createElement("div");
+    rec.className = "video-prova-rec"; rec.textContent = "● REC";
+    tela.appendChild(rec);
+    ov.appendChild(tela);
+    document.body.appendChild(ov);
+    setTimeout(function () { ov.classList.add("recolher"); }, 7000);
+    setTimeout(function () { ov.remove(); }, 8200);
+  }
+
   function evento(spec) {
-    if (!spec || !raizAtual) return;
+    if (!spec) return;
     const partes = String(spec).split(":");
     const tipo = partes[0], id = partes[1];
+    if (tipo === "video") { videoProvaDOM(); return; }
+    if (!raizAtual) return;
     const a = assentoDe(id);
     const alvo = raizAtual.querySelector("#pers-" + id);
     const camada = raizAtual.querySelector("#camada-personagens");

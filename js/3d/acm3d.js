@@ -23,20 +23,33 @@ TOGA.acm3d = (function () {
   let construido = false;
   let info = null;
 
-  // a diretoria real da ACM (homenagem institucional — PDF da ACM)
+  // a diretoria real da ACM (homenagem institucional — PDF da ACM).
+  // Cada um tem uma fala própria, ligada ao seu cargo na reunião.
   const DIRETORIA = [
-    { nome: "José Hercy Ponte de Alencar", cargo: "Presidente" },
-    { nome: "Helga Medved", cargo: "Vice-presidente" },
-    { nome: "Cleber de Castro Cruz", cargo: "Dir. de Comunicação Social" },
-    { nome: "Mário Parente Teófilo Neto", cargo: "Dir. Administrativo" },
-    { nome: "Jorge Cruz de Carvalho", cargo: "Dir. de Prerrogativas" },
-    { nome: "Magno Rocha Thé Mota", cargo: "Dir. de Assuntos Educacionais e Culturais" },
-    { nome: "Wallton Pereira de Souza Paiva", cargo: "Dir. de Patrimônio e Finanças" },
-    { nome: "Francisca Sônia Costa", cargo: "Diretora de Aposentados" },
-    { nome: "Francisca Timbó de Lima", cargo: "Diretora de Pensionistas" },
-    { nome: "Francisco Eduardo Girão Braga", cargo: "Diretor de Esportes" },
-    { nome: "Edwiges Coelho Girão", cargo: "1ª Secretária" },
-    { nome: "Anderson Alexandre Nascimento Silva", cargo: "2º Secretário" }
+    { nome: "José Hercy Ponte de Alencar", cargo: "Presidente",
+      fala: "“Excelência, seja bem-vindo à casa dos magistrados! Estou abrindo a reunião — convênios, a reforma da sede e a palestra que o senhor pode assistir ali no auditório. Puxe uma cadeira.”" },
+    { nome: "Helga Medved", cargo: "Vice-presidente",
+      fala: "“Bom ter um colega da ativa por perto. Estou substituindo o presidente na pauta dos novos convênios de saúde — a associação só existe para cuidar de quem cuida da Justiça.”" },
+    { nome: "Cleber de Castro Cruz", cargo: "Dir. de Comunicação Social",
+      fala: "“Comunicação Social, ao seu dispor. Estou fechando a transmissão da palestra de hoje pelas redes da ACM — magistratura também precisa se explicar para a sociedade, doutor.”" },
+    { nome: "Mário Parente Teófilo Neto", cargo: "Dir. Administrativo",
+      fala: "“Administrativo é o nome chique de quem cuida do telhado, da folha e da garagem. Se faltar café na reunião, a culpa cai em mim — por isso nunca falta.”" },
+    { nome: "Jorge Cruz de Carvalho", cargo: "Dir. de Prerrogativas",
+      fala: "“Prerrogativa de magistrado não é privilégio, doutor — é garantia da independência de quem julga. Qualquer atropelo à sua, a ACM entra junto. Conte conosco.”" },
+    { nome: "Magno Rocha Thé Mota", cargo: "Dir. de Assuntos Educacionais e Culturais",
+      fala: "“Cultura e formação são a minha pasta. A palestra ‘Simples e Mágico’ no auditório saiu daqui — se o senhor ainda não assistiu, vá: vale cada minuto.”" },
+    { nome: "Wallton Pereira de Souza Paiva", cargo: "Dir. de Patrimônio e Finanças",
+      fala: "“Finanças e patrimônio: cada centavo da associação prestado em planilha aberta. A piscina nova e a quadra de beach saíram com superávit — e sem dívida, doutor.”" },
+    { nome: "Francisca Sônia Costa", cargo: "Diretora de Aposentados",
+      fala: "“Cuido dos colegas aposentados — quem entregou a vida à toga não pode ser esquecido depois dela. Um dia o senhor vai querer alguém olhando por isso. Estarei aqui.”" },
+    { nome: "Francisca Timbó de Lima", cargo: "Diretora de Pensionistas",
+      fala: "“Pensionistas são as famílias que ficaram. A ACM ampara quem perdeu o seu magistrado — é a parte silenciosa, e a mais necessária, do nosso trabalho.”" },
+    { nome: "Francisco Eduardo Girão Braga", cargo: "Diretor de Esportes",
+      fala: "“Esportes! O campo society e a quadra de beach tennis são comigo. Sábado tem racha, doutor — toga no cabide, chuteira no pé. Apareça que eu escalo o senhor.”" },
+    { nome: "Edwiges Coelho Girão", cargo: "1ª Secretária",
+      fala: "“1ª Secretária — sou eu que lavro a ata desta reunião. Pode falar devagar que eu registro tudo... e o que o senhor disser de bom, eu sublinho.”" },
+    { nome: "Anderson Alexandre Nascimento Silva", cargo: "2º Secretário",
+      fala: "“2º Secretário, às ordens. Organizo as convocações e a ordem do dia. Se quiser pauta na próxima assembleia, fale comigo — entro com o seu nome.”" }
   ];
 
   function mat(cor) { return TOGA.texturas3d.matPlastico(cor); }
@@ -44,7 +57,31 @@ TOGA.acm3d = (function () {
   function construir(scene) {
     if (construido) return info;
     construido = true;
-    const colisores = [], paredesCamera = [], pontos = {}, vivos = [];
+    const colisores = [], paredesCamera = [], pontos = {}, vivos = [], aguas = [], passaros = [];
+
+    function matAgua(rep) {
+      if (!TOGA.texturas3d.agua) return new THREE.MeshPhongMaterial({ color: 0x1f6f9a, shininess: 80, specular: 0x9fd2e0 });
+      const tex = TOGA.texturas3d.agua().clone();
+      tex.needsUpdate = true; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(rep || 6, rep || 6);
+      return new THREE.MeshPhongMaterial({ map: tex, shininess: 95, specular: 0xbfe6f2 });
+    }
+    function passaro(cx, cz, alt, raio, cor) {
+      const g = new THREE.Group();
+      const corpo = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 6),
+        new THREE.MeshLambertMaterial({ color: cor || 0x44484e })); corpo.scale.set(1.5, 0.85, 1);
+      const cab = new THREE.Mesh(new THREE.SphereGeometry(0.1, 7, 6),
+        new THREE.MeshLambertMaterial({ color: cor || 0x44484e })); cab.position.set(0, 0.07, 0.18);
+      const bico = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 6),
+        new THREE.MeshLambertMaterial({ color: 0xe0a23a })); bico.rotation.x = Math.PI / 2; bico.position.set(0, 0.07, 0.3);
+      const asaE = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.44, 4),
+        new THREE.MeshLambertMaterial({ color: 0x2f3338 })); asaE.position.set(-0.14, 0.05, 0); asaE.rotation.z = 0.5;
+      const asaD = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.44, 4),
+        new THREE.MeshLambertMaterial({ color: 0x2f3338 })); asaD.position.set(0.14, 0.05, 0); asaD.rotation.z = -0.5;
+      g.add(corpo, cab, bico, asaE, asaD);
+      g.position.set(cx, alt, cz); scene.add(g);
+      passaros.push({ grupo: g, asaE: asaE, asaD: asaD, cx: cx, cz: cz, alt: alt, raio: raio,
+        fase: (cx + cz) * 0.05, vel: 0.35 + (Math.abs(Math.round(cx + cz)) % 5) * 0.04 });
+    }
 
     function caixa(w, h, d, x, y, z, material, op) {
       op = op || {};
@@ -117,15 +154,13 @@ TOGA.acm3d = (function () {
       return b;
     }
 
-    const azulPiscina = new THREE.MeshPhongMaterial({ color: 0x2f9fd0, shininess: 90, specular: 0xcfeff8 });
     const areia = mat(0xe2cfa0);
     const grama = mat(0x4f8a44);
 
     /* ================= TERRENO, PRAIA E MAR ================= */
     piso(AX - 40, -22, AX + 40, 50, mat(0xcabb92));                  // areão geral do clube
     piso(AX - 40, 30, AX + 40, 50, areia, 0.01);                     // faixa de praia
-    piso(AX - 40, 38, AX + 40, 50,                                   // o MAR
-      new THREE.MeshPhongMaterial({ color: 0x1f6f9a, shininess: 80, specular: 0x9fd2e0 }), 0.02);
+    aguas.push(piso(AX - 40, 38, AX + 40, 50, matAgua(14), 0.02));   // o MAR ANIMADO
     [AX - 30, AX - 14, AX + 14, AX + 30].forEach(function (x) { palmeira(x, 32); });
     // guarda-sóis e espreguiçadeiras na areia
     [[AX - 20, 34], [AX - 8, 35], [AX + 8, 34], [AX + 20, 35]].forEach(function (p) {
@@ -135,15 +170,33 @@ TOGA.acm3d = (function () {
       lona.position.set(p[0], 1.95, p[1]); scene.add(lona);
       caixa(1.4, 0.18, 0.5, p[0], 0.18, p[1] + 1.0, mat(0xefe5c8), { colide: false, semSombra: true });
     });
+    // torre de salva-vidas na areia (refino: marco da praia)
+    caixa(2.2, 0.16, 2.2, AX + 14, 1.4, 33, mat(0xc94f4f), { colide: false });   // cabine
+    caixa(2.4, 1.2, 0.1, AX + 14, 0.6, 33.9, mat(0xe8e6da));                      // frente
+    [[-0.9, -0.9], [0.9, -0.9], [-0.9, 0.9], [0.9, 0.9]].forEach(function (p) {
+      caixa(0.12, 1.5, 0.12, AX + 14 + p[0], 0.75, 33 + p[1], mat(0x7a5634));
+    });
+    const cobertura = new THREE.Mesh(new THREE.ConeGeometry(2.0, 0.9, 4), mat(0x8e1f1a));
+    cobertura.rotation.y = Math.PI / 4; cobertura.position.set(AX + 14, 2.4, 33); scene.add(cobertura);
+    placaEm("🛟 SALVA-VIDAS", AX + 14, 0.6, 32.0, Math.PI, 1.6);
     pontos.praia = { x: AX, z: 30 };
+
+    /* logo da ACM em placa (canvas) — virado para quem chega */
+    function logoEm(x, y, z, rotY, tam) {
+      if (!TOGA.texturas3d.logoAcm) return;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(tam || 2.0, tam || 2.0),
+        new THREE.MeshBasicMaterial({ map: TOGA.texturas3d.logoAcm(), transparent: false }));
+      m.position.set(x, y, z); m.rotation.y = rotY || 0;
+      scene.add(m);
+      return m;
+    }
 
     /* ================= PORTARIA / FACHADA (sul, z ≈ −16) ================= */
     piso(AX - 6, -20, AX + 6, -12, mat(0x6b675f), 0.02);             // calçada de entrada
     caixa(0.4, 3.4, 0.4, AX - 5, 1.7, -16, mat(0x2b3340));
     caixa(0.4, 3.4, 0.4, AX + 5, 1.7, -16, mat(0x2b3340));
-    caixa(10.6, 0.7, 0.5, AX, 3.5, -16, mat(0x2b3340), { colide: false });
-    letreiroEm("ACM", "ASSOCIAÇÃO CEARENSE DE MAGISTRADOS · CLUBE DOS MAGISTRADOS",
-      "#1d3a6e", AX, 3.5, -15.7, 0, 5.2, 1.0);
+    caixa(10.6, 1.4, 0.5, AX, 4.0, -16, mat(0x2b3340), { colide: false });   // testeira mais alta
+    logoEm(AX, 4.0, -16.28, Math.PI, 2.0);                            // LOGO no alto do portão
     palmeira(AX - 7, -16); palmeira(AX + 7, -16);
     pontos.spawnAcm = { x: AX, z: -18, angulo: 0 };       // chega de bike, de frente para o clube
     pontos.biciVolta = { x: AX, z: -19 };
@@ -151,7 +204,12 @@ TOGA.acm3d = (function () {
     /* ================= O CLUBE (edifício baixo, z −12..2) ================= */
     piso(AX - 22, -12, AX + 22, 2,
       TOGA.texturas3d.pisoEsmec ? new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.pisoEsmec() }) : mat(0xe8e6e0), 0.04);
-    parede(AX - 22, -12, AX + 22, -12, mat(0xe8e6da));               // fundo sul (com vão central de entrada)
+    // fundo sul COM vão central de entrada x∈[AX-1.8, AX+1.8] (o juiz entra)
+    parede(AX - 22, -12, AX - 1.8, -12, mat(0xe8e6da));
+    parede(AX + 1.8, -12, AX + 22, -12, mat(0xe8e6da));
+    letreiroEm("ACM", "ASSOCIAÇÃO CEARENSE DE MAGISTRADOS · CLUBE DOS MAGISTRADOS",
+      "#1d3a6e", AX - 9, 2.0, -12.18, Math.PI, 5.2, 1.0);            // letreiro na fachada do clube
+    logoEm(AX + 8, 1.9, -12.18, Math.PI, 2.2);                        // 2º logo, na fachada do clube
     // reabrir o vão de entrada x∈[AX-1.5, AX+1.5]
     // (recriado por cima como duas metades)
     parede(AX - 22, 2, AX - 0.2, 2, mat(0xe8e6da));                  // norte trecho 1 (vão p/ a área de lazer)
@@ -209,10 +267,32 @@ TOGA.acm3d = (function () {
           corCabelo: "#241a10", traje: fem ? "blazer" : "terno",
           corTraje: ["#2a2a30", "#33424f", "#4a4438", "#2b3340"][i % 4] },
         px, pz, lado < 0 ? 0 : Math.PI, { sentado: true });
-      if (b) b.setEmocao(i === 0 ? "firme" : "neutro");
-      pontos.diretores.push({ nome: d.nome, cargo: d.cargo, x: px, z: pz + (lado < 0 ? 0.6 : -0.6) });
+      if (b) {
+        b.setEmocao(["firme", "neutro", "feliz", "neutro"][i % 4]);
+        // a reunião GESTICULA: cada diretor com um ciclo próprio, defasado
+        if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+          const g = ["enfase", "apelo", "indignado"][i % 3];
+          TOGA.rotinas3d.adicionarRotina(b, [
+            { esperar: 2 + (i % 5) }, { acao: g }, { esperar: 3 + (i % 4) },
+            { acao: i % 2 ? "enfase" : "apelo" }, { esperar: 4 + (i % 3) }
+          ]);
+        }
+      }
+      pontos.diretores.push({ nome: d.nome, cargo: d.cargo, fala: d.fala, x: px, z: pz + (lado < 0 ? 0.6 : -0.6) });
     });
-    // o presidente conduz, de pé, na cabeceira
+    // o presidente conduz, de pé, na cabeceira — gesticulando como quem preside
+    const presidente = npc("presidenteAcm",
+      { pele: "#d8a87f", cabelo: "curto", corCabelo: "#3a3a3a", traje: "terno", corTraje: "#2a2a30", corGravata: "#7a2e2e" },
+      AX + 18, -7, -Math.PI / 2);
+    if (presidente) {
+      presidente.setEmocao("firme");
+      if (TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) {
+        TOGA.rotinas3d.adicionarRotina(presidente, [
+          { acao: "enfase" }, { esperar: 3 }, { acao: "apelo" }, { esperar: 2 },
+          { acao: "indignado" }, { esperar: 3 }
+        ]);
+      }
+    }
     pontos.presidente = { x: AX + 18, z: -7 };
 
     /* ---- SALÃO DE JOGOS (entre auditório e diretoria, z −12..−2, x −6..6) ---- */
@@ -236,11 +316,11 @@ TOGA.acm3d = (function () {
     // PISCINA adulto + infantil + deck
     piso(AX - 16, 4, AX + 4, 16, mat(0xc9ccc2), 0.03);              // deck de piscina
     caixa(8, 0.3, 6, AX - 9, 0.16, 9, mat(0x1f6f9a), { colide: false, semSombra: true }); // borda
-    const aguaAd = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.2, 5.4), azulPiscina);
-    aguaAd.position.set(AX - 9, 0.22, 9); scene.add(aguaAd);
+    const aguaAd = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.2, 5.4), matAgua(3));
+    aguaAd.position.set(AX - 9, 0.22, 9); scene.add(aguaAd); aguas.push(aguaAd);
     colisores.push({ minX: AX - 13, maxX: AX - 5, minZ: 6, maxZ: 12 });
-    const aguaInf = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.16, 2.4), azulPiscina);
-    aguaInf.position.set(AX - 1, 0.2, 6.4); scene.add(aguaInf);
+    const aguaInf = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.16, 2.4), matAgua(2));
+    aguaInf.position.set(AX - 1, 0.2, 6.4); scene.add(aguaInf); aguas.push(aguaInf);
     colisores.push({ minX: AX - 2.9, maxX: AX + 0.9, minZ: 5.0, maxZ: 7.8 });
     placeMarcador("PISCINA ADULTO E INFANTIL", AX - 9, 14.4);
     pontos.piscina = { x: AX - 9, z: 4.8 };
@@ -287,34 +367,77 @@ TOGA.acm3d = (function () {
 
     function placeMarcador(texto, x, z) { placaEm(texto, x, 2.2, z, Math.PI, 2.6); }
 
-    /* ================= GENTE DO CLUBE ================= */
-    // o palestrante no auditório (a mesma palestra "Simples e Mágico")
+    /* ================= GENTE DO CLUBE (com VIDA: gestos e passos) ================= */
+    function rotina(b, passos) {
+      if (b && TOGA.rotinas3d && TOGA.rotinas3d.adicionarRotina) TOGA.rotinas3d.adicionarRotina(b, passos);
+    }
+    // o palestrante no auditório (a mesma palestra "Simples e Mágico"),
+    // virado para a plateia (sul) e gesticulando como quem expõe
     const palestrante = npc("palestranteAcm",
       { pele: "#d8a87f", cabelo: "curto", corCabelo: "#241a10", traje: "terno", corTraje: "#33424f", corBlusa: "#e8e2d2" },
       AX - 16, -9.6, 0);
-    if (palestrante) { palestrante.setEmocao("feliz"); palestrante.segurar("autos", "esq"); }
+    if (palestrante) {
+      palestrante.setEmocao("feliz"); palestrante.segurar("autos", "esq");
+      rotina(palestrante, [{ acao: "enfase" }, { esperar: 2 }, { acao: "apelo" }, { esperar: 2 }, { acao: "enfase" }, { esperar: 3 }]);
+    }
     // alguns magistrados na plateia
     if (TOGA.juizesTJCE && TOGA.juizesTJCE.sortearJuizes) {
       const plat = TOGA.juizesTJCE.sortearJuizes(8);
       pontos.plateiaAcm = [];
       plat.slice(0, 8).forEach(function (j, i) {
         const px = AX - 19 + (i % 6) * 2.0, pz = -8.6 + Math.floor(i / 6) * 1.5;
-        npc("plateiaAcm" + i,
+        const pj = npc("plateiaAcm" + i,
           { pele: PELES[i % 5], cabelo: ["curto", "coque", "longo", "calvo"][i % 4], corCabelo: "#241a10",
             traje: i % 2 ? "terno" : "blazer", corTraje: ["#2a2a30", "#33424f", "#4a4438"][i % 3] },
-          px, pz, 0, { sentado: true });
-        pontos.plateiaAcm.push({ nome: j.nome, lotacao: j.lotacao, x: px, z: pz });
+          px, pz, Math.PI, { sentado: true });   // VIRADOS PARA O PALCO (norte), como as cadeiras
+        if (pj) {
+          pj.setEmocao(i % 4 === 0 ? "feliz" : "neutro");
+          // um ou outro da plateia acena/assente de vez em quando
+          if (i % 3 === 0) rotina(pj, [{ esperar: 4 + i }, { acao: "enfase" }, { esperar: 6 }]);
+        }
+        pontos.plateiaAcm.push({ nome: j.nome, lotacao: j.lotacao, x: px, z: pz, boneco: pj });
       });
     }
-    // banhistas e um goleiro de plantão
-    npc("banhistaAcm",
-      { pele: "#a86a48", cabelo: "longo", corCabelo: "#3a2a1a", traje: "camisa", corTraje: "#f2b53a" },
-      AX - 5, 5, Math.PI);
-    npc("atletaAcm",
+    // um ATLETA correndo no campo society (circuito)
+    const atleta = npc("atletaAcm",
       { pele: "#8a5436", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#c94f4f" },
-      AX - 15.5, 26, Math.PI / 2);
+      AX - 14, 22, 0);
+    if (atleta) { atleta.setEmocao("feliz");
+      rotina(atleta, [
+        { ir: [{ x: AX + 4, z: 22 }] }, { ir: [{ x: AX + 4, z: 32 }] },
+        { ir: [{ x: AX - 14, z: 32 }] }, { ir: [{ x: AX - 14, z: 22 }] }
+      ]);
+    }
+    // um banhista passeando à beira da piscina
+    const banhista = npc("banhistaAcm",
+      { pele: "#a86a48", cabelo: "longo", corCabelo: "#3a2a1a", traje: "camisa", corTraje: "#f2b53a" },
+      AX - 4, 5, Math.PI);
+    if (banhista) rotina(banhista, [
+      { ir: [{ x: AX + 3, z: 6 }] }, { esperar: 3 }, { ir: [{ x: AX - 4, z: 14 }] }, { esperar: 3 },
+      { ir: [{ x: AX - 4, z: 5 }] }, { esperar: 2 }
+    ]);
+    // um GARÇOM do clube, circulando com a bandeja entre a copa e a diretoria
+    const garcom = npc("garcomAcm",
+      { pele: "#c98e66", cabelo: "curto", corCabelo: "#241a10", traje: "camisa", corTraje: "#e8e6da" },
+      AX + 14, -3, 0);
+    if (garcom) {
+      garcom.segurar("xicara", "dir");
+      rotina(garcom, [
+        { ir: [{ x: AX + 14, z: -6 }] }, { acao: "entregar" }, { esperar: 3 },
+        { ir: [{ x: AX + 8, z: -3 }, { x: AX, z: -4 }] }, { esperar: 2 },
+        { ir: [{ x: AX + 8, z: -3 }, { x: AX + 14, z: -3 }] }, { esperar: 2 }
+      ]);
+    }
 
-    info = { colisores: colisores, paredesCamera: paredesCamera, pontos: pontos, vivos: vivos };
+    /* ================= PASSARINHOS / GAIVOTAS ================= */
+    passaro(AX, 40, 7.0, 16, 0xe8e2d2);            // gaivotas sobre o mar
+    passaro(AX - 10, 42, 6.0, 12, 0xe8e2d2);
+    passaro(AX + 12, 38, 8.0, 14, 0xded6c8);
+    passaro(AX - 6, 18, 5.5, 10, 0x33373d);        // sobre o campo/piscina
+    passaro(AX + 8, 10, 6.0, 9, 0x44484e);
+    passaro(AX, 30, 5.0, 8, 0xe8e2d2);             // na praia
+
+    info = { colisores: colisores, paredesCamera: paredesCamera, pontos: pontos, vivos: vivos, aguas: aguas, passaros: passaros };
     return info;
   }
 

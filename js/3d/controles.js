@@ -23,6 +23,7 @@ TOGA.controles3d = (function () {
   let camera = null, jogador = null, colisores = [], paredesCamera = [];
   let provObstaculos = null;        // fornece obstáculos dinâmicos (NPCs, cachorro)
   let obstaculosCache = [];         // recalculado uma vez por quadro
+  let multVel = 1;                  // multiplicador de velocidade (1 a pé, >1 de bike)
   let ativo = false;
   let yaw = 0, pitch = -0.26;                  // ângulos da câmera (visão um pouco mais alta)
   let velAtual = new THREE.Vector3();          // velocidade suavizada
@@ -219,8 +220,8 @@ TOGA.controles3d = (function () {
       }
     }
 
-    // a toga pesa: com estresse alto, o passo encurta
-    let vel = VEL;
+    // a toga pesa: com estresse alto, o passo encurta. De bicicleta, voa.
+    let vel = VEL * multVel;
     const est = TOGA.motor && TOGA.motor.estado ? (TOGA.motor.estado.estresse || 0) : 0;
     if (est >= 85) vel *= 0.72;
     else if (est >= 70) vel *= 0.85;
@@ -312,6 +313,8 @@ TOGA.controles3d = (function () {
     aoDestino: function (fn) { aoDefinirDestino = fn; },
     /* fornecedor de obstáculos dinâmicos (NPCs, cachorro): () => [{x,z,raio}] */
     definirObstaculos: function (fn) { provObstaculos = fn; },
+    /* multiplicador de velocidade (1 a pé, ~1.9 de bicicleta) */
+    definirMultiplicadorVel: function (m) { multVel = m || 1; },
     get yaw() { return yaw; },
     setEixoVirtual: function (frente, lado) {
       eixoVirtual.frente = Math.max(-1, Math.min(1, frente || 0));

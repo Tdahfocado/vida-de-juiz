@@ -1190,9 +1190,10 @@ TOGA.cena3d = (function () {
         visivel: function () { return M().estado && M().fimDaPauta() && semInterludios(); },
         acao: function () { TOGA.ui.mostrarEpilogo(); } },
 
-      // o Parque é LIVRE a qualquer hora — uma das formas de baixar o estresse
-      { id: "parqueDireto", pos: { x: P.portaSaida.x, z: P.portaSaida.z + 1.7 }, raio: 1.8,
-        rotulo: "🌳 dar uma volta no Parque da Cidade (pausa · alivia o estresse)",
+      // o Parque é LIVRE a qualquer hora — pela PORTA DOS FUNDOS, no fim do
+      // corredor leste (longe da entrada principal/rua)
+      { id: "parqueDireto", pos: P.parquePorta || { x: 48.8, z: 0 }, raio: 2.0,
+        rotulo: "🌳 sair para o Parque da Cidade (pausa · alivia o estresse)",
         visivel: function () { return !!(M().estado && TOGA.parque3d); },
         acao: function () { entrarParque("forum"); } },
 
@@ -1662,6 +1663,7 @@ TOGA.cena3d = (function () {
       return;
     }
     emAtendimento = true;
+    desmontarBike(true);          // se estava de bike, desce antes de cair
     if (!emergTickReg) { TOGA.nucleo3d.aoFrame(tickEmergencia); emergTickReg = true; }
     if (TOGA.controles3d.desativar) TOGA.controles3d.desativar();
     limparToasts();
@@ -2473,10 +2475,64 @@ TOGA.cena3d = (function () {
 
   /* Eventos de cena disparados pelos CASOS (campo opcional
      `evento` nas opções/fins): "prisao:<id>" e "soltura:<id>". */
+  /* ---------- O VÍDEO-PROVA (Dia 5, caso eleitoral) ----------
+     Quando o juiz DEFERE a exibição, um painel desce do teto da
+     sala e o vídeo "roda": tela com a gravação, scanline varrendo
+     e o REC piscando; depois o painel recolhe. ---- */
+  let videoProva = null, videoProvaTickReg = false;
+  function mostrarVideoProva3d() {
+    if (videoProva || !TOGA.nucleo3d || !TOGA.nucleo3d.scene) return;
+    if (!videoProvaTickReg) { TOGA.nucleo3d.aoFrame(tickVideoProva); videoProvaTickReg = true; }
+    const W = 3.4, H = 2.0;
+    const g = new THREE.Group();
+    const moldura = new THREE.Mesh(new THREE.BoxGeometry(W + 0.22, H + 0.22, 0.06),
+      new THREE.MeshLambertMaterial({ color: 0x0a0a0c }));
+    moldura.position.z = -0.04;
+    const telaMat = new THREE.MeshBasicMaterial({
+      map: TOGA.texturas3d.videoEleitoral ? TOGA.texturas3d.videoEleitoral() : null,
+      transparent: true, opacity: 0.96 });
+    const tela = new THREE.Mesh(new THREE.PlaneGeometry(W, H), telaMat);
+    const scan = new THREE.Mesh(new THREE.PlaneGeometry(W, 0.12),
+      new THREE.MeshBasicMaterial({ color: 0xbfe6f2, transparent: true, opacity: 0.28, depthWrite: false }));
+    scan.position.z = 0.02;
+    const rec = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6),
+      new THREE.MeshBasicMaterial({ color: 0xe03030 }));
+    rec.position.set(-W / 2 + 0.2, H / 2 - 0.2, 0.05);
+    const cabo = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.7, 6),
+      new THREE.MeshLambertMaterial({ color: 0x2b2f35 }));
+    cabo.position.set(0, H / 2 + 0.35, -0.04);
+    g.add(moldura, tela, scan, rec, cabo);
+    // na sala de audiências, à frente das partes, virado para a bancada/câmera
+    g.position.set(-2.6, 3.7, 8.2); g.rotation.y = 0;
+    TOGA.nucleo3d.scene.add(g);
+    videoProva = { grupo: g, telaMat: telaMat, scan: scan, rec: rec, fase: "descer", t: 0,
+      yTopo: 3.7, yBaixo: 2.05, H: H };
+    if (TOGA.audio && TOGA.audio.tocar) TOGA.audio.tocar("papel");
+    toastMundo("📽 O painel desce do teto e o vídeo começa a rodar: a reunião, o maço de notas, “é duzentos por cabeça”. A sala prende a respiração — a prova é tão clara quanto controversa.");
+  }
+  function tickVideoProva(dt, t) {
+    const v = videoProva; if (!v) return;
+    v.t += dt;
+    if (v.fase === "descer") {
+      v.grupo.position.y = v.yTopo + (v.yBaixo - v.yTopo) * Math.min(1, v.t / 1.3);
+      if (v.t >= 1.3) { v.fase = "tocar"; v.t = 0; }
+    } else if (v.fase === "tocar") {
+      if (v.telaMat) v.telaMat.opacity = 0.9 + Math.sin(t * 26) * 0.06;     // flicker
+      if (v.scan) v.scan.position.y = v.H / 2 - ((v.t * 0.5) % 1) * v.H;     // varredura
+      if (v.rec) v.rec.visible = (Math.floor(t * 1.6) % 2 === 0);           // REC pisca
+      if (v.t >= 7) { v.fase = "subir"; v.t = 0; }
+    } else {
+      v.grupo.position.y = v.yBaixo + (v.yTopo - v.yBaixo) * Math.min(1, v.t / 1.3);
+      if (v.t >= 1.3) { TOGA.nucleo3d.scene.remove(v.grupo); videoProva = null; }
+    }
+  }
+
   function evento(spec, casoId) {
-    if (!spec || !TOGA.prisao3d) return;
+    if (!spec) return;
     const partes = String(spec).split(":");
     const tipo = partes[0], id = partes[1];
+    if (tipo === "video") { mostrarVideoProva3d(); return; }   // o vídeo-prova do caso eleitoral
+    if (!TOGA.prisao3d) return;
     const chave = (casoId || "") + ":" + id;
     if (tipo === "prisao" && npcs[id]) {
       const b = npcs[id];
@@ -2599,11 +2655,6 @@ TOGA.cena3d = (function () {
       { id: "voltarForum", pos: P.portaForum, raio: 2.0,
         rotulo: "entrar no fórum",
         acao: function () { voltarForum(); } },
-
-      { id: "parque", pos: P.parqueEntrada || { x: P.portaForum.x - 16, z: 8 }, raio: 2.4,
-        rotulo: "🌳 ir ao Parque da Cidade (acesso livre)",
-        visivel: function () { return !!TOGA.parque3d; },
-        acao: function () { entrarParque("rua"); } },
 
       { id: "delegacia", pos: P.delegaciaPorta, raio: 2.2,
         rotulo: function () {
@@ -3055,6 +3106,7 @@ TOGA.cena3d = (function () {
   }
 
   function voltarForum() {
+    desmontarBike(true);
     if (TOGA.carro3d && TOGA.carro3d.ativo) TOGA.carro3d.cancelar();
     limparToasts();
     localAtivo = "forum";
@@ -3103,18 +3155,20 @@ TOGA.cena3d = (function () {
   function entrarParque(origem) {
     garantirIniciado();
     if (!TOGA.parque3d) return;
+    desmontarBike(true);
     if (origem) parqueOrigem = origem;
     limparToasts();
     infoParque = TOGA.parque3d.construir(TOGA.nucleo3d.scene);
     localAtivo = "parque";
+    garantirAmbienteTick();
     TOGA.controles3d.setMundo(infoParque);
     const sp = infoParque.pontos.spawnParque;
     TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
     TOGA.interacao3d.definir(interagiveisParque());
     TOGA.controles3d.ativar();          // pode vir de um passeio de bike (controles off)
     alvoObjetivo = null;
-    definirObjetivo("Parque da Cidade — passeie, sente no banco ou pegue a bicicleta");
-    toastMundo("🌳 O Parque da Cidade: o lago, a ilha ao centro e a ciclovia. Acesso livre, ar livre. Pegue a bicicleta para relaxar — ou pedale até a ACM, à beira-mar.");
+    definirObjetivo("Parque da Cidade — pegue a bicicleta, sente no banco, ou vá à ACM na orla (norte)");
+    toastMundo("🌳 O Parque da Cidade: lago com ilha e coreto, fonte, playground e ciclovia. Pegue a bicicleta e PILOTE livre para relaxar — e, lá na orla ao norte, à beira-mar, está a ACM (o Clube dos Magistrados).");
     if (TOGA.atividades && TOGA.atividades.marcarConcluida) TOGA.atividades.marcarConcluida("parque");
     if (TOGA.conquistas) TOGA.conquistas.avaliar("visita-parque");
     montarProtestoParque();
@@ -3123,9 +3177,11 @@ TOGA.cena3d = (function () {
   function entrarAcm() {
     garantirIniciado();
     if (!TOGA.acm3d) return;
+    desmontarBike(true);
     limparToasts();
     infoAcm = TOGA.acm3d.construir(TOGA.nucleo3d.scene);
     localAtivo = "acm";
+    garantirAmbienteTick();
     TOGA.controles3d.setMundo(infoAcm);
     const sp = infoAcm.pontos.spawnAcm;
     TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
@@ -3138,71 +3194,77 @@ TOGA.cena3d = (function () {
     if (TOGA.conquistas) TOGA.conquistas.avaliar("visita-acm");
   }
 
-  /* ---- a bicicleta: passeio leve, sem obstáculos ----
-     Tomamos a câmera e o juiz por alguns segundos e desenhamos
-     um trajeto suave (uma volta ao redor do lago). Relaxa o
-     estresse; quando o destino é a ACM, termina chegando lá. */
-  let bikeState = null, bikeMesh = null, bikeTickReg = false;
+  /* ---- a bicicleta: agora PILOTADA pelo jogador ----
+     Monta a bike sob o juiz, dá um empurrão na velocidade e deixa
+     ele pedalar livre pelo parque com os próprios controles. As
+     rodas giram conforme o deslocamento e o estresse cai aos poucos
+     enquanto se anda. Desce no bicicletário (ou ao trocar de área). */
+  let andandoDeBike = false, bikeMesh = null, bikeTickReg = false, bikeReliefAcc = 0;
+  const bikeUltimaPos = new THREE.Vector3();
 
-  function tickBike(dt) {
-    if (!bikeState || !jogador) return;
-    bikeState.t += dt / bikeState.dur;
-    const path = bikeState.path, n = path.length - 1;
-    const f = Math.max(0, Math.min(0.9999, bikeState.t)) * n;
-    const i = Math.floor(f), frac = f - i;
-    const a = path[i], b = path[Math.min(n, i + 1)];
-    const x = a.x + (b.x - a.x) * frac, z = a.z + (b.z - a.z) * frac;
-    const tx = b.x - a.x, tz = b.z - a.z;
-    const ang = Math.atan2(tx, tz);
-    jogador.grupo.position.set(x, 0, z);
-    jogador.grupo.rotation.y = ang;
-    if (bikeMesh && TOGA.bicicleta3d) TOGA.bicicleta3d.girarRodas(bikeMesh, dt, 9);
-    const cam = TOGA.nucleo3d.camera;
-    if (cam) {
-      const dx = Math.sin(ang), dz = Math.cos(ang);
-      cam.position.set(x - dx * 5, 3.0, z - dz * 5);
-      cam.lookAt(x + dx * 2, 1.1, z + dz * 2);
-    }
-    if (bikeState.t >= 1) {
-      const fim = bikeState.aoChegar; bikeState = null;
-      if (bikeMesh && bikeMesh.parent) bikeMesh.parent.remove(bikeMesh);
-      if (fim) fim();
+  function montarBike() {
+    if (andandoDeBike || !jogador) return;
+    if (TOGA.bicicleta3d && !bikeMesh) bikeMesh = TOGA.bicicleta3d.criar(0x3a8a6a);
+    if (bikeMesh) { jogador.grupo.add(bikeMesh); bikeMesh.position.set(0, 0, 0); bikeMesh.rotation.set(0, 0, 0); bikeMesh.visible = true; }
+    andandoDeBike = true; bikeReliefAcc = 0;
+    bikeUltimaPos.copy(jogador.grupo.position);
+    if (TOGA.controles3d.definirMultiplicadorVel) TOGA.controles3d.definirMultiplicadorVel(1.9);
+    if (!bikeTickReg) { TOGA.nucleo3d.aoFrame(tickBikeRide); bikeTickReg = true; }
+    toastMundo("🚲 Na bicicleta! Pedale à vontade pelo parque (W A S D / setas) — o vento alivia o estresse. Volte ao bicicletário para descer.");
+  }
+
+  function desmontarBike(silencioso) {
+    if (!andandoDeBike) return;
+    andandoDeBike = false;
+    if (bikeMesh && bikeMesh.parent) bikeMesh.parent.remove(bikeMesh);
+    if (TOGA.controles3d.definirMultiplicadorVel) TOGA.controles3d.definirMultiplicadorVel(1);
+    if (!silencioso) toastMundo("🚲 Você desce da bike, o passo mais leve do que subiu.");
+  }
+
+  function tickBikeRide(dt) {
+    if (!andandoDeBike || !jogador) return;
+    const p = jogador.grupo.position;
+    const dist = Math.hypot(p.x - bikeUltimaPos.x, p.z - bikeUltimaPos.z);
+    bikeUltimaPos.copy(p);
+    if (bikeMesh && TOGA.bicicleta3d && dist > 0.0005) TOGA.bicicleta3d.girarRodas(bikeMesh, dt, dist * 22);
+    // o ar livre alivia: a cada ~5 m pedalados, −1 de estresse
+    bikeReliefAcc += dist;
+    if (bikeReliefAcc >= 5) {
+      bikeReliefAcc = 0;
+      if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-1); TOGA.motor.salvar(); }
+      if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
     }
   }
 
-  function passeioDeBike(opts) {
-    opts = opts || {};
-    if (bikeState || !jogador) return;
-    if (!bikeTickReg) { TOGA.nucleo3d.aoFrame(tickBike); bikeTickReg = true; }
-    TOGA.controles3d.desativar();
-    TOGA.interacao3d.definir([]);
-    limparToasts();
-    if (TOGA.bicicleta3d) {
-      if (!bikeMesh) bikeMesh = TOGA.bicicleta3d.criar(0x2f6a8a);
-      jogador.grupo.add(bikeMesh);
-      bikeMesh.position.set(0, 0, 0);
+  /* ---- ambiente VIVO das áreas externas: a água do mar/lago se
+     move (rola o offset da textura) e os passarinhos voam. ---- */
+  let ambienteTickReg = false;
+  function garantirAmbienteTick() {
+    if (ambienteTickReg) return;
+    ambienteTickReg = true;
+    TOGA.nucleo3d.aoFrame(tickAmbiente);
+  }
+  function animarPassaro(p, dt, t) {
+    p.fase += dt * (p.vel || 0.5);
+    const a = p.fase;
+    p.grupo.position.set(p.cx + Math.cos(a) * p.raio, p.alt + Math.sin(a * 2) * 0.4, p.cz + Math.sin(a) * p.raio);
+    p.grupo.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a));   // segue a curva do voo
+    const flap = Math.sin(t * 13 + p.fase * 4) * 0.7;
+    if (p.asaE) p.asaE.rotation.z = 0.5 + flap;
+    if (p.asaD) p.asaD.rotation.z = -0.5 - flap;
+  }
+  function tickAmbiente(dt, t) {
+    const info = localAtivo === "acm" ? infoAcm : localAtivo === "parque" ? infoParque : null;
+    if (!info) return;
+    const aguas = info.aguas;
+    if (aguas) for (let i = 0; i < aguas.length; i++) {
+      const m = aguas[i].material;
+      // só o OFFSET muda (a matriz da textura se atualiza sozinha); nada de
+      // needsUpdate, que re-enviaria o canvas à GPU todo quadro
+      if (m && m.map) { m.map.offset.x += dt * 0.02; m.map.offset.y += dt * 0.013; }
     }
-    jogador.executarAcao(null);
-    // trajeto: arco/volta ao redor de um centro
-    const c = opts.centro, r = opts.raio || 20, voltas = opts.voltas || 1;
-    const passos = 40, path = [];
-    for (let k = 0; k <= passos; k++) {
-      const ang = Math.PI / 2 + (k / passos) * Math.PI * 2 * voltas;
-      path.push({ x: c.x + Math.cos(ang) * r, z: c.z + Math.sin(ang) * r });
-    }
-    if (opts.objetivo) definirObjetivo(opts.objetivo);
-    if (opts.msg) toastMundo(opts.msg, { auto: 4 });
-    bikeState = {
-      t: 0, dur: opts.dur || 9, path: path,
-      aoChegar: function () {
-        if (TOGA.motor && TOGA.motor.estado) {
-          TOGA.motor.alterarEstresse(opts.alivio || -14);
-          TOGA.motor.salvar();
-        }
-        if (TOGA.ui && TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
-        if (opts.aoChegar) opts.aoChegar();
-      }
-    };
+    const passaros = info.passaros;
+    if (passaros) for (let i = 0; i < passaros.length; i++) animarPassaro(passaros[i], dt, t);
   }
 
   function interagiveisParque() {
@@ -3211,46 +3273,31 @@ TOGA.cena3d = (function () {
     function conq() { return TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0; }
     return [
       { id: "voltarRua", pos: P.portaRua, raio: 2.4,
-        rotulo: function () { return parqueOrigem === "forum" ? "voltar ao fórum" : "voltar à rua do fórum"; },
-        acao: function () { if (parqueOrigem === "forum") voltarForum(); else entrarRua(); } },
+        rotulo: function () { return parqueOrigem === "forum" ? "voltar ao fórum (porta dos fundos)" : "voltar à rua do fórum"; },
+        acao: function () { desmontarBike(true); if (parqueOrigem === "forum") voltarForum(); else entrarRua(); } },
 
       { id: "bikePasseio", pos: P.bicicleta, raio: 2.4,
-        rotulo: "🚲 andar de bicicleta (relaxar)",
-        acao: function () {
-          passeioDeBike({
-            centro: { x: TOGA.parque3d.PX, z: 4 }, raio: 20, voltas: 1, dur: 9, alivio: -16,
-            objetivo: "Pedalando pelo parque — respire fundo",
-            msg: "🚲 Uma volta tranquila ao redor do lago. Sem pressa, sem pauta, sem martelo — só o pedal e a brisa.",
-            aoChegar: function () {
-              localAtivo = "parque";
-              TOGA.controles3d.setMundo(infoParque);
-              const bp = infoParque.pontos.bicicleta;
-              TOGA.controles3d.teleportar(bp.x, bp.z, 0);
-              TOGA.interacao3d.definir(interagiveisParque());
-              definirObjetivo("Parque da Cidade — passeie, sente no banco ou pedale até a ACM");
-              toastMundo("🚲 De volta ao bicicletário, leve como antes de uma boa decisão. (estresse aliviado)");
-              reativarControles();
-            }
-          });
-        } },
-
-      { id: "bikeAcm", pos: { x: P.bicicleta.x - 4.5, z: P.bicicleta.z }, raio: 1.9,
         rotulo: function () {
-          return conq() >= ACM_LIMIAR
-            ? "🚲🏖 pedalar até a ACM (à beira-mar)"
-            : "🔒 ACM — pedale até lá com " + ACM_LIMIAR + " conquistas (" + conq() + "/" + ACM_LIMIAR + ")";
+          return andandoDeBike ? "🚲 descer da bicicleta (guardar no bicicletário)"
+                               : "🚲 pegar a bicicleta — pilote livre pelo parque (relaxa o estresse)";
         },
+        acao: function () { if (andandoDeBike) desmontarBike(); else montarBike(); } },
+
+      { id: "acmGate", pos: P.acmGate, raio: 2.8,
+        rotulo: function () {
+          const n = conq();
+          return n >= ACM_LIMIAR
+            ? "🏖 entrar na ACM — Clube dos Magistrados (à beira-mar)"
+            : "🔒 ACM — abre com " + ACM_LIMIAR + " conquistas (" + n + "/" + ACM_LIMIAR + ")";
+        },
+        visivel: function () { return !!P.acmGate; },
         acao: function () {
           if (conq() < ACM_LIMIAR) {
-            toastMundo("🔒 A ACM, o Clube dos Magistrados, abre as portas a quem soma " + ACM_LIMIAR + " conquistas. Você tem " + conq() + ". Falta pouco — siga decidindo bem, e a orla espera.");
+            toastMundo("🔒 A ACM, o Clube dos Magistrados, abre as portas a quem soma " + ACM_LIMIAR + " conquistas. Você tem " + conq() + ". Falta pouco — a orla já se vê daqui, logo ali na praia.");
             return;
           }
-          passeioDeBike({
-            centro: { x: TOGA.parque3d.PX, z: 4 }, raio: 20, voltas: 0.55, dur: 6.5, alivio: -12,
-            objetivo: "Pedalando até a ACM — relaxe e aproveite a orla",
-            msg: "🚲 Você pega a ciclovia da orla rumo à ACM. Vento no rosto, mar à direita — o estresse fica para trás.",
-            aoChegar: function () { entrarAcm(); }
-          });
+          desmontarBike(true);
+          entrarAcm();
         } },
 
       { id: "bancoParque", pos: P.banco, raio: 2.0,
@@ -3263,28 +3310,83 @@ TOGA.cena3d = (function () {
         } },
 
       { id: "dequeParque", pos: P.deque, raio: 2.0,
-        rotulo: "caminhar pelo deque até a ilha",
+        rotulo: "caminhar pelo deque e alimentar os patos",
+        acao: function () {
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-3); TOGA.motor.salvar(); }
+          if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🦆 Da passarela, você joga umas migalhas e os patos vêm em comissão julgadora avaliar a oferta. Por um instante, o único processo é o do pão. (−3 de estresse)");
+        } },
+
+      { id: "totemParque", pos: P.totem || { x: 0, z: 0 }, raio: 2.0,
+        rotulo: "ler o mapa do Parque",
+        visivel: function () { return !!P.totem; },
+        acao: function () {
+          toastMundo("🗺 O totem do Parque: lago com ilha e coreto, fonte, playground, pista de cooper, ciclovia e a orla ao norte — onde fica a ACM. “Você está aqui”, diz a setinha, com a serenidade de quem nunca teve pressa.");
+        } },
+
+      { id: "sorveteParque", pos: P.sorvete || { x: 0, z: 0 }, raio: 2.0,
+        rotulo: "🍦 tomar um sorvete",
+        visivel: function () { return !!P.sorvete; },
+        acao: function () {
+          encenarJogador({ acao: "beber", dur: 2.2 });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-4); TOGA.motor.salvar(); }
+          if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🍦 Um picolé de tapioca no carrinho do parque. Derrete mais rápido do que prazo de embargos — você come depressa, e sorri. (−4 de estresse)");
+        } },
+
+      { id: "playgroundParque", pos: P.playground || { x: 0, z: 0 }, raio: 2.4,
+        rotulo: "dar uma volta no playground",
+        visivel: function () { return !!P.playground; },
+        acao: function () {
+          encenarJogador({ acao: "entregar", dur: 1.4 });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-3); TOGA.motor.salvar(); }
+          if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🛝 Você testa o balanço “só para conferir a segurança do equipamento” (jurisprudência consolidada de todo adulto). Uma criança aprova: “o moço sabe balançar”. (−3 de estresse)");
+        } },
+
+      { id: "quiosqueParque", pos: P.quiosque || { x: 0, z: 0 }, raio: 2.2,
+        rotulo: "☕ parar no quiosque",
+        visivel: function () { return !!P.quiosque; },
+        acao: function () {
+          jogador.segurar("xicara", "dir");
+          encenarJogador({ acao: "beber", dur: 2.0, aoFim: function () { jogador.segurar(null, "dir"); } });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-3); TOGA.motor.salvar(); }
+          if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("☕ Água de coco gelada no quiosque, com o canudo e tudo. O atendente reconhece o senhor: “é o juiz, né? Aqui ninguém é réu — é só freguês”. (−3 de estresse)");
+        } },
+
+      { id: "passarosParque", pos: { x: TOGA.parque3d.PX - 12, z: -2 }, raio: 3.0,
+        rotulo: "observar os passarinhos",
         acao: function () {
           if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-2); TOGA.motor.salvar(); }
           if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
-          toastMundo("🌉 A passarela de madeira range de leve sobre a água. Da ilha, o parque inteiro parece um intervalo merecido. (−2 de estresse)");
+          toastMundo("🐦 Os pássaros cruzam o céu do parque sem pauta nem prazo — sabiás, bem-te-vis e uma gaivota perdida da praia. Cinco minutos olhando para cima fazem mais pela toga do que qualquer despacho. (−2 de estresse)");
         } }
     ];
+  }
+
+  /* lança um minijogo da ACM (natação/beachTennis/penaltis): trava os
+     controles, roda o painel, e religa ao terminar. */
+  function iniciarMinijogo(qual) {
+    if (!TOGA.minijogos || TOGA.minijogos.emJogo) return;
+    if (TOGA.atividades && TOGA.atividades.emVisita) return;
+    const fn = TOGA.minijogos[qual];
+    if (!fn) { toastMundo("O minijogo não está disponível agora."); return; }
+    TOGA.controles3d.desativar();
+    fn(function () { reativarControles(); });
   }
 
   function interagiveisAcm() {
     const P = infoAcm.pontos;
     const AX = TOGA.acm3d.AX;
     const lista = [
-      { id: "voltarBikeAcm", pos: P.biciVolta, raio: 2.8,
-        rotulo: "🚲 voltar de bicicleta ao Parque",
+      { id: "voltarParque", pos: P.biciVolta, raio: 2.8,
+        rotulo: "🚶 voltar ao Parque da Cidade",
         acao: function () {
-          passeioDeBike({
-            centro: { x: AX, z: 26 }, raio: 16, voltas: 0.5, dur: 6, alivio: -8,
-            objetivo: "De volta pela orla — sem pressa",
-            msg: "🚲 Você pega a bike de volta. A orla é ainda mais bonita na volta, com o sol mais baixo.",
-            aoChegar: function () { entrarParque(); }
-          });
+          toastMundo("🚶 Você atravessa o portão de volta ao Parque — o mar fica para trás.");
+          entrarParque("forum");
+          const g = infoParque && infoParque.pontos && infoParque.pontos.acmGate;
+          if (g) TOGA.controles3d.teleportar(g.x, g.z + 4, 0);   // reaparece ao lado do portão, no parque
         } },
 
       { id: "palestraAcm", pos: P.assentoPalestraAcm, raio: 2.6,
@@ -3311,24 +3413,16 @@ TOGA.cena3d = (function () {
         } },
 
       { id: "piscinaAcm", pos: P.piscina, raio: 2.4,
-        rotulo: "ver a piscina adulto e infantil",
-        acao: function () {
-          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-3); TOGA.motor.salvar(); }
-          if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
-          toastMundo("🏊 A piscina adulto e, ao lado, a infantil — água azul reluzindo a poucos metros do mar. Você molha os pés e adia a sustentação oral mental. (−3 de estresse)");
-        } },
+        rotulo: "🏊 disputar uma corrida na piscina (minijogo)",
+        acao: function () { iniciarMinijogo("natacao"); } },
 
       { id: "beachTennisAcm", pos: P.beachTennis, raio: 2.4,
-        rotulo: "ver a quadra de beach tennis",
-        acao: function () {
-          toastMundo("🎾 A quadra de beach tennis, areia fofa e rede esticada. Alguém grita “é sua!” e ninguém vai buscar. Esporte de magistrado: todo mundo acha que a bola era do outro.");
-        } },
+        rotulo: "🎾 jogar uma partida de beach tennis (minijogo)",
+        acao: function () { iniciarMinijogo("beachTennis"); } },
 
       { id: "campoAcm", pos: P.campo, raio: 2.6,
-        rotulo: "ver o campo de futebol society",
-        acao: function () {
-          toastMundo("⚽ O campo society, grama verdinha e traves brancas. Aos sábados, a magistratura troca a toga pela camisa e descobre que celeridade no gramado também é difícil.");
-        } },
+        rotulo: "⚽ disputar pênaltis no campo society (minijogo)",
+        acao: function () { iniciarMinijogo("penaltis"); } },
 
       { id: "saunaAcm", pos: P.sauna, raio: 2.2,
         rotulo: "espiar a sauna",
@@ -3345,11 +3439,21 @@ TOGA.cena3d = (function () {
         } },
 
       { id: "praiaAcm", pos: P.praia, raio: 2.6,
-        rotulo: "caminhar até o mar",
+        rotulo: "caminhar até o mar (e ver as gaivotas)",
         acao: function () {
           if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-5); TOGA.motor.salvar(); }
           if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
-          toastMundo("🌊 A Praia do Futuro a poucos passos: vento salgado, barracas ao longe e o horizonte sem prazo nem peça. O mar não recorre. (−5 de estresse)");
+          toastMundo("🌊 A Praia do Futuro a poucos passos: o mar vem e vai, as gaivotas riscam o céu, e o horizonte não tem prazo nem peça. O mar não recorre. (−5 de estresse)");
+        } },
+
+      { id: "salaoJogosAcm", pos: P.salaoJogos || { x: 0, z: 0 }, raio: 2.6,
+        rotulo: "🎱 jogar uma sinuca no salão de jogos",
+        visivel: function () { return !!P.salaoJogos; },
+        acao: function () {
+          encenarJogador({ acao: "entregar", dur: 1.8 });
+          if (TOGA.motor && TOGA.motor.estado) { TOGA.motor.alterarEstresse(-4); TOGA.motor.salvar(); }
+          if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+          toastMundo("🎱 No salão de jogos: sinuca, pebolim e pingue-pongue. Você encaçapa a bola 8 “no grito” e um colega protesta a falta — protesto indeferido por unanimidade da mesa. (−4 de estresse)");
         } }
     ];
 
@@ -3358,7 +3462,9 @@ TOGA.cena3d = (function () {
       lista.push({ id: "diretorAcm" + i, pos: { x: d.x, z: d.z }, raio: 1.5,
         rotulo: "cumprimentar — " + d.nome.split(" ")[0] + " (" + d.cargo + ")",
         acao: function () {
-          toastMundo("🤝 " + d.nome + " — " + d.cargo + " da ACM. “Bom ter um colega da ativa por aqui, Excelência. A associação é a casa de todos nós — descanso, esporte e prerrogativas.”");
+          // cada diretor tem a SUA fala, ligada ao cargo
+          const f = d.fala || "“Bom ter um colega da ativa por aqui, Excelência.”";
+          toastMundo("🤝 " + d.nome + " — " + d.cargo + ": " + f);
         } });
     });
     return lista;

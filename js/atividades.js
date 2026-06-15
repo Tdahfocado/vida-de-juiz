@@ -23,9 +23,9 @@ TOGA.atividades = (function () {
 
   const ATIVIDADES = [
     { id: "parque", icone: "🌳", nome: "Parque da Cidade", limiar: 0,
-      hint: "Acesso livre A QUALQUER HORA: dê uma volta na porta do fórum. Lago, ciclovia e a bicicleta — uma das formas de aliviar o estresse." },
+      hint: "Acesso livre A QUALQUER HORA, pela porta dos fundos no fim do corredor leste. Lago, fonte, playground e a bicicleta que você pilota — uma das formas de aliviar o estresse." },
     { id: "acm", icone: "🏖", nome: "ACM — Clube dos Magistrados", limiar: 5,
-      hint: "À beira-mar: auditório, esportes e a Diretoria em reunião. Pegue a bicicleta no Parque e pedale até lá." },
+      hint: "À beira-mar, visível na orla ao norte do Parque: auditório, esportes e a Diretoria. Entre pelo portão da ACM (destrava com 5 conquistas)." },
     { id: "delegacia", icone: "🚔", nome: "Visita à Delegacia", limiar: 8,
       hint: "Conheça o outro lado do flagrante: a casa da Polícia Judiciária." },
     { id: "escola", icone: "🏫", nome: "Visita à Escola Municipal", limiar: 15,

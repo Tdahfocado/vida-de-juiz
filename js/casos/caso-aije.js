@@ -144,6 +144,7 @@ TOGA.casos.push({
             fundamento: "Busca da verdade real, sem filtro de admissibilidade",
             efeitos: { tec: -10, imp: -6, estresse: 4, tempo: 6 },
             carimbo: "PROVA ACOLHIDA",
+            evento: "video",
             setFlags: { prejulgouMidia: true },
             reacoes: [
               { quem: "beatriz", emocao: "raiva", texto: "Vossa Excelência acabou de antecipar o mérito e de validar prova cuja licitude nem foi enfrentada. Isso é nulidade, e está em ata." }
@@ -155,6 +156,7 @@ TOGA.casos.push({
             fundamento: "Contraditório (CF, art. 5º, LV) sem prejulgar a admissibilidade",
             efeitos: { tec: 8, imp: 6, tempo: 8 },
             carimbo: "EXIBIÇÃO PARA CONTRADITÓRIO",
+            evento: "video",
             setFlags: { conduziuContraditorio: true },
             reacoes: [
               { quem: "heitor", emocao: "firme", texto: "De acordo, Excelência. Que se veja e se ouça — e que a decisão sobre se PODE ser usada venha depois, fundamentada. É o caminho que sobrevive ao Tribunal." }

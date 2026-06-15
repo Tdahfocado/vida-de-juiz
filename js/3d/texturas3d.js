@@ -388,6 +388,112 @@ TOGA.texturas3d = (function () {
     });
   }
 
+  /* ---------- LOGO DA ACM ----------
+     Recriação em canvas (idioma do jogo, sem asset externo) da
+     marca da Associação Cearense de Magistrados: a silhueta navy
+     do mapa/asa do Ceará com o acento verde, "ACM" e o nome. */
+  function logoAcm() {
+    return criar("logoAcm", 512, function (ctx, tam) {
+      const navy = "#23396b", verde = "#4f8a3a";
+      ctx.fillStyle = "#f6f4ee"; ctx.fillRect(0, 0, tam, tam);
+      const cx = tam * 0.5, ey = tam * 0.30, S = tam * 0.30;
+      // acento verde (folha curva) atrás, à esquerda
+      ctx.fillStyle = verde;
+      ctx.beginPath();
+      ctx.moveTo(cx - 1.05 * S, ey + 0.35 * S);
+      ctx.bezierCurveTo(cx - 0.9 * S, ey + 0.95 * S, cx - 0.1 * S, ey + 1.05 * S, cx + 0.35 * S, ey + 0.75 * S);
+      ctx.bezierCurveTo(cx - 0.15 * S, ey + 1.35 * S, cx - 1.0 * S, ey + 1.2 * S, cx - 1.2 * S, ey + 0.55 * S);
+      ctx.closePath(); ctx.fill();
+      // emblema navy (mapa/asa estilizado do Ceará, apontando à esquerda)
+      ctx.fillStyle = navy;
+      ctx.beginPath();
+      ctx.moveTo(cx - 1.15 * S, ey + 0.15 * S);     // bico/ponta oeste
+      ctx.bezierCurveTo(cx - 0.5 * S, ey - 0.95 * S, cx + 0.55 * S, ey - 1.0 * S, cx + 0.95 * S, ey - 0.35 * S);
+      ctx.bezierCurveTo(cx + 1.2 * S, ey + 0.1 * S, cx + 0.7 * S, ey + 0.55 * S, cx + 0.25 * S, ey + 0.55 * S);
+      ctx.bezierCurveTo(cx - 0.1 * S, ey + 0.55 * S, cx - 0.2 * S, ey + 0.95 * S, cx - 0.45 * S, ey + 0.9 * S);
+      ctx.bezierCurveTo(cx - 0.85 * S, ey + 0.8 * S, cx - 1.1 * S, ey + 0.55 * S, cx - 1.15 * S, ey + 0.15 * S);
+      ctx.closePath(); ctx.fill();
+      // "ACM"
+      ctx.fillStyle = navy; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.font = "bold " + Math.floor(tam * 0.23) + "px Georgia, serif";
+      ctx.fillText("ACM", cx, tam * 0.70);
+      // nome por extenso
+      ctx.font = "bold " + Math.floor(tam * 0.046) + "px Georgia, serif";
+      ctx.fillText("Associação Cearense de Magistrados", cx, tam * 0.86, tam * 0.92);
+    });
+  }
+
+  /* ---------- ÁGUA (mar/lago/piscina) ----------
+     Textura de ondas para rolar (offset animado no cena3d) e dar
+     a sensação de água em movimento. RepeatWrapping já vem do criar. */
+  function agua() {
+    return criar("agua", 256, function (ctx, tam) {
+      ctx.fillStyle = "#1f6f9a"; ctx.fillRect(0, 0, tam, tam);
+      // faixas de onda claras, onduladas
+      ctx.lineWidth = 3;
+      for (let y = 0; y < tam; y += 16) {
+        ctx.strokeStyle = (y % 32 === 0) ? "rgba(255,255,255,.16)" : "rgba(150,220,240,.12)";
+        ctx.beginPath();
+        for (let x = 0; x <= tam; x += 8) {
+          const yy = y + Math.sin((x / tam) * Math.PI * 4 + y * 0.4) * 4;
+          if (x === 0) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+      }
+      // brilhos pontuais de sol na água
+      ctx.fillStyle = "rgba(255,255,255,.14)";
+      for (let i = 0; i < 80; i++) {
+        const x = Math.abs(ruido(i * 3 + 1)) * tam, y = Math.abs(ruido(i * 3 + 7)) * tam;
+        ctx.fillRect(x, y, 3, 2);
+      }
+    });
+  }
+
+  /* ---------- O VÍDEO-PROVA (caso eleitoral, Dia 5) ----------
+     Um "frame" da gravação da reunião de compra de votos, em canvas:
+     a mesa, as silhuetas, o maço de notas, o REC e o timecode. Vira
+     textura (3D) ou fundo do painel (2D). */
+  const canvasCache = {};
+  function videoEleitoralCanvas() {
+    if (canvasCache.videoEleitoral) return canvasCache.videoEleitoral;
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 320;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#14171c"; ctx.fillRect(0, 0, 512, 320);
+    ctx.fillStyle = "#1e242c"; ctx.fillRect(0, 0, 512, 150);          // parede
+    ctx.fillStyle = "#3a2c1e"; ctx.fillRect(60, 205, 392, 86);        // mesa
+    ctx.fillStyle = "#4a3826"; ctx.fillRect(60, 205, 392, 14);
+    ctx.fillStyle = "#0c0e12";                                         // silhuetas sentadas
+    [92, 172, 340, 420].forEach(function (x) {
+      ctx.beginPath(); ctx.arc(x, 180, 23, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(x - 25, 200, 50, 58);
+    });
+    // o candidato em pé, no centro, com o maço de notas
+    ctx.fillStyle = "#10131a";
+    ctx.beginPath(); ctx.arc(256, 96, 27, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(229, 120, 54, 92);
+    ctx.fillStyle = "#3a7a3a";                                         // dinheiro (verde)
+    for (let i = 0; i < 5; i++) ctx.fillRect(298 + i * 3, 150 - i * 2, 46, 24);
+    ctx.fillStyle = "#bfe6bf"; ctx.fillRect(310, 156, 22, 3);
+    ctx.fillStyle = "#e7cf9a"; ctx.font = "italic bold 21px Georgia, serif"; ctx.textAlign = "center";
+    ctx.fillText("“é duzentos por cabeça...”", 256, 304);
+    ctx.fillStyle = "#e03030"; ctx.beginPath(); ctx.arc(30, 28, 9, 0, Math.PI * 2); ctx.fill();  // REC
+    ctx.fillStyle = "#ffffff"; ctx.font = "bold 16px monospace";
+    ctx.textAlign = "left"; ctx.fillText("REC", 44, 33);
+    ctx.textAlign = "right"; ctx.fillText("28/09 00:14", 492, 33);
+    ctx.strokeStyle = "#000000"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, 504, 312);
+    ctx.fillStyle = "rgba(0,0,0,.12)";                                 // scanlines baked
+    for (let y = 0; y < 320; y += 4) ctx.fillRect(0, y, 512, 2);
+    canvasCache.videoEleitoral = c;
+    return c;
+  }
+  function videoEleitoral() {
+    if (cache.videoEleitoral) return cache.videoEleitoral;
+    const tx = new THREE.CanvasTexture(videoEleitoralCanvas());
+    cache.videoEleitoral = tx;
+    return tx;
+  }
+
   /* asfalto com faixa central tracejada (a avenida da viagem) */
   function asfalto() {
     return criar("asfalto", 128, function (ctx, tam) {
@@ -435,6 +541,10 @@ TOGA.texturas3d = (function () {
     pisoAuditorioEsmec: pisoAuditorioEsmec,
     letreiro: letreiro,
     retrato: retrato,
+    logoAcm: logoAcm,
+    agua: agua,
+    videoEleitoral: videoEleitoral,
+    videoEleitoralCanvas: videoEleitoralCanvas,
     asfalto: asfalto,
     deArte: deArte,
     fotoThor: fotoThor,
