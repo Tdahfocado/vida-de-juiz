@@ -1185,9 +1185,17 @@ TOGA.cena3d = (function () {
           toastMundo("⚖ O advogado de plantão se levanta para o aperto de mão: “Excelência, apareça sempre. Juiz que respeita a tribuna julga melhor — e advogado que respeita a toga defende melhor.” Na parede, a placa lembra: a advocacia é indispensável à administração da justiça (CF, art. 133).");
         } },
 
-      // ENCERRAR o expediente: ao SUL da porta oeste, só no fim da pauta
-      { id: "saida", pos: { x: P.portaSaida.x + 0.4, z: P.portaSaida.z - 1.5 }, raio: 1.3,
-        rotulo: "🏁 encerrar o expediente (sair do fórum)",
+      // SAIR PARA A RUA (pátio da Delegacia/Escola/ESMEC): NA PRÓPRIA PORTA
+      // oeste, livre a qualquer hora — as VISITAS lá dentro é que destravam
+      // com conquistas. Raio generoso: quem chega à porta já interage.
+      { id: "cidade", pos: { x: P.portaSaida.x + 0.6, z: P.portaSaida.z }, raio: 1.9,
+        rotulo: "🚪 sair para a rua — pátio da Delegacia e da Escola",
+        visivel: function () { return !!(M().estado && TOGA.cidade3d); },
+        acao: function () { entrarRua(); } },
+
+      // ENCERRAR o expediente: AFASTADO da porta, ao sul, só no fim da pauta
+      { id: "saida", pos: { x: P.portaSaida.x + 0.9, z: P.portaSaida.z - 1.9 }, raio: 1.2,
+        rotulo: "🏁 encerrar o expediente (fechar o dia)",
         visivel: function () { return M().estado && M().fimDaPauta() && semInterludios(); },
         acao: function () { TOGA.ui.mostrarEpilogo(); } },
 
@@ -1197,14 +1205,6 @@ TOGA.cena3d = (function () {
         rotulo: "🌳 sair para o Parque da Cidade (pausa · alivia o estresse)",
         visivel: function () { return !!(M().estado && TOGA.parque3d); },
         acao: function () { entrarParque("forum"); } },
-
-      // SAIR PARA A RUA (pátio da Delegacia/Escola/ESMEC): ao NORTE da porta
-      // oeste, livre a qualquer hora — as VISITAS lá dentro é que destravam
-      // com conquistas. Posição separada da saída, para não conflitar.
-      { id: "cidade", pos: { x: P.portaSaida.x + 0.4, z: P.portaSaida.z + 1.5 }, raio: 1.3,
-        rotulo: "🚪 sair para a rua — pátio da Delegacia e da Escola",
-        visivel: function () { return !!(M().estado && TOGA.cidade3d); },
-        acao: function () { entrarRua(); } },
 
       // ---- Ala Leste II: 2ª Vara e CEJUSC ----
       { id: "gab2", pos: P.gab2 || { x: 43.5, z: -5.6 }, raio: 2.0,
@@ -3188,18 +3188,27 @@ TOGA.cena3d = (function () {
   function montarBike() {
     if (andandoDeBike || !jogador) return;
     if (TOGA.bicicleta3d && !bikeMesh) bikeMesh = TOGA.bicicleta3d.criar(0x3a8a6a);
-    if (bikeMesh) { jogador.grupo.add(bikeMesh); bikeMesh.position.set(0, 0, 0); bikeMesh.rotation.set(0, 0, 0); bikeMesh.visible = true; }
+    if (bikeMesh) {
+      jogador.grupo.add(bikeMesh);
+      // a bici desloca para FRENTE: o selim fica sob o juiz e o guidão à frente
+      bikeMesh.position.set(0, 0, 0.32); bikeMesh.rotation.set(0, 0, 0); bikeMesh.visible = true;
+    }
     andandoDeBike = true; bikeReliefAcc = 0;
     bikeUltimaPos.copy(jogador.grupo.position);
+    // pose de PILOTAR: mãos no guidão e sem balanço de passada (não "anda")
+    if (jogador.executarAcao) jogador.executarAcao("guidao");
+    if (TOGA.controles3d.definirMontado) TOGA.controles3d.definirMontado(true);
     if (TOGA.controles3d.definirMultiplicadorVel) TOGA.controles3d.definirMultiplicadorVel(1.9);
     if (!bikeTickReg) { TOGA.nucleo3d.aoFrame(tickBikeRide); bikeTickReg = true; }
-    toastMundo("🚲 Na bicicleta! Pedale à vontade pelo parque (W A S D / setas) — o vento alivia o estresse. Volte ao bicicletário para descer.");
+    toastMundo("🚲 Na bicicleta! Pilote à vontade pelo parque (W A S D / setas) — o vento alivia o estresse. Volte ao bicicletário para descer.");
   }
 
   function desmontarBike(silencioso) {
     if (!andandoDeBike) return;
     andandoDeBike = false;
     if (bikeMesh && bikeMesh.parent) bikeMesh.parent.remove(bikeMesh);
+    if (jogador && jogador.executarAcao) jogador.executarAcao(null);   // solta o guidão
+    if (TOGA.controles3d.definirMontado) TOGA.controles3d.definirMontado(false);
     if (TOGA.controles3d.definirMultiplicadorVel) TOGA.controles3d.definirMultiplicadorVel(1);
     if (!silencioso) toastMundo("🚲 Você desce da bike, o passo mais leve do que subiu.");
   }

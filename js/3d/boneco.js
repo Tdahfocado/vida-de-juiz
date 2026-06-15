@@ -112,6 +112,11 @@ TOGA.boneco3d = (function () {
                 alvos: function (ta) {
                   if (ta >= 1.5) return {};
                   return { bD: -2.5, zD: 0.55 };
+                } },
+    /* pilotar a bicicleta: as duas mãos à frente, no guidão (persistente) */
+    guidao:    { persistente: true,
+                alvos: function () {
+                  return { bE: -1.15, bD: -1.15, zE: 0.22, zD: -0.22 };
                 } }
   };
 

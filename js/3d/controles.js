@@ -24,6 +24,7 @@ TOGA.controles3d = (function () {
   let provObstaculos = null;        // fornece obstáculos dinâmicos (NPCs, cachorro)
   let obstaculosCache = [];         // recalculado uma vez por quadro
   let multVel = 1;                  // multiplicador de velocidade (1 a pé, >1 de bike)
+  let montado = false;              // de bicicleta: sem balanço de passada
   let ativo = false;
   let yaw = 0, pitch = -0.26;                  // ângulos da câmera (visão um pouco mais alta)
   let velAtual = new THREE.Vector3();          // velocidade suavizada
@@ -258,8 +259,9 @@ TOGA.controles3d = (function () {
       jogador.rotation.y += delta * Math.min(1, 12 * dt);
     }
 
-    // animação de passos (balanço sutil do grupo, lido pelo boneco)
-    jogador.userData.andando = velAtual.lengthSq() > 0.3;
+    // animação de passos (balanço sutil do grupo, lido pelo boneco).
+    // De bicicleta NÃO "anda": o corpo desliza sem balanço de passada.
+    jogador.userData.andando = !montado && velAtual.lengthSq() > 0.3;
     if (jogador.userData.andando && TOGA.audio) TOGA.audio.passo();
 
     atualizarCamera(dt);
@@ -315,6 +317,8 @@ TOGA.controles3d = (function () {
     definirObstaculos: function (fn) { provObstaculos = fn; },
     /* multiplicador de velocidade (1 a pé, ~1.9 de bicicleta) */
     definirMultiplicadorVel: function (m) { multVel = m || 1; },
+    /* de bicicleta: suprime o balanço de passada (sem "andar") */
+    definirMontado: function (sim) { montado = !!sim; },
     get yaw() { return yaw; },
     setEixoVirtual: function (frente, lado) {
       eixoVirtual.frente = Math.max(-1, Math.min(1, frente || 0));
