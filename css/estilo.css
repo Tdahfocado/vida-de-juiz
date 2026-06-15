@@ -166,6 +166,12 @@ button:focus-visible { outline: 2px solid var(--latao-claro); outline-offset: 3p
   text-decoration: underline dotted; margin-top: 6px;
 }
 .link-sobre:hover { color: var(--latao-claro); }
+.credito-autor {
+  display: inline-block; margin-top: 14px; font-size: .72rem; line-height: 1.5;
+  color: #9a8c72; max-width: 540px;
+}
+.credito-autor strong { color: var(--latao); }
+.credito-autor a { color: var(--latao); }
 #tela-sobre p { margin-top: 8px; color: var(--texto); }
 #tela-sobre code { background: rgba(201,163,92,.12); padding: 1px 6px; border-radius: 4px; }
 
