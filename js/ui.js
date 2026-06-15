@@ -121,8 +121,11 @@ TOGA.ui = (function () {
       TOGA.cena3d.toastMundo("💬 Laís, baixinho, na porta do gabinete: “doutor, com licença o registro: o senhor está há horas sem uma pausa, e eu vejo daqui o seu passo pesando. A pauta precisa do senhor INTEIRO — copa, água ou setor de saúde. Escolha um, que eu seguro o expediente.”");
     }
 
-    // COLAPSO aos 100: o juiz passa mal e o atendimento médico é acionado
-    if (v >= 100 && !colapsoArmado) {
+    // COLAPSO aos 100: o juiz passa mal e o atendimento médico é acionado.
+    // O guard _colapsoPendente impede re-disparo enquanto a cena animada
+    // (adiada para quando o juiz voltar ao mundo 3D) ainda não rodou —
+    // assim o estresse NÃO cai sozinho antes da cena.
+    if (v >= 100 && !colapsoArmado && !(e.flags && e.flags._colapsoPendente)) {
       colapsoArmado = true;
       if (modo3d() && TOGA.cena3d && TOGA.cena3d.emergenciaMedica) {
         TOGA.cena3d.emergenciaMedica(function () { colapsoArmado = false; });
@@ -863,8 +866,11 @@ TOGA.ui = (function () {
   function prepararOuIniciarAudiencia() {
     if (modo3d()) {
       prontoParaAudiencia = true;
+      // entrarMundo() já recalcula o objetivo (seta + texto) pela ordem de
+      // prioridade: se houver interlúdio/recado pendente, ele vem ANTES da
+      // bancada — definir "bancada" aqui à força criava a contradição entre
+      // a seta (apontando o recado) e o texto (mandando à bancada).
       TOGA.cena3d.entrarMundo();
-      TOGA.cena3d.definirObjetivo("Sente-se à bancada na sala de audiências (E) para apregoar as partes");
       return;
     }
     iniciarAudiencia();

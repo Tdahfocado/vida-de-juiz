@@ -1641,14 +1641,16 @@ TOGA.cena3d = (function () {
      Chamada por ui.atualizarEstresse. */
   function emergenciaMedica(aoFim) {
     const M = TOGA.motor, e = M && M.estado;
-    if (!mundoAtivo() || emAtendimento) {
+    // a cena já está rodando: não faz nada (o alívio vem no fim dela)
+    if (emAtendimento) { if (aoFim) aoFim(); return; }
+    if (!mundoAtivo()) {
       const ehModo3d = document.body.classList.contains("modo-3d");
-      if (ehModo3d && !emAtendimento) {
+      if (ehModo3d) {
         // estourou durante a audiência (mundo coberto): ADIA a cena animada
-        // para quando o juiz voltar ao mundo 3D (tickGeral dispara). Normaliza
-        // agora só para a pauta seguir sem re-disparar.
-        if (e) { M.alterarEstresse(45 - (e.estresse || 0)); e.minutos += 30; e.flags._colapsou = true; e.flags._colapsoPendente = true; M.salvar(); }
-        if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+        // para quando o juiz voltar ao mundo 3D (tickGeral dispara). NÃO mexe
+        // no estresse agora — o alívio acontece DENTRO da cena (recuperar),
+        // à vista do jogador. Só marca o pendente, que trava o re-disparo.
+        if (e) { e.flags._colapsoPendente = true; M.salvar(); }
         if (aoFim) aoFim();
         return;
       }
