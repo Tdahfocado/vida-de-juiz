@@ -631,6 +631,7 @@ TOGA.rotinas3d = (function () {
     cancelar: cancelar,
     adicionarRotina: adicionarRotina,
     iniciarElenco: iniciarElenco,
+    elenco: function () { return elenco; },
     criancas: function () { return criancas; },
     get assistenteSocial() { return assistenteSocial; },
     get lourdes() { return lourdes; },

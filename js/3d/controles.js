@@ -21,6 +21,8 @@ TOGA.controles3d = (function () {
 
   const RAIO = 0.35, VEL = 3.2;
   let camera = null, jogador = null, colisores = [], paredesCamera = [];
+  let provObstaculos = null;        // fornece obstáculos dinâmicos (NPCs, cachorro)
+  let obstaculosCache = [];         // recalculado uma vez por quadro
   let ativo = false;
   let yaw = 0, pitch = -0.26;                  // ângulos da câmera (visão um pouco mais alta)
   let velAtual = new THREE.Vector3();          // velocidade suavizada
@@ -156,12 +158,31 @@ TOGA.controles3d = (function () {
       const dx = x - px, dz = z - pz;
       if (dx * dx + dz * dz < RAIO * RAIO) return true;
     }
+    // obstáculos dinâmicos: personagens e o cachorro (círculos)
+    for (let i = 0; i < obstaculosCache.length; i++) {
+      const o = obstaculosCache[i];
+      const dx = x - o.x, dz = z - o.z;
+      const rr = RAIO + (o.raio || 0.34);
+      if (dx * dx + dz * dz < rr * rr) return true;
+    }
     return false;
   }
 
   /* ---------- O tick de cada quadro ---------- */
   function tick(dt) {
     if (!ativo || !jogador) return;
+
+    // obstáculos dinâmicos do quadro (personagens, cachorro). Quem JÁ está
+    // sobreposto ao juiz é ignorado, para que um NPC que encoste nunca o prenda.
+    if (provObstaculos) {
+      const px = jogador.position.x, pz = jogador.position.z;
+      const todos = provObstaculos();
+      obstaculosCache = [];
+      for (let i = 0; i < todos.length; i++) {
+        const o = todos[i], dx = px - o.x, dz = pz - o.z, rr = (RAIO + (o.raio || 0.34)) * 0.9;
+        if (dx * dx + dz * dz >= rr * rr) obstaculosCache.push(o);
+      }
+    } else { obstaculosCache = []; }
 
     // giro pelo teclado
     if (teclas["arrowleft"]) yaw += 2.2 * dt;
@@ -289,6 +310,8 @@ TOGA.controles3d = (function () {
     },
     /* o cena3d registra aqui o desenho do marcador de destino */
     aoDestino: function (fn) { aoDefinirDestino = fn; },
+    /* fornecedor de obstáculos dinâmicos (NPCs, cachorro): () => [{x,z,raio}] */
+    definirObstaculos: function (fn) { provObstaculos = fn; },
     get yaw() { return yaw; },
     setEixoVirtual: function (frente, lado) {
       eixoVirtual.frente = Math.max(-1, Math.min(1, frente || 0));

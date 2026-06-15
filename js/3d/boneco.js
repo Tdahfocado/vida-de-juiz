@@ -86,6 +86,32 @@ TOGA.boneco3d = (function () {
                   if (ta >= 4.8) return {};
                   const releitura = Math.sin(ta * 1.8) * 0.06;
                   return { bE: -1.05 + releitura, bD: -1.05 + releitura, zE: 0.2, zD: -0.2 };
+                } },
+    /* ---- GESTOS DE EMOÇÃO (acompanham as falas) ----
+       Disparados pelo setEmocao (cena3d): veemência, indignação,
+       súplica e desespero ganham CORPO, não só rosto. */
+    enfase:    { dur: 1.5,                          // veemência: o dedo que martela o ar
+                alvos: function (ta, t) {
+                  if (ta >= 1.4) return {};
+                  const batida = Math.abs(Math.sin(t * 8)) * 0.55;
+                  return { bD: -1.45 - batida, zD: -0.08 };
+                } },
+    indignado: { dur: 1.7,                          // "como assim?!" — os dois braços abrem
+                alvos: function (ta, t) {
+                  if (ta >= 1.5) return {};
+                  const abre = Math.min(1, t * 4);
+                  return { bE: -0.55 * abre, bD: -0.55 * abre, zE: 0.62 * abre, zD: -0.62 * abre };
+                } },
+    apelo:     { dur: 1.9,                          // súplica: as duas mãos à frente
+                alvos: function (ta, t) {
+                  if (ta >= 1.7) return {};
+                  const tremor = Math.sin(t * 5) * 0.07;
+                  return { bE: -1.15 + tremor, bD: -1.15 - tremor, zE: 0.14, zD: -0.14 };
+                } },
+    desespero: { dur: 1.7,                          // a mão que sobe à cabeça
+                alvos: function (ta) {
+                  if (ta >= 1.5) return {};
+                  return { bD: -2.5, zD: 0.55 };
                 } }
   };
 

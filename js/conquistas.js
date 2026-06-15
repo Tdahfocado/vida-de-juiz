@@ -87,6 +87,18 @@ TOGA.conquistas = (function () {
       desc: "Conduza uma mediação no CEJUSC e ajude as partes a construírem o próprio acordo (Res. CNJ 125/2010).",
       se: c => c.gatilho === "mediacao-cejusc" },
 
+    { id: "arLivre", icone: "🌳", nome: "Ar livre",
+      desc: "Visite o Parque da Cidade — e descubra que a toga também respira fora do fórum.",
+      se: c => c.gatilho === "visita-parque" },
+
+    { id: "casaDosMagistrados", icone: "🏖", nome: "A casa dos magistrados",
+      desc: "Chegue à ACM, à beira-mar — o clube destrava com 5 conquistas.",
+      se: c => c.gatilho === "visita-acm" },
+
+    { id: "provaIlicita", icone: "⚖", nome: "A prova clara e a prova nula",
+      desc: "No caso eleitoral, rejeite a AIJE sustentada só em gravação ilícita (STF, Tema 979) — decida certo contra a multidão.",
+      se: c => !!(c.flags && c.flags.aijeImprocedenteCorreta) },
+
     { id: "maratonista", icone: "🏃", nome: "Maratonista da toga",
       desc: "Conclua os três dias de trabalho.",
       se: c => c.pautasConcluidas >= 3 },
@@ -351,8 +363,9 @@ TOGA.conquistas = (function () {
     if (areaAtiv && TOGA.atividades) {
       areaAtiv.innerHTML = "<h3>🌳 Atividades da comarca</h3>" +
         TOGA.atividades.resumo().map(function (a) {
-          const pct = Math.round(100 * a.progresso / a.limiar);
-          const estado = a.concluida ? "✓ concluída"
+          const pct = a.limiar ? Math.round(100 * a.progresso / a.limiar) : 100;
+          const estado = a.concluida ? "✓ visitada"
+            : a.limiar === 0 ? "acesso livre — a qualquer hora"
             : a.destravada ? "destravada — saia do fórum ao fim da pauta"
             : a.progresso + "/" + a.limiar + " conquistas";
           return '<div class="ativ-linha' + (a.destravada ? " destravada" : "") + '" title="' + a.hint + '">' +

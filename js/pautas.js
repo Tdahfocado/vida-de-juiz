@@ -37,5 +37,12 @@ TOGA.pautas = [
     titulo: "Dia 4 — Dia de Júri",
     subtitulo: "Um plenário, sete jurados, a comarca inteira assistindo. Você preside.",
     casos: ["feminicidio"]
+  },
+  {
+    id: "dia5",
+    titulo: "Dia 5 — Dia Eleitoral",
+    subtitulo: "Como juiz eleitoral, uma AIJE de compra de votos: a prova é clara, e é nula. Decida contra a multidão.",
+    inicio: "14:00",
+    casos: ["aije"]
   }
 ];

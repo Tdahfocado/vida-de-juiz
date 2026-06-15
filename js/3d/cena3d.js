@@ -278,6 +278,7 @@ TOGA.cena3d = (function () {
     assessora.grupo.position.set(pA.x, 0, pA.z - 0.55);
     assessora.grupo.rotation.y = 0; // de frente para a mesa/porta
     TOGA.nucleo3d.scene.add(assessora.grupo);
+    bloqueantesExtra.push(assessora);
 
     // luz de quem fala
     luzFala = new THREE.SpotLight(0xffe9b8, 0, 7, 0.55, 0.5);
@@ -287,6 +288,7 @@ TOGA.cena3d = (function () {
     TOGA.nucleo3d.scene.add(luzFala, luzFala.target);
 
     TOGA.controles3d.iniciar(TOGA.nucleo3d.camera, jogador.grupo, mundoInfo);
+    if (TOGA.controles3d.definirObstaculos) TOGA.controles3d.definirObstaculos(obstaculosColisao);
     // marcador do clique-para-mover: anel frio no ponto de destino
     let marcadorDestino = null;
     if (TOGA.controles3d.aoDestino) {
@@ -329,7 +331,33 @@ TOGA.cena3d = (function () {
   /* Habitantes da Ala Leste II: o(a) colega titular da 2ª Vara, no
      seu gabinete; e a sessão de mediação do CEJUSC (facilitadora +
      as duas partes). Bonecos estáticos — cenário das interações. */
+  /* obstáculos dinâmicos para a colisão do juiz: o elenco do fórum
+     (Matias, dona Lourdes, servidores, 2ª Vara em sessão, crianças),
+     o cachorro Razumikin, os NPCs fixos das alas novas e a gente das
+     áreas externas (rua, ESMEC, parque, ACM). Quem está longe é
+     descartado pela própria distância no controles. */
+  function obstaculosColisao() {
+    const arr = [];
+    function push(b, raio) {
+      if (b && b.grupo) arr.push({ x: b.grupo.position.x, z: b.grupo.position.z, raio: raio || 0.34 });
+    }
+    if (TOGA.rotinas3d && TOGA.rotinas3d.elenco) TOGA.rotinas3d.elenco().forEach(function (b) { push(b, 0.34); });
+    if (TOGA.caramelo3d && TOGA.caramelo3d.posicao) {
+      const p = TOGA.caramelo3d.posicao();
+      if (p) arr.push({ x: p.x, z: p.z, raio: 0.5 });
+    }
+    bloqueantesExtra.forEach(function (b) { push(b, 0.34); });
+    const info = localAtivo === "rua" ? infoRua
+               : localAtivo === "esmec" ? infoEsmec
+               : localAtivo === "parque" ? infoParque
+               : localAtivo === "acm" ? infoAcm : null;
+    if (info && info.vivos) info.vivos.forEach(function (b) { push(b, 0.34); });
+    return arr;
+  }
+
   let juiz2Vara = null;
+  const bloqueantesExtra = [];     // NPCs fixos que o juiz não atravessa
+  const animarExtras = [];         // NPCs das alas novas que precisam de tick (gestos)
   function povoarAlaLesteII() {
     if (!TOGA.boneco3d || !mundoInfo || !mundoInfo.pontos.gab2Juiz) return;
     const P = mundoInfo.pontos;
@@ -338,6 +366,8 @@ TOGA.cena3d = (function () {
       b.grupo.position.set(x, 0, z);
       b.grupo.rotation.y = rotY || 0;
       TOGA.nucleo3d.scene.add(b.grupo);
+      bloqueantesExtra.push(b);
+      animarExtras.push(b);        // ticado no tickGeral → ganha gestos/expressão
       return b;
     }
     // a colega da 2ª Vara, sentada à mesa, de frente para quem entra
@@ -345,7 +375,8 @@ TOGA.cena3d = (function () {
       { pele: "#a86a48", cabelo: "coque", corCabelo: "#241a10", traje: "blazer", corTraje: "#33424f", corBlusa: "#e8e2d2", oculos: true },
       P.gab2Juiz.x, P.gab2Juiz.z, 0, { sentado: true });
     juiz2Vara.segurar("autos", "esq");
-    // CEJUSC: a facilitadora e as duas partes em torno da mesa redonda
+    // CEJUSC: a facilitadora e as duas partes em torno da mesa redonda —
+    // uma SESSÃO VIVA: as partes discutem com veemência, a mediadora apazigua
     const facil = npc("cejuscFacil",
       { pele: "#c98e66", cabelo: "longo", corCabelo: "#3a2a1a", traje: "blazer", corTraje: "#2f4a3e", corBlusa: "#efe5c8" },
       P.cejuscMediador.x, P.cejuscMediador.z, Math.PI, { sentado: true });
@@ -355,7 +386,34 @@ TOGA.cena3d = (function () {
     const parteB = npc("cejuscParteB",
       { pele: "#d8a87f", cabelo: "coque", corCabelo: "#241a10", traje: "vestido", corTraje: "#5a4a52" },
       P.cejuscParteB.x, P.cejuscParteB.z, -Math.PI / 2, { sentado: true });
-    parteA.setEmocao("firme"); parteB.setEmocao("firme");
+    parteA.setEmocao("raiva"); parteB.setEmocao("raiva"); facil.setEmocao("firme");
+    iniciarVidaCejusc(facil, parteA, parteB);
+  }
+
+  /* a sessão do CEJUSC ganha drama em loop: um lado se inflama, o outro
+     reage, e a facilitadora pede calma — gestos de verdade, sem parar. */
+  let vidaCejuscAtiva = false;
+  function iniciarVidaCejusc(facil, a, b) {
+    if (vidaCejuscAtiva) return;
+    vidaCejuscAtiva = true;
+    let fase = 0;
+    function fala(boneco, dur) {
+      if (!boneco) return;
+      boneco.falando(true);
+      setTimeout(function () { boneco.falando(false); }, dur || 2200);
+    }
+    function passo() {
+      fase = (fase + 1) % 5;
+      if (fase === 0) { a.setEmocao("raiva"); a.executarAcao("indignado"); fala(a, 2400); }
+      else if (fase === 1) { b.setEmocao("raiva"); b.executarAcao("enfase"); fala(b, 2400); }
+      else if (fase === 2) {
+        if (facil) { facil.setEmocao("firme"); facil.executarAcao("apelo"); fala(facil, 2600); }
+        a.setEmocao("triste"); b.setEmocao("medo");
+      } else if (fase === 3) { b.setEmocao("triste"); b.executarAcao("apelo"); fala(b, 2200); }
+      else { a.setEmocao("firme"); a.executarAcao("enfase"); fala(a, 2200); }
+      setTimeout(passo, 2800 + Math.random() * 1600);
+    }
+    setTimeout(passo, 1800);
   }
 
   /* O martelo da bancada é clicável durante a audiência:
@@ -408,6 +466,14 @@ TOGA.cena3d = (function () {
     npcsCorredor.forEach(n => n.boneco.tick(dt, t));
     equipeTreinamento.forEach(b => b.tick(dt, t));
     turmaEleitor.forEach(b => b.tick(dt, t));
+    animarExtras.forEach(b => b.tick(dt, t));   // 2ª Vara + sessão do CEJUSC
+    // colapso adiado: estourou 100 durante a audiência → encena agora,
+    // que o juiz já está de volta ao mundo 3D
+    if (!emAtendimento && TOGA.motor.estado && TOGA.motor.estado.flags._colapsoPendente && mundoAtivo()) {
+      TOGA.motor.estado.flags._colapsoPendente = false;
+      TOGA.motor.salvar();
+      emergenciaMedica();
+    }
     // o ponto de interação do zelador acompanha o passeio dele
     if (TOGA.rotinas3d && TOGA.rotinas3d.matias) {
       posMatias.x = TOGA.rotinas3d.matias.grupo.position.x;
@@ -1124,6 +1190,12 @@ TOGA.cena3d = (function () {
         visivel: function () { return M().estado && M().fimDaPauta() && semInterludios(); },
         acao: function () { TOGA.ui.mostrarEpilogo(); } },
 
+      // o Parque é LIVRE a qualquer hora — uma das formas de baixar o estresse
+      { id: "parqueDireto", pos: { x: P.portaSaida.x, z: P.portaSaida.z + 1.7 }, raio: 1.8,
+        rotulo: "🌳 dar uma volta no Parque da Cidade (pausa · alivia o estresse)",
+        visivel: function () { return !!(M().estado && TOGA.parque3d); },
+        acao: function () { entrarParque("forum"); } },
+
       { id: "cidade", pos: { x: P.portaSaida.x, z: P.portaSaida.z - 2.0 }, raio: 1.8,
         rotulo: function () {
           if (TOGA.atividades.liberadas) return "🌳 sair para a RUA · modo de teste";
@@ -1401,6 +1473,7 @@ TOGA.cena3d = (function () {
      ===================================================== */
   let medicoBoneco = null;
   let emAtendimento = false;
+  let emergState = null, emergTickReg = false, equipeMedica = null, soroMesh = null;
 
   function mundoAtivo() {
     const t = document.getElementById("tela-mundo");
@@ -1417,7 +1490,86 @@ TOGA.cena3d = (function () {
     if (P) medicoBoneco.grupo.position.set(P.x, 0, P.z - 0.4);
     medicoBoneco.grupo.visible = false;
     TOGA.nucleo3d.scene.add(medicoBoneco.grupo);
+    animarExtras.push(medicoBoneco);   // ticado → gesticula durante o atendimento
     return medicoBoneco;
+  }
+
+  /* a equipe de emergência: médico + maqueiro + a maca reutilizável */
+  function garantirEquipeMedica() {
+    if (equipeMedica) return equipeMedica;
+    const medico = garantirMedico();
+    const helper = TOGA.boneco3d.criar(
+      { id: "maqueiroForum", avatar: { pele: "#a86a48", cabelo: "curto",
+        corCabelo: "#241a10", traje: "camisa", corTraje: "#cfe0ea" } }, {});
+    helper.grupo.visible = false;
+    TOGA.nucleo3d.scene.add(helper.grupo);
+    animarExtras.push(helper);
+    const maca = montarMaca(0, -300);   // nasce fora de cena
+    maca.visible = false;
+    equipeMedica = { medico: medico, helper: helper, maca: maca };
+    return equipeMedica;
+  }
+
+  /* deita / levanta o juiz (pose de desacordado) */
+  function deitarJuiz(sim) {
+    if (!jogador) return;
+    jogador.executarAcao(null);
+    jogador.userData && (jogador.userData.andando = false);
+    jogador.grupo.userData.andando = false;
+    if (sim) { jogador.grupo.rotation.set(-Math.PI / 2, jogador.grupo.rotation.y, 0); }
+    else { jogador.grupo.rotation.set(0, jogador.grupo.rotation.y, 0); jogador.grupo.position.y = 0; }
+  }
+
+  /* suporte de soro ao lado da maca */
+  function montarSoro(x, z) {
+    removerSoro();
+    const g = new THREE.Group();
+    const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.7, 8),
+      new THREE.MeshLambertMaterial({ color: 0xc9ccd2 }));
+    haste.position.y = 0.85;
+    const gancho = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6),
+      new THREE.MeshLambertMaterial({ color: 0xc9ccd2 }));
+    gancho.rotation.z = Math.PI / 2; gancho.position.set(0.12, 1.65, 0);
+    const bolsa = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.05),
+      new THREE.MeshLambertMaterial({ color: 0xbfe3c0, transparent: true, opacity: 0.85 }));
+    bolsa.position.set(0.22, 1.45, 0);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.05, 12),
+      new THREE.MeshLambertMaterial({ color: 0x55585e }));
+    g.add(haste, gancho, bolsa, base);
+    g.position.set(x, 0, z);
+    TOGA.nucleo3d.scene.add(g);
+    soroMesh = g;
+  }
+  function removerSoro() {
+    if (soroMesh) { TOGA.nucleo3d.scene.remove(soroMesh); soroMesh = null; }
+  }
+
+  /* tick da emergência: interpola o transporte da maca e conduz a
+     câmera cinematográfica em torno da ação. */
+  function tickEmergencia(dt) {
+    if (!emergState) return;
+    const tr = emergState.transporte;
+    if (tr) {
+      tr.t += dt / tr.dur;
+      const k = Math.min(1, tr.t);
+      const fx = tr.de.x + (tr.para.x - tr.de.x) * k;
+      const fz = tr.de.z + (tr.para.z - tr.de.z) * k;
+      const ang = Math.atan2(tr.para.x - tr.de.x, tr.para.z - tr.de.z);
+      const eq = equipeMedica;
+      if (eq && eq.maca) { eq.maca.position.set(fx, 0, fz); eq.maca.rotation.y = ang; }
+      jogador.grupo.position.set(fx, 0.72, fz);
+      jogador.grupo.rotation.set(-Math.PI / 2, ang, 0);
+      if (eq && eq.medico) { eq.medico.grupo.position.set(fx - Math.cos(ang) * 0.7, 0, fz + Math.sin(ang) * 0.7); eq.medico.grupo.rotation.y = ang; eq.medico.grupo.userData.andando = true; }
+      if (eq && eq.helper) { eq.helper.grupo.position.set(fx + Math.cos(ang) * 0.7, 0, fz - Math.sin(ang) * 0.7); eq.helper.grupo.rotation.y = ang; eq.helper.grupo.userData.andando = true; }
+      emergState.foco = { x: fx, z: fz };
+      if (tr.t >= 1) { emergState.transporte = null; const cb = tr.onFim; if (cb) cb(); }
+    }
+    const f = emergState.foco, cam = TOGA.nucleo3d.camera;
+    if (cam && f) {
+      const a = emergState.camAng || 0;
+      cam.position.set(f.x + Math.sin(a) * 4.3, 2.7, f.z + Math.cos(a) * 4.3);
+      cam.lookAt(f.x, 0.8, f.z);
+    }
   }
 
   /* maca simples (lona + base com rodinhas) montada ao lado do juiz */
@@ -1482,11 +1634,25 @@ TOGA.cena3d = (function () {
     return "";
   }
 
-  /* EMERGÊNCIA aos 100: cutscene completa. Chamada por ui.atualizarEstresse. */
+  /* EMERGÊNCIA aos 100: cutscene completa e ANIMADA — o juiz colapsa
+     de verdade (cai no chão), a equipe médica é acionada, ele é
+     carregado na maca, TRANSPORTADO desacordado até o setor de saúde,
+     medicado/tratado, e só então desperta. Tudo mostrado em cena.
+     Chamada por ui.atualizarEstresse. */
   function emergenciaMedica(aoFim) {
     const M = TOGA.motor, e = M && M.estado;
-    // fora do mundo 3D (audiência/2D): normaliza sem cena, com aviso
     if (!mundoAtivo() || emAtendimento) {
+      const ehModo3d = document.body.classList.contains("modo-3d");
+      if (ehModo3d && !emAtendimento) {
+        // estourou durante a audiência (mundo coberto): ADIA a cena animada
+        // para quando o juiz voltar ao mundo 3D (tickGeral dispara). Normaliza
+        // agora só para a pauta seguir sem re-disparar.
+        if (e) { M.alterarEstresse(45 - (e.estresse || 0)); e.minutos += 30; e.flags._colapsou = true; e.flags._colapsoPendente = true; M.salvar(); }
+        if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
+        if (aoFim) aoFim();
+        return;
+      }
+      // modo 2D clássico: normaliza com aviso (sem cena)
       if (e) { M.alterarEstresse(45 - (e.estresse || 0)); e.minutos += 30; e.flags._colapsou = true; M.salvar(); }
       if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
       if (TOGA.conquistas) TOGA.conquistas.avaliar("colapso-medico");
@@ -1494,46 +1660,95 @@ TOGA.cena3d = (function () {
       return;
     }
     emAtendimento = true;
+    if (!emergTickReg) { TOGA.nucleo3d.aoFrame(tickEmergencia); emergTickReg = true; }
     if (TOGA.controles3d.desativar) TOGA.controles3d.desativar();
     limparToasts();
     flashEmergencia(true);
-    // o juiz tomba na cadeira
-    jogador.executarAcao(null);
-    jogador.sentar(true);
-    jogador.grupo.rotation.z = 0.5;
+
     const jx = jogador.grupo.position.x, jz = jogador.grupo.position.z;
-    const med = garantirMedico();
-    const maca = montarMaca(jx + 0.95, jz);
-    if (med) {
-      med.grupo.position.set(jx - 0.75, 0, jz + 0.25);
-      med.grupo.rotation.y = Math.atan2(0.75, -0.25);
-      med.grupo.visible = true;
-      med.segurar("pastas", "esq");
-    }
-    toastMundo("💥 A vista escurece, os sons abafam... o senhor perde as forças e tomba na cadeira. O estresse cobrou a conta.", { auto: 4 });
-    toastMundo("🚑 A brigada de emergência do fórum chega correndo com a maca. Laís já avisou o setor de saúde: “segura firme, doutor!”", { auto: 4 });
-    toastMundo("🩺 Pressão, oxigênio, soro e uma voz calma e firme: “Excelência, o senhor está conosco. Respire fundo comigo. Vai passar.”", { auto: 5 });
-    setTimeout(function () { if (med) med.falando(true); }, 8200);
+    const noForum = (localAtivo === "forum");
+    emergState = { transporte: null, foco: { x: jx, z: jz }, camAng: 0.3 };
+
+    // FASE 1 — o colapso: o juiz desaba no chão, desacordado
+    deitarJuiz(true);
+    jogador.grupo.position.set(jx, 0.14, jz);
+    toastMundo("💥 A vista escurece, os sons somem, as pernas falham — e o senhor DESABA no chão da sala, desacordado. O martelo rola da bancada. O estresse cobrou a conta inteira.", { auto: 4 });
+
+    // FASE 2 — a equipe de emergência chega
     setTimeout(function () {
-      const est = (M && M.estado) || e;
+      const eq = garantirEquipeMedica();
+      eq.maca.visible = true; eq.maca.position.set(jx, 0, jz - 1.1); eq.maca.rotation.y = 0;
+      eq.medico.grupo.visible = true; eq.medico.grupo.position.set(jx - 0.85, 0, jz + 0.5); eq.medico.grupo.rotation.y = Math.PI;
+      eq.medico.setEmocao("firme"); eq.medico.executarAcao("apelo");
+      eq.helper.grupo.visible = true; eq.helper.grupo.position.set(jx + 0.85, 0, jz + 0.5); eq.helper.grupo.rotation.y = Math.PI;
+      eq.helper.setEmocao("surpresa"); eq.helper.executarAcao("entregar");
+      emergState.camAng = -0.5;
+      toastMundo("🚑 “EMERGÊNCIA NA SALA!” A brigada do fórum chega correndo com a maca; a assessora Laís abre caminho. O médico se ajoelha, mede o pulso, ergue a voz: “oxigênio, JÁ!”.", { auto: 4 });
+    }, 1500);
+
+    // FASE 3 — carregam o juiz na maca
+    setTimeout(function () {
+      jogador.grupo.position.set(jx, 0.72, jz - 1.1);
+      jogador.grupo.rotation.set(-Math.PI / 2, 0, 0);
+      emergState.foco = { x: jx, z: jz - 1.1 };
+      emergState.camAng = 0.4;
+      toastMundo("🧑‍⚕️ “Um, dois, três” — com cuidado, eles erguem o senhor para a maca e prendem o cinto de segurança. Desacordado, o juiz é firmado para o transporte.", { auto: 4 });
+    }, 3800);
+
+    // FASE 4 — o transporte ao setor de saúde
+    setTimeout(function () {
+      if (noForum && mundoInfo.pontos.saude) {
+        const dest = mundoInfo.pontos.saude;
+        toastMundo("🏥 A maca dispara pelo corredor — distribuição, custódia, assistência social — abrindo passagem até o SETOR DE SAÚDE. Servidores se encostam nas paredes; ninguém respira. Tudo para pelo juiz.", { auto: 5 });
+        emergState.transporte = { t: 0, dur: 6, de: { x: jx, z: jz - 1.1 }, para: { x: dest.x, z: dest.z + 0.6 }, onFim: trataNoSetor };
+      } else {
+        toastMundo("🏥 Sem fórum por perto, o socorro vem até o senhor: a equipe monta o atendimento ali mesmo, no chão onde o juiz caiu.", { auto: 5 });
+        trataNoSetor();
+      }
+    }, 6000);
+
+    function trataNoSetor() {
+      const f = emergState.foco, eq = equipeMedica;
+      if (eq) {
+        eq.medico.grupo.userData.andando = false; eq.helper.grupo.userData.andando = false;
+        eq.medico.grupo.position.set(f.x - 0.85, 0, f.z + 0.45); eq.medico.grupo.rotation.y = Math.PI;
+        eq.helper.grupo.position.set(f.x + 0.9, 0, f.z + 0.2); eq.helper.grupo.rotation.y = Math.PI * 0.7;
+        eq.medico.setEmocao("firme"); eq.medico.falando(true); eq.medico.executarAcao("apelo");
+        eq.helper.executarAcao("lerPapel");   // monitorando os sinais
+      }
+      montarSoro(f.x + 0.75, f.z);
+      emergState.camAng = 0.7;
+      toastMundo("💉 No setor de saúde: máscara de oxigênio, acesso na veia, soro pingando, monitor apitando o ritmo do coração. “Aguenta aí, doutor — o senhor vai voltar inteiro. Respira comigo.”", { auto: 6 });
+      setTimeout(recuperar, 6500);
+    }
+
+    function recuperar() {
+      const est = (M && M.estado) || e, f = emergState.foco;
       if (est) {
         TOGA.motor.alterarEstresse(45 - (est.estresse || 0));   // normaliza para ~45
-        est.minutos += 30;
-        est.flags._colapsou = true;
-        TOGA.motor.salvar();
+        est.minutos += 30; est.flags._colapsou = true; TOGA.motor.salvar();
       }
-      if (med) { med.falando(false); med.segurar(null, "esq"); med.grupo.visible = false; }
-      jogador.grupo.rotation.z = 0;
-      jogador.sentar(false);
+      // o juiz desperta: levanta da maca, de pé ao lado dela
+      deitarJuiz(false);
+      jogador.grupo.position.set(f.x + 0.3, 0, f.z + 1.0);
+      jogador.grupo.rotation.set(0, Math.PI, 0);
+      if (equipeMedica) {
+        equipeMedica.medico.falando(false); equipeMedica.medico.executarAcao(null); equipeMedica.medico.grupo.visible = false;
+        equipeMedica.helper.executarAcao(null); equipeMedica.helper.grupo.visible = false;
+        equipeMedica.maca.visible = false;
+      }
+      removerSoro();
       flashEmergencia(false);
-      if (maca) TOGA.nucleo3d.scene.remove(maca);
-      toastMundo("💚 Aos poucos a cor volta ao rosto. O médico é categórico: “O senhor voltou de longe. A partir de hoje, autocuidado não é luxo — é dever funcional.” (estresse aliviado · +30 min no relógio)", { auto: 7 });
+      toastMundo("💚 O senhor desperta no setor de saúde, a cor de volta ao rosto. O médico não dá desconto: “voltou de longe, Excelência. Autocuidado não é luxo — é dever funcional. Da próxima vez, pare ANTES de cair.” (estresse normalizado · +30 min no relógio)", { auto: 8 });
       if (TOGA.conquistas) TOGA.conquistas.avaliar("colapso-medico");
       if (TOGA.ui.atualizarHUD) TOGA.ui.atualizarHUD();
       emAtendimento = false;
+      const px = f.x + 0.3, pz = f.z + 1.0;
+      emergState = null;
+      TOGA.controles3d.teleportar(px, pz, Math.PI);
       reativarControles();
       if (aoFim) aoFim();
-    }, 12800);
+    }
   }
 
   /* ---------- O CARDÁPIO DA COPA ----------
@@ -2119,8 +2334,18 @@ TOGA.cena3d = (function () {
     });
   }
 
+  // cada emoção forte ganha um GESTO de corpo (veemência, indignação,
+  // súplica, desespero) — a fala não fica só no rosto
+  const GESTO_EMO = {
+    raiva: "indignado", firme: "enfase", surpresa: "indignado",
+    medo: "apelo", triste: "apelo", choro: "desespero"
+  };
   function setEmocao(idPers, emocao) {
-    if (npcs[idPers]) npcs[idPers].setEmocao(emocao);
+    const b = npcs[idPers];
+    if (!b) return;
+    b.setEmocao(emocao);
+    const g = GESTO_EMO[emocao];
+    if (g && b.executarAcao && b.acao == null) b.executarAcao(g);
   }
 
   let falanteId = null;          // quem fala agora (luz/olhares o acompanham)
@@ -2376,7 +2601,7 @@ TOGA.cena3d = (function () {
       { id: "parque", pos: P.parqueEntrada || { x: P.portaForum.x - 16, z: 8 }, raio: 2.4,
         rotulo: "🌳 ir ao Parque da Cidade (acesso livre)",
         visivel: function () { return !!TOGA.parque3d; },
-        acao: function () { entrarParque(); } },
+        acao: function () { entrarParque("rua"); } },
 
       { id: "delegacia", pos: P.delegaciaPorta, raio: 2.2,
         rotulo: function () {
@@ -2841,9 +3066,42 @@ TOGA.cena3d = (function () {
   /* =====================================================
      PARQUE DA CIDADE + ACM + a BICICLETA
      ===================================================== */
-  function entrarParque() {
+  let protestoMontado = false;
+  function montarProtestoParque() {
+    if (protestoMontado || !infoParque || !TOGA.boneco3d) return;
+    const e = TOGA.motor && TOGA.motor.estado;
+    if (!e || !e.flags._protestoEleitoral) return;
+    protestoMontado = true;
+    const PX = TOGA.parque3d.PX, scene = TOGA.nucleo3d.scene;
+    // faixa do protesto
+    if (TOGA.texturas3d.placa) {
+      [["⚖ JUIZ COMPRADO?", PX - 3], ["A SENTENÇA TEM PREÇO?", PX + 3]].forEach(function (f) {
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.7),
+          new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.placa(f[0]) }));
+        m.position.set(f[1], 1.9, 19.5); m.rotation.y = Math.PI;
+        scene.add(m);
+      });
+    }
+    const cores = ["#7a2e2e", "#3f4f5a", "#5a4a3a", "#2f4a3e", "#4a3a52"];
+    for (let i = 0; i < 6; i++) {
+      const b = TOGA.boneco3d.criar({ id: "manifestante" + i, avatar: {
+        pele: ["#d8a87f", "#c98e66", "#a86a48", "#8a5436"][i % 4],
+        cabelo: ["curto", "coque", "longo", "calvo"][i % 4], corCabelo: "#241a10",
+        traje: i % 2 ? "camisa" : "vestido", corTraje: cores[i % 5] } }, {});
+      b.grupo.position.set(PX - 5 + i * 2, 0, 21 + (i % 2) * 1.2);
+      b.grupo.rotation.y = Math.PI;
+      b.setEmocao("raiva");
+      scene.add(b.grupo);
+      infoParque.vivos.push(b);   // o juiz também não atravessa os manifestantes
+    }
+    toastMundo("📢 No gramado, o protesto que a manchete convocou: faixas com o seu nome e a palavra “COMPRADO”. São pessoas que leram o título, não os autos. Você garante a segurança do ato — protestar é direito — e segue em frente. A sua sentença responde por você, lá onde ela vai ser julgada: no Tribunal, pelos autos.", { auto: 9 });
+  }
+
+  let parqueOrigem = "rua";       // de onde o juiz veio ao parque (p/ saber a volta)
+  function entrarParque(origem) {
     garantirIniciado();
     if (!TOGA.parque3d) return;
+    if (origem) parqueOrigem = origem;
     limparToasts();
     infoParque = TOGA.parque3d.construir(TOGA.nucleo3d.scene);
     localAtivo = "parque";
@@ -2855,6 +3113,9 @@ TOGA.cena3d = (function () {
     alvoObjetivo = null;
     definirObjetivo("Parque da Cidade — passeie, sente no banco ou pegue a bicicleta");
     toastMundo("🌳 O Parque da Cidade: o lago, a ilha ao centro e a ciclovia. Acesso livre, ar livre. Pegue a bicicleta para relaxar — ou pedale até a ACM, à beira-mar.");
+    if (TOGA.atividades && TOGA.atividades.marcarConcluida) TOGA.atividades.marcarConcluida("parque");
+    if (TOGA.conquistas) TOGA.conquistas.avaliar("visita-parque");
+    montarProtestoParque();
   }
 
   function entrarAcm() {
@@ -2871,6 +3132,8 @@ TOGA.cena3d = (function () {
     alvoObjetivo = null;
     definirObjetivo("ACM — Clube dos Magistrados. Auditório a oeste, Diretoria a leste, a praia ao fundo.");
     toastMundo("🏖 A ACM — Associação Cearense de Magistrados, à beira da Praia do Futuro. Auditório, a Diretoria em reunião, piscina, beach tennis, campo society — e o mar logo ali.");
+    if (TOGA.atividades && TOGA.atividades.marcarConcluida) TOGA.atividades.marcarConcluida("acm");
+    if (TOGA.conquistas) TOGA.conquistas.avaliar("visita-acm");
   }
 
   /* ---- a bicicleta: passeio leve, sem obstáculos ----
@@ -2946,8 +3209,8 @@ TOGA.cena3d = (function () {
     function conq() { return TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0; }
     return [
       { id: "voltarRua", pos: P.portaRua, raio: 2.4,
-        rotulo: "voltar à rua do fórum",
-        acao: function () { entrarRua(); } },
+        rotulo: function () { return parqueOrigem === "forum" ? "voltar ao fórum" : "voltar à rua do fórum"; },
+        acao: function () { if (parqueOrigem === "forum") voltarForum(); else entrarRua(); } },
 
       { id: "bikePasseio", pos: P.bicicleta, raio: 2.4,
         rotulo: "🚲 andar de bicicleta (relaxar)",

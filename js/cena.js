@@ -277,6 +277,26 @@ TOGA.cena = (function () {
       0% { transform: rotate(-22deg); } 40% { transform: rotate(14deg); }
       60% { transform: rotate(-2deg); } 100% { transform: rotate(-22deg); }
     }
+    /* flashes de emoção no personagem que fala (só filter: não mexe no assento) */
+    .pers.emo-forte { animation: emoForte 1s ease; }
+    .pers.emo-pop   { animation: emoPop .7s ease; }
+    .pers.emo-triste{ animation: emoTriste 1.4s ease; }
+    @keyframes emoForte {
+      0% { filter: drop-shadow(0 0 2px rgba(217,107,107,0)); }
+      25% { filter: drop-shadow(0 0 16px rgba(217,107,107,.9)); }
+      55% { filter: drop-shadow(0 0 8px rgba(231,207,154,.7)); }
+      100% { filter: none; }
+    }
+    @keyframes emoPop {
+      0% { filter: brightness(1); }
+      30% { filter: brightness(1.7) drop-shadow(0 0 14px rgba(255,240,200,.9)); }
+      100% { filter: brightness(1); }
+    }
+    @keyframes emoTriste {
+      0% { filter: brightness(1); }
+      40% { filter: brightness(.82) drop-shadow(0 0 12px rgba(110,150,200,.7)); }
+      100% { filter: brightness(1); }
+    }
   </style>
 </svg>`;
   }
@@ -391,9 +411,22 @@ TOGA.cena = (function () {
     raiz.querySelector(".lagrima").setAttribute("opacity", e.lagrima ? 1 : 0);
   }
 
+  // cada emoção forte dá um "flash" no personagem (o SVG usa o atributo
+  // transform para o assento, então a ênfase vai pelo filter/glow — sem
+  // brigar com o posicionamento)
+  const EMO_CLASSE = {
+    raiva: "emo-forte", firme: "emo-forte", surpresa: "emo-pop",
+    choro: "emo-triste", medo: "emo-triste", triste: "emo-triste", vergonha: "emo-triste"
+  };
   function setEmocao(idPers, emocao) {
     if (!raizAtual) return;
-    aplicarEmocao(raizAtual.querySelector("#pers-" + idPers), emocao);
+    const g = raizAtual.querySelector("#pers-" + idPers);
+    aplicarEmocao(g, emocao);
+    if (g) {
+      g.classList.remove("emo-forte", "emo-pop", "emo-triste");
+      const cls = EMO_CLASSE[emocao];
+      if (cls) { void g.getBoundingClientRect(); g.classList.add(cls); }   // reinicia a animação
+    }
   }
 
   /* ---------- Avatar avulso ----------

@@ -285,5 +285,8 @@ TOGA.caramelo3d = (function () {
     }
   }
 
-  return { iniciar: iniciar };
+  return {
+    iniciar: iniciar,
+    posicao: function () { return cachorro ? cachorro.grupo.position : null; }
+  };
 })();

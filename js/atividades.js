@@ -22,6 +22,10 @@ TOGA.atividades = (function () {
   const CHAVE = "toga.atividades.v1";   // { concluidas: {id:true}, avisadas: {id:true} }
 
   const ATIVIDADES = [
+    { id: "parque", icone: "🌳", nome: "Parque da Cidade", limiar: 0,
+      hint: "Acesso livre A QUALQUER HORA: dê uma volta na porta do fórum. Lago, ciclovia e a bicicleta — uma das formas de aliviar o estresse." },
+    { id: "acm", icone: "🏖", nome: "ACM — Clube dos Magistrados", limiar: 5,
+      hint: "À beira-mar: auditório, esportes e a Diretoria em reunião. Pegue a bicicleta no Parque e pedale até lá." },
     { id: "delegacia", icone: "🚔", nome: "Visita à Delegacia", limiar: 8,
       hint: "Conheça o outro lado do flagrante: a casa da Polícia Judiciária." },
     { id: "escola", icone: "🏫", nome: "Visita à Escola Municipal", limiar: 15,
