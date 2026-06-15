@@ -992,6 +992,15 @@ document.addEventListener("DOMContentLoaded", function () {
     if (TOGA.conquistas) TOGA.conquistas.abrirVitrine();
   });
 
+  /* ----- "Como jogar — roteiro do dia": reabre o tutorial a qualquer hora.
+     O mesmo botão atende o menu, a pauta e o HUD do mundo 3D. ----- */
+  ["#btn-como-jogar", "#btn-ajuda-pauta", "#btn-ajuda-mundo"].forEach(function (sel) {
+    var b = $(sel);
+    if (b) b.addEventListener("click", function () {
+      if (TOGA.ui && TOGA.ui.mostrarTutorial) TOGA.ui.mostrarTutorial(true);
+    });
+  });
+
   function abrirPersonalizacao() {
     var modal = document.getElementById("modal-juiz");
     if (!modal) {

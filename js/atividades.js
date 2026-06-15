@@ -505,6 +505,63 @@ TOGA.atividades = (function () {
     ]
   };
 
+  /* CEJUSC — mediação de verdade, no anexo do fórum, observando as
+     normas do CNJ (Res. 125/2010) e a Lei de Mediação (13.140/2015).
+     Conflito de vizinhança: o muro da divisa e a água da chuva.     */
+  MISSOES.mediacaoCejusc = {
+    titulo: "🤝 CEJUSC — Sessão de Mediação",
+    gatilho: "mediacao-cejusc",
+    passos: [
+      { texto: "Na mesa redonda do CEJUSC, a facilitadora te cede a condução: “doutor, hoje o senhor é MEDIADOR, não juiz — quem decide são eles.” De um lado, seu Genaro; do outro, dona Cida, vizinhos de muro há vinte anos. O conflito: a calha da casa dela despeja água no quintal dele, que ergueu um muro mais alto “de raiva” e tapou o sol da horta dela. Os dois vieram, espontaneamente, antes de virar processo." },
+      { texto: "Antes da primeira fala, os dois te olham, tensos, sem saber as regras da sala.",
+        decisao: {
+          prompt: "Como você ABRE a sessão de mediação?",
+          opcoes: [
+            { rotulo: "“Vamos ser objetivos: cada um fala dois minutos e eu já digo quem tem razão.”",
+              tom: "ruim",
+              feedback: "Você acabou de virar juiz na cadeira errada. O mediador NÃO decide nem diz quem tem razão (Lei 13.140/2015, art. 4º, §1º) — se decidisse, não seria mediação. Os dois se fecham na hora." },
+            { rotulo: "Explicar o combinado: a sessão é VOLUNTÁRIA, o que se disser aqui é CONFIDENCIAL e não vira prova, e o acordo só sai se os DOIS quiserem — você apenas conduz.",
+              tom: "otimo",
+              feedback: "Abertura de manual: voluntariedade e autonomia da vontade (Lei 13.140/2015, art. 2º, I e V), confidencialidade (art. 30) e o papel do mediador que facilita, não julga. Os ombros dos dois baixam — agora é um espaço seguro." },
+            { rotulo: "Pedir que cada um traga testemunhas e documentos para a próxima sessão.",
+              tom: "ruim",
+              feedback: "Isso é instrução de processo, não mediação. A facilitadora intervém: “aqui não se produz prova — aqui se constrói solução. Documento e testemunha são a lógica que os afastou.”" }
+          ]
+        } },
+      { texto: "Dona Cida desabafa sobre a horta na sombra; seu Genaro a corta: “a senhora começou, com essa água toda no MEU quintal!” — e vira para você: “o senhor é juiz, manda ela arrumar a calha e pronto!”",
+        decisao: {
+          prompt: "Seu Genaro te chama para tomar partido. O que você faz?",
+          opcoes: [
+            { rotulo: "Concordar: tecnicamente a calha é responsabilidade dela; oriente-a a consertar.",
+              tom: "ruim",
+              feedback: "Caiu na armadilha. Dar parecer jurídico e tomar lado quebra a IMPARCIALIDADE do mediador (Lei 13.140/2015, art. 2º, II) — e dona Cida, agora “perdedora”, levanta para ir embora." },
+            { rotulo: "Calar os dois e advertir seu Genaro pela interrupção.",
+              tom: "ruim",
+              feedback: "Trocou a facilitação por disciplina de audiência. “Mediar não é dar bronca”, sussurra a facilitadora — repreender só muda quem está com raiva, não resolve a água nem a sombra." },
+            { rotulo: "Manter a imparcialidade e reformular o interesse de cada um: “o senhor quer o quintal seco; a senhora quer sol na horta. Os dois querem a própria casa em paz — é isso?”",
+              tom: "otimo",
+              feedback: "Você não decidiu nada e fez tudo: imparcialidade preservada (art. 2º, II) e os interesses reais separados das posições. Os dois assentem — descobrem que querem, no fundo, a mesma coisa: sossego." }
+          ]
+        } },
+      { texto: "Serenos, eles enxergam as saídas: a calha pode ganhar um desvio barato; o muro, uma fileira de tijolo vazado que deixa passar a luz. Falta fechar.",
+        decisao: {
+          prompt: "Como se conclui a mediação?",
+          opcoes: [
+            { rotulo: "Você redige o acordo que achar mais justo e manda os dois assinarem.",
+              tom: "ruim",
+              feedback: "Acordo de mediador tem o mesmo defeito da sentença: não é deles. A solução precisa nascer das partes (autonomia da vontade — art. 2º, V); imposta, descumpre-se no primeiro temporal." },
+            { rotulo: "Devolver a caneta a eles: “qual combinação funciona para os dois?” — e, fechado o consenso, lavrar o termo para HOMOLOGAÇÃO do juiz, com força de título executivo.",
+              tom: "otimo",
+              feedback: "Eles mesmos definem prazos e divisão dos custos. O termo de acordo, homologado, vira título executivo judicial (Lei 13.140/2015, art. 20, p. único; CPC, art. 515, II–III). Acordo com dono se cumpre — e os vinte anos de vizinhança continuam." },
+            { rotulo: "Encerrar sem acordo e encaminhar para audiência: já avançaram bastante.",
+              tom: "ruim",
+              feedback: "Desistir com o consenso a um passo! A facilitadora lamenta: “o conflito estava resolvido na mesa; o senhor o mandou para a fila do processo.”" }
+          ]
+        } },
+      { texto: "Aperto de mão sincero sobre a mesa redonda. A facilitadora arquiva o termo e sorri: “é por isso que o CEJUSC existe, doutor — a Resolução 125 do CNJ não criou mais uma sala de processo; criou um lugar onde o conflito termina de verdade.”" }
+    ]
+  };
+
   function executarMissao(id, aoTerminar) {
     const m = MISSOES[id];
     if (!m || emVisita) return false;

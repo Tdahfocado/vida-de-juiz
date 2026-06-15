@@ -396,7 +396,8 @@ TOGA.mundo3d = (function () {
     // (afastadas 6 cm da face da parede + polygonOffset: sem
     // z-fighting — as placas "piscavam" de longe com a neblina aberta)
     if (TOGA.texturas3d.placa) {
-      [["DISTRIBUIÇÃO", 4.0, -1.81, 0, 1.4],
+      [["GABINETE — JUIZ(A) DA 1ª VARA", -9.6, -1.81, 0, 3.0],
+       ["DISTRIBUIÇÃO", 4.0, -1.81, 0, 1.4],
        ["DIRETORIA DO FORO", 4.0, -1.81, 0, 1.4, 2.18],     // segunda linha de placas
        ["CENTRAL DE MANDADOS", 4.0, -1.81, 0, 1.4, 1.81],
        ["CUSTÓDIA", 13.7, -1.80, 0, 1.4],
@@ -911,7 +912,10 @@ TOGA.mundo3d = (function () {
     // norte: vão da SALA DA OAB em x∈[33.4,34.6]
     parede(scene, 30, -2, 33.4, -2);
     parede(scene, 34.6, -2, 38, -2);
-    parede(scene, 38, -2, 38, 2);                  // novo fim da ala
+    // antes era o fim da ala; agora abre passagem para a ALA LESTE II
+    // (CEJUSC + Gabinete da 2ª Vara) — vão central em z∈[−0.6, 0.6]
+    parede(scene, 38, -2, 38, -0.6);
+    parede(scene, 38, 0.6, 38, 2);
     // o setor de saúde nunca teve parede leste — agora tem
     parede(scene, 30, -8, 30, -2);
 
@@ -1052,6 +1056,117 @@ TOGA.mundo3d = (function () {
     pontos.extintor = { x: 18.2, z: -1.4 };
   }
 
+  /* ---------- ALA LESTE II: CEJUSC + GABINETE DA 2ª VARA ----------
+     Extensão do corredor além de x=38, ligada pelo vão aberto na
+     parede da Ala Leste. Ao SUL, o CEJUSC (mesa redonda — o símbolo
+     do consenso); ao NORTE, o gabinete do(a) titular da 2ª Vara.    */
+  function placaAla(scene, texto, x, y, z, rotY, larg) {
+    if (!TOGA.texturas3d.placa) return;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(larg || 1.6, 0.36),
+      new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.placa(texto),
+        polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    m.position.set(x, y, z); m.rotation.y = rotY || 0;
+    scene.add(m);
+  }
+
+  function construirAlaLesteII(scene) {
+    // ---- extensão do corredor (x 38→50) ----
+    piso(scene, 38, -2, 50, 2, 0x2e2114, TOGA.texturas3d.pisoCorredor && TOGA.texturas3d.pisoCorredor());
+    // norte: vão do GABINETE DA 2ª VARA em x∈[42.4, 43.6]
+    parede(scene, 38, -2, 42.4, -2);
+    parede(scene, 43.6, -2, 50, -2);
+    // sul: vão do CEJUSC em x∈[43.4, 44.6]
+    parede(scene, 38, 2, 43.4, 2);
+    parede(scene, 44.6, 2, 50, 2);
+    parede(scene, 50, -2, 50, 2);                  // fim da ala
+    // placas do corredor (viradas para quem caminha)
+    placaAla(scene, "GABINETE — JUIZ(A) DA 2ª VARA", 43.0, 2.55, -1.81, 0, 3.0);
+    placaAla(scene, "CEJUSC — SOLUÇÃO DE CONFLITOS", 44.0, 2.55, 1.81, Math.PI, 3.0);
+
+    /* ============ GABINETE DA 2ª VARA (norte, x 39–48, z −9–−2) ============ */
+    piso(scene, 39, -9, 48, -2, 0x3a2b1b, TOGA.texturas3d.pisoSala && TOGA.texturas3d.pisoSala());
+    parede(scene, 39, -9, 48, -9);                 // fundo
+    parede(scene, 39, -9, 39, -2);                 // oeste
+    parede(scene, 48, -9, 48, -2);                 // leste
+    // mesa do juiz colega + computador + autos + cadeira
+    mesa(scene, 43.5, -7.2, 2.6, 1.1);
+    caixa(scene, 0.55, 0.38, 0.06, 43.0, 1.06, -7.35, mat(0x1d150d), { colide: false });
+    const telaG2 = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.3),
+      new THREE.MeshBasicMaterial({ color: 0x9fc3ae }));
+    telaG2.position.set(43.0, 1.06, -7.31); scene.add(telaG2);
+    caixa(scene, 0.45, 0.07, 0.32, 44.2, 0.86, -7.2, mat(0xf4ecd9), { colide: false });
+    caixa(scene, 0.42, 0.07, 0.30, 44.2, 0.93, -7.18, mat(0xe2d6ba), { colide: false, rotY: 0.12 });
+    cadeira(scene, 43.5, -7.9, Math.PI, 0x2a1d12);
+    // cadeiras de atendimento, do outro lado da mesa
+    cadeira(scene, 42.9, -6.4, 0, 0x4a3018);
+    cadeira(scene, 44.1, -6.4, 0, 0x4a3018);
+    // estante de livros
+    caixa(scene, 0.4, 2.4, 2.4, 47.7, 1.2, -5.5, mat(0x33220f));
+    for (let i = 0; i < 10; i++) {
+      caixa(scene, 0.1, 0.3, 0.18, 47.45, 0.6 + (i % 5) * 0.42, -6.3 + Math.floor(i / 5) * 1.4,
+        mat([0x7a2e2e, 0x2f4a3e, 0xc9a35c, 0x33424f][i % 4]), { colide: false });
+    }
+    // aparador com cafeteira própria + planta + janela
+    caixa(scene, 1.2, 0.85, 0.5, 40.0, 0.425, -8.5, mat(0x4a3018), { studs: "#4a3018" });
+    caixa(scene, 0.3, 0.42, 0.3, 40.0, 1.06, -8.5, mat(0x1d150d), { colide: false });
+    planta(scene, 39.5, -2.6);
+    janela(scene, 47.9, -5.5, -Math.PI / 2);
+    cortina(scene, 47.82, -5.5, -Math.PI / 2);
+    lustre(scene, 43.5, -5.5);
+    // brasão sobre a estante (gabinete de magistrado)
+    const brasG2 = new THREE.Mesh(new THREE.CircleGeometry(0.4, 24),
+      TOGA.texturas3d.brasao ? new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.brasao() })
+                             : new THREE.MeshBasicMaterial({ color: 0x463422 }));
+    brasG2.position.set(43.5, 2.3, -8.84); scene.add(brasG2);
+    placaAla(scene, "2ª VARA — GABINETE", 43.5, 1.7, -8.83, 0, 1.8);
+    pontos.gab2 = { x: 43.5, z: -5.6 };
+    pontos.gab2Juiz = { x: 43.5, z: -7.9 };
+
+    /* ============ CEJUSC (sul, x 39–49, z 2–12) ============ */
+    piso(scene, 39, 2, 49, 12, 0x3a3326, TOGA.texturas3d.pisoSala && TOGA.texturas3d.pisoSala());
+    parede(scene, 39, 12, 49, 12);                 // fundo
+    parede(scene, 39, 2, 39, 12);                  // oeste
+    parede(scene, 49, 2, 49, 12);                  // leste
+    // MESA REDONDA — o consenso senta todo mundo no mesmo nível
+    const mesaR = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.08, 22),
+      TOGA.texturas3d.madeira ? matTex(TOGA.texturas3d.madeira(), 2, 2) : mat(0x7a5634));
+    mesaR.position.set(44, 0.76, 7); mesaR.castShadow = true; scene.add(mesaR);
+    const peR = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 0.76, 12), mat(0x4a3018));
+    peR.position.set(44, 0.38, 7); scene.add(peR);
+    colisores.push({ minX: 42.6, maxX: 45.4, minZ: 5.6, maxZ: 8.4 });
+    // 6 cadeiras ao redor (iguais — ninguém preside)
+    [[0, -1.85], [0, 1.85], [-1.7, -0.9], [1.7, -0.9], [-1.7, 0.9], [1.7, 0.9]].forEach(function (c) {
+      cadeira(scene, 44 + c[0], 7 + c[1], Math.atan2(-c[0], -c[1]), 0x556a55);
+    });
+    // jarra d'água e copos no centro (hospitalidade da sessão)
+    const jarra = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.28, 10),
+      new THREE.MeshPhongMaterial({ color: 0xb9d2e0, transparent: true, opacity: 0.5 }));
+    jarra.position.set(44, 0.94, 7); scene.add(jarra);
+    // mural das normas do CNJ (Res. 125/2010 · Lei 13.140/2015)
+    if (TOGA.texturas3d.letreiro) {
+      const mural = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.5),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.letreiro(
+          "CEJUSC", "#2f4a3e", "#e7cf9a", "RES. CNJ 125/2010 · LEI 13.140/2015 — MEDIAÇÃO") }));
+      mural.position.set(44, 1.8, 11.85); mural.rotation.y = Math.PI; scene.add(mural);
+    }
+    planta(scene, 39.6, 2.7); planta(scene, 48.4, 2.7);
+    lustre(scene, 44, 7); lustre(scene, 44, 10.5);
+    janela(scene, 48.85, 9, -Math.PI / 2);
+    cortina(scene, 48.78, 9, -Math.PI / 2);
+    placaAla(scene, "MESA DE MEDIAÇÃO E CONCILIAÇÃO", 44, 2.4, 11.83, Math.PI, 2.8);
+    pontos.cejusc = { x: 44, z: 4.4 };
+    pontos.mesaCejusc = { x: 44, z: 5.4 };
+    pontos.cejuscMediador = { x: 44, z: 9.0 };       // facilitador(a), de costas p/ o fundo
+    pontos.cejuscParteA = { x: 42.3, z: 7.0 };
+    pontos.cejuscParteB = { x: 45.7, z: 7.0 };
+
+    // ---- teto do novo bloco (o teto principal vai só até x≈42) ----
+    const tetoII = new THREE.Mesh(new THREE.PlaneGeometry(13, 22), mat(0x241a10));
+    tetoII.rotation.x = Math.PI / 2;
+    tetoII.position.set(44, ALTURA, 1.5);
+    scene.add(tetoII);
+  }
+
   function construir(scene) {
     construirGabinete(scene);
     construirCorredor(scene);
@@ -1065,6 +1180,7 @@ TOGA.mundo3d = (function () {
     construirBrinquedoteca(scene);
     construirJuri(scene);
     construirAlaLeste(scene);
+    construirAlaLesteII(scene);
     teto(scene);
     construirStuds(scene);
     // studs 3D só na qualidade alta — e nunca projetam sombra (são milhares)

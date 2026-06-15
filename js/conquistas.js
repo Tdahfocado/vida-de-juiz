@@ -79,6 +79,14 @@ TOGA.conquistas = (function () {
       desc: "Termine um dia com o estresse abaixo de 30.",
       se: c => c.gatilho === "epilogo" && pautaCompleta(c) && (c.estado.estresse || 0) < 30 },
 
+    { id: "voltouInteiro", icone: "🚑", nome: "Voltou de longe",
+      desc: "Leve o estresse ao limite, passe mal e seja salvo pela equipe médica do fórum. Que a lição fique.",
+      se: c => c.gatilho === "colapso-medico" || !!(c.flags && c.flags._colapsou) },
+
+    { id: "construtorConsenso", icone: "🤝", nome: "Construtor(a) de consenso",
+      desc: "Conduza uma mediação no CEJUSC e ajude as partes a construírem o próprio acordo (Res. CNJ 125/2010).",
+      se: c => c.gatilho === "mediacao-cejusc" },
+
     { id: "maratonista", icone: "🏃", nome: "Maratonista da toga",
       desc: "Conclua os três dias de trabalho.",
       se: c => c.pautasConcluidas >= 3 },

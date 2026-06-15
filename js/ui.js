@@ -83,6 +83,7 @@ TOGA.ui = (function () {
   }
 
   let turvaAtiva = false;
+  let colapsoArmado = false;     // trava de reentrância da emergência aos 100
   function atualizarEstresse() {
     const e = M().estado;
     if (!e) return;
@@ -118,6 +119,30 @@ TOGA.ui = (function () {
       e.flags._avisoEstresse70 = true;
       M().salvar();
       TOGA.cena3d.toastMundo("💬 Laís, baixinho, na porta do gabinete: “doutor, com licença o registro: o senhor está há horas sem uma pausa, e eu vejo daqui o seu passo pesando. A pauta precisa do senhor INTEIRO — copa, água ou setor de saúde. Escolha um, que eu seguro o expediente.”");
+    }
+
+    // COLAPSO aos 100: o juiz passa mal e o atendimento médico é acionado
+    if (v >= 100 && !colapsoArmado) {
+      colapsoArmado = true;
+      if (modo3d() && TOGA.cena3d && TOGA.cena3d.emergenciaMedica) {
+        TOGA.cena3d.emergenciaMedica(function () { colapsoArmado = false; });
+      } else {
+        // fallback fora do 3D (audiência/modo clássico): normaliza com aviso
+        e.estresse = 45;
+        e.minutos += 30;
+        e.flags._colapsou = true;
+        M().salvar();
+        if (TOGA.conquistas) TOGA.conquistas.avaliar("colapso-medico");
+        const area = $("#linha-pausas");
+        if (area) {
+          const aviso = document.createElement("div");
+          aviso.className = "aviso-pausa";
+          aviso.textContent = "🚑 O estresse chegou ao limite: o senhor passou mal e foi atendido pela equipe médica do fórum. Pressão normalizada, mas perdeu 30 minutos. Cuide-se, Excelência.";
+          area.after(aviso);
+          setTimeout(() => aviso.remove(), 6000);
+        }
+        setTimeout(() => { colapsoArmado = false; atualizarHUD(); }, 50);
+      }
     }
   }
 
@@ -1098,13 +1123,19 @@ TOGA.ui = (function () {
   }
 
   /* ---------- Tutorial da primeira partida ---------- */
-  function mostrarTutorial() {
-    if (TOGA.config && TOGA.config.demo) return;   // demonstração: direto ao caso
-    try { if (localStorage.getItem("toga.tutorial.v1")) return; } catch (e) {}
+  function mostrarTutorial(forcar) {
+    // `forcar` = reabrir pelo botão "Como jogar" (ignora demo e a flag de
+    // "já vi"); sem ele, só aparece uma vez, na primeira partida.
+    if (!forcar) {
+      if (TOGA.config && TOGA.config.demo) return;   // demonstração: direto ao caso
+      try { if (localStorage.getItem("toga.tutorial.v1")) return; } catch (e) {}
+    }
     const ehToque = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
     const cartoes = [
       { titulo: "Bem-vindo(a) à comarca, Excelência",
         texto: "Você é o juiz. Cada decisão precisa de <strong>fundamento</strong> — e cada uma mexe nos quatro eixos da sua reputação: ⚖ Técnica, ❤ Humanidade, ⏱ Celeridade e 🛡 Imparcialidade. Não existe vencer: existe <em>decidir bem</em>." },
+      { titulo: "A sequência do dia — onde clicar, na ordem",
+        texto: "1) <strong>Consulte a pauta</strong> (no 3D, o computador do gabinete; no clássico, ela já abre). 2) Escolha um caso e <strong>abra os autos</strong> na mesa. 3) Clique em <strong>“🔔 Apregoar as partes”</strong> para <strong>iniciar a audiência</strong>. 4) Entre audiências, despache os <strong>📥 conclusos</strong> que chegam ao gabinete (decisões sem audiência). 5) Atenda os <strong>expedientes da Diretoria</strong> (a servidora Samantha) — pedidos administrativos. Feche o dia na <strong>porta de saída</strong>." },
       { titulo: "Antes de cada audiência",
         texto: "Abra os <strong>autos</strong> e leia as peças. Marque até <strong>2 focos de estudo</strong>: as decisões ligadas a eles saem <strong>de graça</strong>. Sem o foco, dá para <strong>reler os autos na hora</strong> — mas custa minutos, e o relógio do fórum não perdoa. Dá até para <strong>grifar</strong> trechos com o marca-texto: é seu caderno de juiz." },
       { titulo: "Na audiência",

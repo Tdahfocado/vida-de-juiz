@@ -325,8 +325,11 @@ button:focus-visible { outline: 2px solid var(--latao-claro); outline-offset: 3p
 .preenchimento.cel { background: var(--eixo-cel); }
 .preenchimento.imp { background: var(--eixo-imp); }
 .preenchimento.est { background: linear-gradient(90deg, #7fa08f, #c9a35c 55%, #d96b6b); }
-.barra-estresse.alerta .rotulo { color: #e0b46a; }
-.barra-estresse.critico .rotulo { color: #e08a8a; animation: pulsar 1s ease infinite; }
+.barra-estresse.alerta .rotulo { color: #e0b46a; font-weight: 700; }
+.barra-estresse.critico .rotulo { color: #e08a8a; font-weight: 800; animation: pulsar 1s ease infinite; }
+/* o trilho do estresse ganha brilho conforme aperta — fica impossível ignorar */
+.barra-estresse.alerta .trilho { box-shadow: 0 0 10px rgba(224,180,106,.55); border-color: #8a6a30; }
+.barra-estresse.critico .trilho { box-shadow: 0 0 16px rgba(224,138,138,.85); border-color: var(--vinho); animation: pulsar 1s ease infinite; }
 
 /* pílula de estresse (mundo 3D e pauta) */
 .pilula-estresse {
@@ -334,8 +337,27 @@ button:focus-visible { outline: 2px solid var(--latao-claro); outline-offset: 3p
   background: rgba(20,16,11,.82); border: 1px solid var(--madeira-viva);
   border-radius: 999px; padding: 5px 12px; color: var(--verde-claro);
 }
-.pilula-estresse.alerta { color: #e0b46a; border-color: #8a6a30; }
-.pilula-estresse.critico { color: #e08a8a; border-color: var(--vinho); animation: pulsar 1s ease infinite; }
+.pilula-estresse.alerta { color: #e0b46a; border-color: #8a6a30; box-shadow: 0 0 10px rgba(224,180,106,.4); animation: pulsar 1.8s ease infinite; }
+.pilula-estresse.critico { color: #e08a8a; border-color: var(--vinho); box-shadow: 0 0 14px rgba(224,138,138,.6); animation: pulsar 1s ease infinite; }
+
+/* "passar mal": pulso vermelho de tela inteira durante a emergência médica */
+#flash-emergencia {
+  position: fixed; inset: 0; z-index: 80; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(120,0,0,.12) 30%, rgba(90,0,0,.72) 100%);
+  transition: opacity .6s ease;
+}
+#flash-emergencia.ativo { opacity: 1; animation: pulsoEmergencia 1.4s ease-in-out infinite; }
+@keyframes pulsoEmergencia { 0%,100% { opacity: .72; } 50% { opacity: 1; } }
+
+/* botão de ajuda "?" — reabre o roteiro do dia (menu, pauta e mundo 3D) */
+.btn-ajuda {
+  width: 30px; height: 30px; flex: 0 0 30px; border-radius: 50%;
+  background: rgba(20,16,11,.82); border: 1px solid var(--latao);
+  color: var(--latao-claro); font-weight: 800; font-size: 1rem; line-height: 1;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  pointer-events: auto;   /* o #tela-mundo tem pointer-events:none */
+}
+.btn-ajuda:hover { background: rgba(201,163,92,.16); border-color: var(--latao-claro); }
 
 /* pausas de autocuidado (pauta 2D) */
 .linha-pausas { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }

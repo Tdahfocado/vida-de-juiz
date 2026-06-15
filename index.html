@@ -43,6 +43,7 @@
       <div class="linha-extras">
         <button class="btn-secundario" id="btn-juiz">👤 &nbsp;Personalizar juiz(a)</button>
         <button class="btn-secundario" id="btn-conquistas">🏅 &nbsp;Conquistas</button>
+        <button class="btn-secundario" id="btn-como-jogar">📜 &nbsp;Como jogar — roteiro do dia</button>
       </div>
 
       <div class="linha-config">
@@ -99,6 +100,7 @@
         <button class="btn-pausa" id="btn-lanche">🥪 Frigobar <small>+6 min</small></button>
         <button class="btn-pausa" id="btn-saude" hidden>🩺 Setor de saúde <small>+15 min</small></button>
         <button class="btn-pausa" id="btn-conclusos" hidden>📥 Conclusos <span id="qtd-conclusos"></span></button>
+        <button class="btn-ajuda" id="btn-ajuda-pauta" title="Como jogar — roteiro do dia" aria-label="Como jogar">?</button>
       </div>
 
       <div class="lista-pauta" id="lista-pauta"><!-- cartões gerados pelo ui.js --></div>
@@ -233,6 +235,7 @@
     <div class="hud-mundo">
       <div class="relogio" id="hud-relogio-mundo">—</div>
       <div class="pilula-estresse" id="estresse-mundo" title="Estresse">🫀 18</div>
+      <button class="btn-ajuda" id="btn-ajuda-mundo" title="Como jogar — roteiro do dia" aria-label="Como jogar">?</button>
       <div id="objetivo-mundo" class="objetivo-mundo" hidden>—</div>
     </div>
     <div id="prompt-interacao" class="prompt-interacao" hidden>
@@ -364,6 +367,9 @@
   <script src="js/3d/mundo.js"></script>
   <script src="js/3d/cidade3d.js"></script>
   <script src="js/3d/esmec3d.js"></script>
+  <script src="js/3d/parque3d.js"></script>
+  <script src="js/3d/acm3d.js"></script>
+  <script src="js/3d/bicicleta3d.js"></script>
   <script src="js/3d/carro3d.js"></script>
   <script src="js/3d/rotinas3d.js"></script>
   <script src="js/3d/prisao3d.js"></script>
