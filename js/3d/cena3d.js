@@ -1185,8 +1185,9 @@ TOGA.cena3d = (function () {
           toastMundo("⚖ O advogado de plantão se levanta para o aperto de mão: “Excelência, apareça sempre. Juiz que respeita a tribuna julga melhor — e advogado que respeita a toga defende melhor.” Na parede, a placa lembra: a advocacia é indispensável à administração da justiça (CF, art. 133).");
         } },
 
-      { id: "saida", pos: P.portaSaida, raio: 2.0,
-        rotulo: "encerrar o expediente e sair do fórum",
+      // ENCERRAR o expediente: ao SUL da porta oeste, só no fim da pauta
+      { id: "saida", pos: { x: P.portaSaida.x + 0.4, z: P.portaSaida.z - 1.5 }, raio: 1.3,
+        rotulo: "🏁 encerrar o expediente (sair do fórum)",
         visivel: function () { return M().estado && M().fimDaPauta() && semInterludios(); },
         acao: function () { TOGA.ui.mostrarEpilogo(); } },
 
@@ -1197,31 +1198,13 @@ TOGA.cena3d = (function () {
         visivel: function () { return !!(M().estado && TOGA.parque3d); },
         acao: function () { entrarParque("forum"); } },
 
-      { id: "cidade", pos: { x: P.portaSaida.x, z: P.portaSaida.z - 2.0 }, raio: 1.8,
-        rotulo: function () {
-          if (TOGA.atividades.liberadas) return "🌳 sair para a RUA · modo de teste";
-          const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
-          const tem = TOGA.atividades && TOGA.atividades.LISTA.some(function (a) { return n >= a.limiar; });
-          return tem ? "🌳 sair para a RUA — atividades da comarca"
-                     : "🌳 espiar a rua (atividades destravam com conquistas)";
-        },
-        visivel: function () {
-          if (!TOGA.atividades || !M().estado) return false;
-          if (TOGA.atividades.liberadas) return true;   // modo de teste do autor
-          return !!(M().fimDaPauta() && semInterludios());
-        },
-        acao: function () {
-          if (TOGA.atividades.liberadas) { entrarRua(); return; }
-          const n = TOGA.conquistas ? TOGA.conquistas.quantasGanhas() : 0;
-          const prox = TOGA.atividades.LISTA.find(function (a) { return n < a.limiar; });
-          if (!TOGA.atividades.LISTA.some(function (a) { return n >= a.limiar; })) {
-            toastMundo("🔒 A comarca além do fórum destrava com as suas conquistas: " +
-              TOGA.atividades.LISTA.map(function (a) { return a.icone + " " + a.limiar; }).join(" · ") +
-              ". Você tem " + n + (prox ? " — faltam " + (prox.limiar - n) + " para " + prox.nome + "." : "."));
-            return;
-          }
-          entrarRua();
-        } },
+      // SAIR PARA A RUA (pátio da Delegacia/Escola/ESMEC): ao NORTE da porta
+      // oeste, livre a qualquer hora — as VISITAS lá dentro é que destravam
+      // com conquistas. Posição separada da saída, para não conflitar.
+      { id: "cidade", pos: { x: P.portaSaida.x + 0.4, z: P.portaSaida.z + 1.5 }, raio: 1.3,
+        rotulo: "🚪 sair para a rua — pátio da Delegacia e da Escola",
+        visivel: function () { return !!(M().estado && TOGA.cidade3d); },
+        acao: function () { entrarRua(); } },
 
       // ---- Ala Leste II: 2ª Vara e CEJUSC ----
       { id: "gab2", pos: P.gab2 || { x: 43.5, z: -5.6 }, raio: 2.0,

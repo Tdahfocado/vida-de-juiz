@@ -22,6 +22,7 @@ TOGA.interacao3d = (function () {
   if (!window.THREE) return {};
 
   let lista = [];
+  let persistentes = [];     // itens que SOBREVIVEM ao definir() (ex.: o cachorro)
   let focado = null;
 
   /* anel dourado no chão sob o interagível focado — o jogador
@@ -124,8 +125,10 @@ TOGA.interacao3d = (function () {
   if (promptEl) promptEl.addEventListener("click", dispararFocado);
 
   return {
-    definir: function (novaLista) { lista = novaLista || []; },
-    adicionar: function (item) { lista.push(item); },
+    // definir troca a lista da ÁREA, mas reconcatena os persistentes
+    // (senão o cachorro some toda vez que se troca de cena/volta ao fórum)
+    definir: function (novaLista) { lista = (novaLista || []).concat(persistentes); },
+    adicionar: function (item) { persistentes.push(item); lista.push(item); },
     dispararFocado: dispararFocado,
     tick: tick,
     listar: function () {
