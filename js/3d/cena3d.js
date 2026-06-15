@@ -3195,12 +3195,11 @@ TOGA.cena3d = (function () {
     }
     andandoDeBike = true; bikeReliefAcc = 0;
     bikeUltimaPos.copy(jogador.grupo.position);
-    // pose de PILOTAR: mãos no guidão e sem balanço de passada (não "anda")
+    // pose de PILOTAR: mãos no guidão; e modo VEÍCULO (igual ao carro)
     if (jogador.executarAcao) jogador.executarAcao("guidao");
-    if (TOGA.controles3d.definirMontado) TOGA.controles3d.definirMontado(true);
-    if (TOGA.controles3d.definirMultiplicadorVel) TOGA.controles3d.definirMultiplicadorVel(1.9);
+    if (TOGA.controles3d.definirVeiculo) TOGA.controles3d.definirVeiculo(true);
     if (!bikeTickReg) { TOGA.nucleo3d.aoFrame(tickBikeRide); bikeTickReg = true; }
-    toastMundo("🚲 Na bicicleta! Pilote à vontade pelo parque (W A S D / setas) — o vento alivia o estresse. Volte ao bicicletário para descer.");
+    toastMundo("🚲 Na bicicleta! Pilote como um veículo: W/▲ pedala · A/◄ D/► esterçam · S/▼ freia. O vento alivia o estresse — volte ao bicicletário para descer.");
   }
 
   function desmontarBike(silencioso) {
@@ -3208,8 +3207,7 @@ TOGA.cena3d = (function () {
     andandoDeBike = false;
     if (bikeMesh && bikeMesh.parent) bikeMesh.parent.remove(bikeMesh);
     if (jogador && jogador.executarAcao) jogador.executarAcao(null);   // solta o guidão
-    if (TOGA.controles3d.definirMontado) TOGA.controles3d.definirMontado(false);
-    if (TOGA.controles3d.definirMultiplicadorVel) TOGA.controles3d.definirMultiplicadorVel(1);
+    if (TOGA.controles3d.definirVeiculo) TOGA.controles3d.definirVeiculo(false);
     if (!silencioso) toastMundo("🚲 Você desce da bike, o passo mais leve do que subiu.");
   }
 

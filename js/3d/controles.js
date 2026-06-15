@@ -25,6 +25,8 @@ TOGA.controles3d = (function () {
   let obstaculosCache = [];         // recalculado uma vez por quadro
   let multVel = 1;                  // multiplicador de velocidade (1 a pé, >1 de bike)
   let montado = false;              // de bicicleta: sem balanço de passada
+  let modoVeiculo = false;          // pilotar como o carro (acelera/esterça/inércia)
+  let velVeic = 0;                  // velocidade escalar da bicicleta
   let ativo = false;
   let yaw = 0, pitch = -0.26;                  // ângulos da câmera (visão um pouco mais alta)
   let velAtual = new THREE.Vector3();          // velocidade suavizada
@@ -115,7 +117,7 @@ TOGA.controles3d = (function () {
       inicioClique = null;
     });
     window.addEventListener("mousemove", e => {
-      if (!arrastando || !ativo) return;
+      if (!arrastando || !ativo || modoVeiculo) return;   // de bici, a câmera segue o guidão
       yaw -= (e.clientX - ultimoMouse.x) * 0.005;
       pitch = Math.max(-0.62, Math.min(0.25, pitch - (e.clientY - ultimoMouse.y) * 0.003));
       ultimoMouse = { x: e.clientX, y: e.clientY };
@@ -185,6 +187,9 @@ TOGA.controles3d = (function () {
         if (dx * dx + dz * dz >= rr * rr) obstaculosCache.push(o);
       }
     } else { obstaculosCache = []; }
+
+    // de BICICLETA: pilota como o carro (acelera, esterça, inércia)
+    if (modoVeiculo) { tickVeiculo(dt); return; }
 
     // giro pelo teclado
     if (teclas["arrowleft"]) yaw += 2.2 * dt;
@@ -267,6 +272,35 @@ TOGA.controles3d = (function () {
     atualizarCamera(dt);
   }
 
+  /* ---------- Pilotar a BICICLETA (estilo carro) ----------
+     W/▲ pedala (acelera na direção do guidão), S/▼ freia/ré, A/◄ e D/►
+     ESTERÇAM o guidão (só com velocidade), e há inércia. A câmera (yaw)
+     acompanha o guidão. */
+  const VMAX_BIKE = 7.0;
+  function tickVeiculo(dt) {
+    const acelera = teclas["w"] || teclas["arrowup"] || eixoVirtual.frente > 0.3;
+    const freia = teclas["s"] || teclas["arrowdown"] || eixoVirtual.frente < -0.3;
+    if (acelera) velVeic = Math.min(VMAX_BIKE, velVeic + 7.5 * dt);
+    else if (freia) velVeic = Math.max(-VMAX_BIKE * 0.4, velVeic - 12 * dt);
+    else { velVeic *= (1 - Math.min(1, 1.4 * dt)); if (Math.abs(velVeic) < 0.05) velVeic = 0; }
+
+    // esterço: A/◄ vira à esquerda, D/► à direita — proporcional à velocidade
+    const steer = ((teclas["a"] || teclas["arrowleft"]) ? 1 : 0)
+                - ((teclas["d"] || teclas["arrowright"]) ? 1 : 0) - eixoVirtual.lado;
+    const fator = Math.min(1, Math.abs(velVeic) / 1.8);
+    yaw += steer * 2.6 * dt * fator * (velVeic < 0 ? -1 : 1);
+
+    const p = jogador.position;
+    const nx = p.x + Math.sin(yaw) * velVeic * dt;
+    if (!colide(nx, p.z)) p.x = nx; else velVeic *= 0.25;
+    const nz = p.z + Math.cos(yaw) * velVeic * dt;
+    if (!colide(p.x, nz)) p.z = nz; else velVeic *= 0.25;
+
+    jogador.rotation.y = yaw;             // a bici aponta para o guidão
+    jogador.userData.andando = false;     // desliza, não anda
+    atualizarCamera(dt);
+  }
+
   /* ---------- Câmera follow com clip de parede ---------- */
   let DIST = 3.4;
   const ALT = 2.15;
@@ -319,6 +353,12 @@ TOGA.controles3d = (function () {
     definirMultiplicadorVel: function (m) { multVel = m || 1; },
     /* de bicicleta: suprime o balanço de passada (sem "andar") */
     definirMontado: function (sim) { montado = !!sim; },
+    /* pilotar a bici como o carro (acelera/esterça/inércia); ao montar,
+       o guidão assume a direção atual do corpo para a câmera não saltar */
+    definirVeiculo: function (sim) {
+      modoVeiculo = !!sim; velVeic = 0;
+      if (sim && jogador) yaw = jogador.rotation.y;
+    },
     get yaw() { return yaw; },
     setEixoVirtual: function (frente, lado) {
       eixoVirtual.frente = Math.max(-1, Math.min(1, frente || 0));

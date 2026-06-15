@@ -531,8 +531,10 @@ TOGA.carro3d = (function () {
       if (!freando) e._freiou = false;
       e.v = Math.max(-4, Math.min(VMAX, e.v + acel * dt));
       if (!acelerando && !freando && Math.abs(e.v) < 0.6) e.v = 0;
-      const lado = (teclas["a"] || teclas["arrowleft"]) ? -1
-                 : (teclas["d"] || teclas["arrowright"]) ? 1 : 0;
+      // câmera olha para +z (tela: direita = −x): ◄/A vai para a ESQUERDA
+      // da tela (+x) e ►/D para a DIREITA (−x). Antes estava invertido.
+      const lado = (teclas["a"] || teclas["arrowleft"]) ? 1
+                 : (teclas["d"] || teclas["arrowright"]) ? -1 : 0;
       // a pista inteira é alcançável (ultrapassagem do ônibus) —
       // mas o contra-fluxo é por conta e risco de quem ousa
       e.x = Math.max(SX - 3.2, Math.min(SX + 3.4, e.x + lado * 3.2 * dt));
