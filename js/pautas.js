@@ -48,8 +48,8 @@ TOGA.pautas = [
   {
     id: "dia6",
     titulo: "Dia 6 — Dia no Juizado Especial",
-    subtitulo: "Audiências de instrução no JECC: dois criminais (a insignificância e o seu limite) e dois cíveis. Conclua para destravar a festa do 4º título.",
+    subtitulo: "Audiências de instrução no próprio Juizado: dois criminais (som alto na LCP e moto sem CNH — desproporção e atipicidade) e dois cíveis. Conclua para destravar a festa do 4º título.",
     inicio: "09:00",
-    casos: ["jecc-insignificancia", "jecc-reincidente", "jecc-negativacao", "jecc-vicio"]
+    casos: ["jecc-somalto", "jecc-cnh", "jecc-negativacao", "jecc-vicio"]
   }
 ];

@@ -401,6 +401,24 @@ TOGA.juizado3d = (function () {
     placaEmRot("INSTRUÇÃO ON-LINE", JX + 13.4, 1.7, 5.6, 0, 2.0);
     pontos.bancadaJecc = { x: JX + 10.5, z: 11.2 };
 
+    /* ---- PALCO da audiência do JECC (encenação dos casos no PRÓPRIO
+       Juizado): bancada, câmera, fila de entrada, plateia e assentos
+       (mesmas chaves do 2D: centro/esq1.../dir1...). ---- */
+    pontos.bancadaPalco = { x: JX + 10.5, z: 12.4 };
+    pontos.cameraBancadaJecc = {
+      pos: { x: JX + 10.5, y: 2.7, z: 13.5 },
+      alvo: { x: JX + 10.5, y: 1.1, z: 9.0 }
+    };
+    pontos.filaJecc = { x: JX + 10.0, z: 5.4 };
+    pontos.publicoJecc = [
+      { x: JX + 7.5, z: 5.2 }, { x: JX + 8.8, z: 5.2 }, { x: JX + 12.2, z: 5.2 },
+      { x: JX + 13.5, z: 5.2 }, { x: JX + 8.2, z: 6.0 }, { x: JX + 13.0, z: 6.0 }
+    ];
+    // bancos da plateia do JECC
+    pontos.publicoJecc.forEach(function (p) {
+      caixa(0.6, 0.45, 0.5, p.x, 0.22, p.z, mat(0x4a3018), { colide: false, semSombra: true });
+    });
+
     /* ============ GENTE DO JUIZADO ============ */
     function npc(item, x, z, rotY, opcoes) {
       const b = TOGA.boneco3d.criar({ id: "jecc_" + item.id, avatar: item.avatar }, opcoes || {});
@@ -446,8 +464,15 @@ TOGA.juizado3d = (function () {
       scene.add(base, luz);
     });
 
+    // assentos da audiência do JECC (mesmas chaves do 2D)
+    const ASSENTOS3D_JECC = {
+      centro: { x: JX + 10.5, z: 9.4 },
+      esq1: { x: JX + 8.4, z: 9.0 }, esq2: { x: JX + 7.4, z: 8.4 }, esq3: { x: JX + 6.8, z: 7.8 },
+      dir1: { x: JX + 12.6, z: 9.0 }, dir2: { x: JX + 13.4, z: 8.4 }, dir3: { x: JX + 14.0, z: 7.8 }
+    };
+
     info = { colisores: colisores, paredesCamera: paredesCamera, pontos: pontos,
-             vivos: vivos, equipe: equipe, elenco: EQUIPE, JX: JX };
+             vivos: vivos, equipe: equipe, elenco: EQUIPE, assentos: ASSENTOS3D_JECC, JX: JX };
     return info;
   }
 

@@ -18,6 +18,7 @@ TOGA.casos.push({
   hora: "11:10",
   duracaoPrevistaMin: 30,
   tensao: 4,
+  sala: "jecc",
 
   personagens: [
     { id: "seujose", nome: "Seu José", papel: "Autor (sem advogado)", assento: "centro",

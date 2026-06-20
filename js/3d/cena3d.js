@@ -2147,9 +2147,29 @@ TOGA.cena3d = (function () {
     const c = TOGA.motor && TOGA.motor.casoDaVez && TOGA.motor.casoDaVez();
     return !!(c && c.sala === "juri");
   }
+  function casoNoJecc() {
+    const c = TOGA.motor && TOGA.motor.casoDaVez && TOGA.motor.casoDaVez();
+    return !!(c && c.sala === "jecc");
+  }
 
   function palcoDoCaso() {
     const P = mundoInfo.pontos;
+    // casos do Juizado Especial são encenados na PRÓPRIA sala do JECC
+    if (casoNoJecc() && TOGA.juizado3d) {
+      if (!infoJuizado) infoJuizado = TOGA.juizado3d.construir(TOGA.nucleo3d.scene);
+      const PJ = infoJuizado.pontos;
+      return {
+        id: "jecc",
+        assentos: infoJuizado.assentos,
+        bancada: PJ.bancadaPalco,
+        cameraBancada: PJ.cameraBancadaJecc,
+        filaBase: PJ.filaJecc,
+        caminhoEntrada: [{ x: PJ.filaJecc.x + 0.3, z: PJ.filaJecc.z + 0.6 }],
+        publico: PJ.publicoJecc,
+        publicoRot: 0,
+        figuracao: null
+      };
+    }
     if (casoNoJuri()) {
       return {
         id: "juri",
@@ -2195,6 +2215,12 @@ TOGA.cena3d = (function () {
 
     palcoCorrente = palcoDoCaso();
     const palco = palcoCorrente;
+
+    // na sala do JECC, a equipe residente (Rochelle, juízas leigas...)
+    // some durante o ato para não se sobrepor às partes
+    if (palco.id === "jecc" && infoJuizado && infoJuizado.vivos) {
+      infoJuizado.vivos.forEach(function (b) { b.grupo.visible = false; });
+    }
 
     // elenco do caso: entra andando pela porta e senta no
     // assento 3D equivalente ao 2D (com o bot, senta direto)
@@ -2581,8 +2607,17 @@ TOGA.cena3d = (function () {
     luzFalaAlvo = 0;
     if (TOGA.diretor3d) TOGA.diretor3d.desativar();
     jogador.grupo.position.y = 0;
-    const pb = (palcoCorrente || palcoDoCaso()).bancada;
-    TOGA.controles3d.teleportar(pb.x, pb.z - 2.2, Math.PI); // desce do estrado, de frente p/ a porta
+    const palcoFim = palcoCorrente || palcoDoCaso();
+    if (palcoFim.id === "jecc") {
+      // a equipe do JECC reaparece; o juiz volta ao corredor do fórum
+      // (o expediente do dia é conduzido a partir do fórum)
+      if (infoJuizado && infoJuizado.vivos) infoJuizado.vivos.forEach(function (b) { b.grupo.visible = true; });
+      const fb = mundoInfo.pontos.bancada;
+      TOGA.controles3d.teleportar(fb.x, fb.z - 2.2, Math.PI);
+    } else {
+      const pb = palcoFim.bancada;
+      TOGA.controles3d.teleportar(pb.x, pb.z - 2.2, Math.PI); // desce do estrado, de frente p/ a porta
+    }
     palcoCorrente = null;
   }
 
