@@ -350,7 +350,8 @@ TOGA.cena3d = (function () {
     const info = localAtivo === "rua" ? infoRua
                : localAtivo === "esmec" ? infoEsmec
                : localAtivo === "parque" ? infoParque
-               : localAtivo === "acm" ? infoAcm : null;
+               : localAtivo === "acm" ? infoAcm
+               : localAtivo === "juizado" ? infoJuizado : null;
     if (info && info.vivos) info.vivos.forEach(function (b) { push(b, 0.34); });
     return arr;
   }
@@ -1198,6 +1199,12 @@ TOGA.cena3d = (function () {
         rotulo: "🏁 encerrar o expediente (fechar o dia)",
         visivel: function () { return M().estado && M().fimDaPauta() && semInterludios(); },
         acao: function () { TOGA.ui.mostrarEpilogo(); } },
+
+      // o JUIZADO ESPECIAL — porta no corredor (x≈11), livre a qualquer hora
+      { id: "juizado", pos: P.portaJuizado || { x: 11, z: 1.3 }, raio: 2.0,
+        rotulo: "🏛 entrar no Juizado Especial Cível e Criminal",
+        visivel: function () { return !!(M().estado && TOGA.juizado3d); },
+        acao: function () { entrarJuizado(); } },
 
       // o Parque é LIVRE a qualquer hora — pela PORTA DOS FUNDOS, no fim do
       // corredor leste (longe da entrada principal/rua)
@@ -2597,7 +2604,7 @@ TOGA.cena3d = (function () {
      trocar colisores, spawn e interagíveis.
      ===================================================== */
   let localAtivo = "forum";
-  let infoRua = null, infoEsmec = null, infoParque = null, infoAcm = null;
+  let infoRua = null, infoEsmec = null, infoParque = null, infoAcm = null, infoJuizado = null;
 
   function esconderJogador(sim) {
     if (jogador) jogador.grupo.visible = !sim;
@@ -2620,6 +2627,7 @@ TOGA.cena3d = (function () {
                : localAtivo === "esmec" ? infoEsmec
                : localAtivo === "parque" ? infoParque
                : localAtivo === "acm" ? infoAcm
+               : localAtivo === "juizado" ? infoJuizado
                : mundoInfo;
     TOGA.controles3d.setMundo(info);
     TOGA.controles3d.ativar();
@@ -3101,6 +3109,268 @@ TOGA.cena3d = (function () {
   }
 
   /* =====================================================
+     O JUIZADO ESPECIAL CÍVEL E CRIMINAL (ala do fórum)
+     ===================================================== */
+  let festaJuizadoAtiva = false;
+  let juizadoAcelerado = false;
+  let juizadoTickReg = false;
+  function garantirTickJuizado() {
+    if (juizadoTickReg) return;
+    juizadoTickReg = true;
+    TOGA.nucleo3d.aoFrame(tickJuizado);
+  }
+
+  function entrarJuizado() {
+    garantirIniciado();
+    if (!TOGA.juizado3d) return;
+    festaJuizadoAtiva = false;
+    limparToasts();
+    infoJuizado = TOGA.juizado3d.construir(TOGA.nucleo3d.scene);
+    if (TOGA.juizado3d.esconderFesta) TOGA.juizado3d.esconderFesta();
+    restaurarEquipeJuizado();
+    localAtivo = "juizado";
+    garantirTickJuizado();
+    TOGA.controles3d.setMundo(infoJuizado);
+    const sp = infoJuizado.pontos.spawnJuizado;
+    TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
+    TOGA.controles3d.ativar();
+    TOGA.interacao3d.definir(interagiveisJuizado(false));
+    alvoObjetivo = null;
+    // dia de serviço do JECC: a unidade mais rápida do Estado trabalha ACELERADA
+    const e = TOGA.motor.estado;
+    juizadoAcelerado = !!(e && e.pauta === "dia6");
+    if (juizadoAcelerado) {
+      definirObjetivo("Juizado Especial — DIA DE SERVIÇO: a equipe está em ritmo acelerado. Fale com elas (E)");
+      toastMundo("⚡ O Juizado Especial Cível e Criminal em DIA DE SERVIÇO — e aqui ninguém anda devagar. Teclados crepitam, carimbos batem, minutas voam: não se é a unidade mais RÁPIDA do Estado sem trabalhar acelerado. A equipe está a mil; fale com cada uma (E).");
+    } else {
+      definirObjetivo("Juizado Especial Cível e Criminal — converse com a equipe; o ‹ FÓRUM volta pelo salão");
+      toastMundo("🏛 O Juizado Especial Cível e Criminal: a unidade onde o senhor cravou cinco anos de trabalho. Secretaria, atendimento (atermação), o gabinete e a sala de audiências. A equipe está cada uma no seu posto — fale com elas (E).");
+    }
+  }
+
+  function entrarJuizadoFesta() {
+    garantirIniciado();
+    if (!TOGA.juizado3d) return;
+    limparToasts();
+    infoJuizado = TOGA.juizado3d.construir(TOGA.nucleo3d.scene);
+    TOGA.juizado3d.montarFesta(TOGA.nucleo3d.scene);
+    localAtivo = "juizado";
+    festaJuizadoAtiva = true;
+    juizadoAcelerado = false;   // festa é comemoração, não expediente
+    reunirEquipeFesta();
+    garantirTickJuizado();
+    TOGA.controles3d.setMundo(infoJuizado);
+    const sp = infoJuizado.pontos.spawnJuizado;
+    TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
+    TOGA.controles3d.ativar();
+    TOGA.interacao3d.definir(interagiveisJuizado(true));
+    alvoObjetivo = null;
+    definirObjetivo("Dia de Festa! Fale com a equipe (E), brinque nas dinâmicas e abra o mural de fotos");
+    if (TOGA.conquistas) TOGA.conquistas.avaliar("festa-juizado");
+    cerimoniaFesta();
+  }
+
+  /* posição/dança da festa: cada um da equipe vira-se e gingará */
+  let bonecosFesta = [];
+  function reunirEquipeFesta() {
+    const eq = infoJuizado.equipe; if (!eq) return;
+    const JX = TOGA.juizado3d.JX;
+    // quem desce ao salão, e para onde (em semicírculo, de frente p/ o bolo)
+    const palco = [
+      ["tcheska", JX, -8.6, 0], ["nubia", JX - 2.4, -7.6, 0.3], ["rochelle", JX + 2.4, -7.6, -0.3],
+      ["yasmin", JX - 4.2, -6.6, 0.5], ["milla", JX + 4.2, -6.6, -0.5], ["gloria", JX - 5.6, -5.2, 0.7],
+      ["debora", JX + 5.6, -5.2, -0.7], ["lais", JX - 3.0, -4.0, 0.4], ["bruna", JX + 3.0, -4.0, -0.4],
+      ["carlostierry", JX, -3.2, 0], ["lidayana", JX - 1.6, -2.2, 0.2], ["mariana", JX + 1.6, -2.2, -0.2],
+      ["luana", JX, -1.4, 0]
+    ];
+    bonecosFesta = [];
+    palco.forEach(function (p) {
+      const b = eq[p[0]]; if (!b) return;
+      if (b.sentar) b.sentar(false);
+      b.grupo.position.set(p[1], 0, p[2]);
+      b.grupo.rotation.y = p[3];
+      b.setEmocao("feliz");
+      b.faseFesta = Math.random() * Math.PI * 2;
+      bonecosFesta.push(b);
+    });
+  }
+  function restaurarEquipeJuizado() {
+    const eq = infoJuizado && infoJuizado.equipe; if (!eq) return;
+    Object.keys(eq).forEach(function (id) {
+      const b = eq[id], e = b.estacao; if (!e) return;
+      if (b.sentar) b.sentar(e.sentado);
+      b.grupo.position.set(e.x, 0, e.z);
+      b.grupo.rotation.y = e.rotY;
+      b.setEmocao(id === "carlostierry" ? "surpresa" : "neutro");
+    });
+    bonecosFesta = [];
+  }
+  let _festaEmoT = 0, _aceleraT = 0;
+  function tickJuizado(dt, t) {
+    if (localAtivo !== "juizado" || !infoJuizado) return;
+    // 1) TODA a equipe vive sempre: respiração, piscar, pose da emoção.
+    //    No DIA DE SERVIÇO o relógio da equipe corre mais rápido (acelerados).
+    const vivos = infoJuizado.vivos || [];
+    const accel = (juizadoAcelerado && !festaJuizadoAtiva) ? 1.9 : 1;
+    for (let i = 0; i < vivos.length; i++) vivos[i].tick(dt * accel, t * accel);
+    if (juizadoAcelerado && !festaJuizadoAtiva) {
+      // a unidade mais rápida do Estado: gestos de trabalho em rajada
+      if (t - _aceleraT > 1.5) {
+        _aceleraT = t;
+        const gestos = ["lerPapel", "enfase", "entregar"];
+        for (let i = 0; i < vivos.length; i++) {
+          const b = vivos[i];
+          if (!b.acao && Math.random() < 0.55) b.executarAcao(gestos[Math.floor(Math.random() * gestos.length)]);
+          b.setEmocao(Math.random() < 0.25 ? "feliz" : "firme");
+        }
+      }
+      return;
+    }
+    if (!festaJuizadoAtiva) return;
+    // 2) na festa: confete caindo + a dança POR CIMA do idle
+    const conf = TOGA.juizado3d.confetesFesta ? TOGA.juizado3d.confetesFesta() : [];
+    for (let i = 0; i < conf.length; i++) {
+      const m = conf[i], u = m.userData.confete; if (!u) continue;
+      m.position.y -= u.vy * dt;
+      m.position.x = u.baseX + Math.sin(t * 2 + u.fase) * u.balanco;
+      m.rotation.x += u.giro * dt; m.rotation.z += u.giro * 0.7 * dt;
+      if (m.position.y < 0.1) { m.position.y = 3.0; }   // recicla ao topo
+    }
+    for (let i = 0; i < bonecosFesta.length; i++) {
+      const b = bonecosFesta[i];
+      const f = b.faseFesta || 0;
+      b.grupo.position.y = Math.abs(Math.sin(t * 3 + f)) * 0.10;
+      b.grupo.rotation.z = Math.sin(t * 3 + f) * 0.06;
+    }
+    // troca de emoção em bloco, a cada ~4s (alegria contagiante)
+    if (t - _festaEmoT > 4) {
+      _festaEmoT = t;
+      const emocoes = ["feliz", "surpresa", "feliz"];
+      for (let i = 0; i < bonecosFesta.length; i++) {
+        const b = bonecosFesta[i];
+        setTimeout((function (bb, em) { return function () { if (bb && bb.setEmocao) bb.setEmocao(em); }; })(b, emocoes[i % 3]), i * 80);
+      }
+    }
+    // balões flutuando
+    const baloes = TOGA.juizado3d.baloesFesta ? TOGA.juizado3d.baloesFesta() : [];
+    for (let i = 0; i < baloes.length; i++) {
+      const m = baloes[i];
+      m.position.y = m.userData.baseY + Math.sin(t * 1.3 + m.userData.fase) * 0.12;
+    }
+  }
+
+  function reagirEquipeFesta(emocao) {
+    for (let i = 0; i < bonecosFesta.length; i++) {
+      (function (b, idx) {
+        setTimeout(function () { if (b && b.setEmocao) b.setEmocao(emocao); }, idx * 90);
+      })(bonecosFesta[i], i);
+    }
+  }
+
+  /* a cerimônia: anúncio do 4º título + os números da gestão +
+     a despedida do juiz (remoção ao Núcleo de Custódia) */
+  function cerimoniaFesta() {
+    reagirEquipeFesta("feliz");
+    toastMundo("🎉 O salão do Juizado explode em aplausos quando o senhor entra. Balões, faixa, bolo de quatro velas. Tcheska bate a colher na taça pedindo silêncio — e o silêncio vem, porque é a Tcheska.");
+    toastMundo("👑 Tcheska, a voz embargada de orgulho: “Senhoras e senhores, é OFICIAL: QUARTO título consecutivo no Prêmio + Gestão do TJCE — e desta vez com CERTIFICAÇÃO EXCELÊNCIA, a mais alta que existe. Quatro anos seguidos. NENHUMA unidade do Estado fez isso.”");
+    toastMundo("📊 No telão, os números que ninguém esquece: quando o doutor assumiu, o congestionamento beirava 60%. Quando saiu, estava em ~16% — a MENOR taxa do Ceará, em TODAS as competências. O Juizado mais rápido do Estado. Núbia grita do fundo: “setor de alvarás confirma!”");
+    toastMundo("💎 Rochelle ergue a taça: “Cinco anos, doutor. Vi o senhor transformar pilha de processo em justiça entregue. E ainda me ensinou IA — hoje eu lapido minuta como lapido joia.” Bruna completa, no jeito do Cariri: “Égua, vai fazer falta, viu! Mas o método o senhor deixou com a gente.”");
+    toastMundo("🤝 Você toma a palavra. Conta que foi removido para o Núcleo de Custódia e Garantias da Comarca de Fortaleza — capítulo novo, depois de cinco anos intensos aqui. A sala silencia. Laís, oito anos ao seu lado, segura o choro: “a gente continua, doutor. Do jeito certo.”");
+    toastMundo("❤ E então o laço é selado, em definitivo: este Juizado e esta equipe são parte do senhor para sempre. Onde a custódia o levar, leva também o que se construiu aqui — a prova de que dá para ser JUSTO e RÁPIDO ao mesmo tempo. Agora, a festa! (fale com a equipe, brinque nas dinâmicas e veja o mural)");
+    reagirEquipeFesta("surpresa");
+    if (TOGA.audio) TOGA.audio.tocar("papel");
+  }
+
+  function voltarDoJuizado() {
+    limparToasts();
+    festaJuizadoAtiva = false;
+    localAtivo = "forum";
+    TOGA.controles3d.setMundo(mundoInfo);
+    const v = mundoInfo.pontos.voltaJuizado;
+    TOGA.controles3d.teleportar(v.x, v.z, v.angulo || 0);
+    TOGA.interacao3d.definir(montarInteragiveis());
+    atualizarObjetivoAutomatico();
+    toastMundo("🚪 De volta ao corredor do fórum.");
+  }
+
+  function interagiveisJuizado(festa) {
+    const P = infoJuizado.pontos;
+    const eq = infoJuizado.equipe;
+    const elenco = infoJuizado.elenco;
+    const contadores = {};
+    const lista = [];
+
+    // diálogo de cada personagem da equipe (cicla pelas falas)
+    elenco.forEach(function (item) {
+      const b = eq[item.id];
+      const pos = festa && b ? { x: b.grupo.position.x, z: b.grupo.position.z } : (b ? { x: b.estacao.x, z: b.estacao.z } : null);
+      if (!pos) return;
+      lista.push({
+        id: "jecc_" + item.id,
+        pos: pos, raio: 1.8,
+        rotulo: "falar com " + item.nome + " — " + item.cargo,
+        acao: function () {
+          if (b) {
+            b.setEmocao("feliz");
+            if (jogador) b.olharPara(jogador.grupo.position.clone().setY(1.4));
+            setTimeout(function () { if (b) b.olharPara(null); }, 5000);
+          }
+          const n = contadores[item.id] || 0;
+          contadores[item.id] = n + 1;
+          toastMundo(item.falas[n % item.falas.length]);
+        }
+      });
+    });
+
+    // o mural de fotos da equipe (abre a galeria DOM)
+    lista.push({
+      id: "jecc_mural", pos: P.mural, raio: 1.8,
+      rotulo: "🖼 abrir o mural de fotos da equipe",
+      acao: function () { if (TOGA.muralJecc) TOGA.muralJecc.abrir(); }
+    });
+
+    // porta de volta ao fórum
+    lista.push({
+      id: "jecc_volta", pos: P.portaForum, raio: 2.0,
+      rotulo: "‹ voltar ao fórum",
+      acao: voltarDoJuizado
+    });
+
+    if (festa) {
+      // as DINÂMICAS da festa (minijogos com movimento)
+      lista.push({
+        id: "jecc_bolo", pos: { x: TOGA.juizado3d.JX, z: -4 }, raio: 1.8,
+        rotulo: "🎂 cortar o bolo do 4º título (dinâmica)",
+        acao: function () {
+          if (TOGA.minijogos && TOGA.minijogos.brindeJuizado) {
+            TOGA.minijogos.brindeJuizado(function (r) { reagirEquipeFesta(r.venceu ? "feliz" : "surpresa"); });
+          }
+        }
+      });
+      lista.push({
+        id: "jecc_alvara", pos: { x: TOGA.juizado3d.JX - 7, z: -7 }, raio: 1.8,
+        rotulo: "⚡ Corrida do Alvará com a Núbia (dinâmica)",
+        acao: function () {
+          if (TOGA.minijogos && TOGA.minijogos.corridaAlvara) {
+            TOGA.minijogos.corridaAlvara(function (r) { reagirEquipeFesta(r.venceu ? "feliz" : "surpresa"); });
+          }
+        }
+      });
+      lista.push({
+        id: "jecc_scanner", pos: { x: TOGA.juizado3d.JX + 7, z: -7 }, raio: 1.8,
+        rotulo: "🖨 ajudar o Carlos Tierry com o scanner (dinâmica)",
+        acao: function () {
+          if (TOGA.minijogos && TOGA.minijogos.scannerTierry) {
+            TOGA.minijogos.scannerTierry(function (r) { reagirEquipeFesta(r.venceu ? "feliz" : "surpresa"); });
+          }
+        }
+      });
+    }
+
+    return lista;
+  }
+
+  /* =====================================================
      PARQUE DA CIDADE + ACM + a BICICLETA
      ===================================================== */
   let protestoMontado = false;
@@ -3486,6 +3756,8 @@ TOGA.cena3d = (function () {
     garantirIniciado: garantirIniciado,
     esconderJogador: esconderJogador,
     entrarRua: entrarRua,
+    entrarJuizado: entrarJuizado,
+    entrarJuizadoFesta: entrarJuizadoFesta,
     entrarEsmec: entrarEsmecDireto,
     dirigirEsmec: iniciarViagemEsmec,
     voltarForum: voltarForum,

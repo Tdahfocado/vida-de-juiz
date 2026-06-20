@@ -823,6 +823,21 @@ document.addEventListener("DOMContentLoaded", function () {
     TOGA.ui.mostrarTutorial();   // só na primeira partida (flag local)
   }
 
+  /* O DIA DE FESTA do Juizado: destrava ao concluir o Dia 6.
+     Entra no fórum 3D e troca para o Juizado em modo festa. */
+  function comecarFesta() {
+    if (TOGA.config.modo3d && suporta3d && TOGA.cena3d && TOGA.cena3d.entrarJuizadoFesta) {
+      if (!TOGA.motor.carregar("dia6")) TOGA.motor.novoJogo("dia6");
+      document.body.classList.add("modo-3d");
+      TOGA.cena = TOGA.cena3d;
+      TOGA.cena3d.entrarMundo("gabinete");
+      TOGA.cena3d.entrarJuizadoFesta();
+    } else if (TOGA.muralJecc) {
+      // sem 3D: ao menos a galeria de fotos da equipe
+      TOGA.muralJecc.abrir();
+    }
+  }
+
   chaveEstudo.addEventListener("click", function () {
     TOGA.config.modoEstudo = !TOGA.config.modoEstudo;
     chaveEstudo.classList.toggle("ligada", TOGA.config.modoEstudo);
@@ -965,6 +980,25 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       listaDias.appendChild(wrap);
     });
+
+    // ----- CARTÃO DO DIA DE FESTA (4º título) — destrava com o Dia 6 -----
+    var peekFesta = TOGA.motor.peekSave("dia6");
+    var festaLiberada = !!(peekFesta && peekFesta.concluido);
+    var wrapF = document.createElement("div");
+    wrapF.className = "dia-wrap";
+    var bf = document.createElement("button");
+    bf.className = "btn btn-dia cartao-festa" + (festaLiberada ? "" : " bloqueado");
+    if (festaLiberada) {
+      bf.innerHTML = "🏆 &nbsp;Dia de Festa — 4º Título Consecutivo" +
+        '<span class="sub-dia">Prêmio + Gestão TJCE · Certificação Excelência · a equipe do Juizado te espera</span>';
+      bf.addEventListener("click", comecarFesta);
+    } else {
+      bf.innerHTML = "🔒 &nbsp;Dia de Festa (bloqueado)" +
+        '<span class="sub-dia">Conclua o “Dia 6 — Dia no Juizado Especial” para destravar a comemoração do 4º título</span>';
+      bf.disabled = true;
+    }
+    wrapF.appendChild(bf);
+    listaDias.appendChild(wrapF);
 
     // o quadro de carreira: nível, estrelas e progresso
     var c = TOGA.motor.carreira();

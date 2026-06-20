@@ -245,7 +245,11 @@ TOGA.conquistas = (function () {
 
     { id: "palestrante", icone: "🎤", nome: "Palestrante da Escola Judicial",
       desc: "Aceite o convite para contar como foi esse dia.",
-      se: c => !!c.flags.palestraAceita }
+      se: c => !!c.flags.palestraAceita },
+
+    { id: "tetraJuizado", icone: "🏆", nome: "Tetracampeão da gestão",
+      desc: "Comemore, com a equipe, o 4º título consecutivo no Prêmio + Gestão do TJCE — Certificação Excelência, no Juizado Especial.",
+      se: c => c.gatilho === "festa-juizado" }
   ];
 
   /* ---------- persistência ---------- */

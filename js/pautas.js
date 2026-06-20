@@ -44,5 +44,12 @@ TOGA.pautas = [
     subtitulo: "Como juiz eleitoral, uma AIJE de compra de votos: a prova é clara, e é nula. Decida contra a multidão.",
     inicio: "14:00",
     casos: ["aije"]
+  },
+  {
+    id: "dia6",
+    titulo: "Dia 6 — Dia no Juizado Especial",
+    subtitulo: "Audiências de instrução no JECC: dois criminais (a insignificância e o seu limite) e dois cíveis. Conclua para destravar a festa do 4º título.",
+    inicio: "09:00",
+    casos: ["jecc-insignificancia", "jecc-reincidente", "jecc-negativacao", "jecc-vicio"]
   }
 ];

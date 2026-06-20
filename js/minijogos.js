@@ -413,10 +413,234 @@ TOGA.minijogos = (function () {
     aguardarAcao(function () { loop(passo); });
   }
 
+  /* ============================================================
+     ⚡ CORRIDA DO ALVARÁ — a Núbia, "setor de alvarás"
+     Alterne ◄ e ► para a Núbia carimbar alvarás. Ritmo constante
+     = mais alvarás antes do relógio zerar. (dinâmica da festa)
+     ============================================================ */
+  function corridaAlvara(aoFim) {
+    if (emJogo) return; abrir();
+    const META = 16, TEMPO = 22;
+    let prog = 0, vel = 0, ultimo = "", combo = 0, conta = 0, tempo = TEMPO;
+    let acabou = false, tFim = 0, flash = 0, braco = 0;
+
+    onPress = function (n) {
+      if (acabou) return;
+      if (n === "esq" || n === "dir") {
+        if (ultimo && n !== ultimo) { vel += 2.4; combo++; }
+        else { vel = Math.max(0, vel - 1.2); combo = 0; }
+        ultimo = n; braco = n === "esq" ? -1 : 1;
+      }
+    };
+    function passo(dt) {
+      if (!acabou) {
+        vel = Math.max(0, vel - 5.5 * dt);
+        prog += vel * dt * 12;
+        while (prog >= 100) { prog -= 100; conta++; flash = 0.35; }
+        tempo -= dt;
+        if (conta >= META || tempo <= 0) acabou = true;
+      } else { tFim += dt; if (tFim > 0.9) { fim(); return; } }
+      if (flash > 0) flash -= dt;
+
+      fundo("#3a2c52", "#23396b");
+      painelTopo("⚡ Corrida do Alvará — Núbia", "alvarás: " + conta + "/" + META);
+      // balcão
+      ctx.fillStyle = "#5e3f22"; ctx.fillRect(120, 250, CW - 240, 120);
+      ctx.fillStyle = "#7a5230"; ctx.fillRect(120, 250, CW - 240, 16);
+      // a Núbia carimbando (braço sobe e desce)
+      const bx = CW / 2;
+      ctx.fillStyle = "#a86a48"; ctx.beginPath(); ctx.arc(bx, 210, 26, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#4a5a6e"; ctx.fillRect(bx - 30, 232, 60, 60);
+      const erguer = (flash > 0 ? -22 : 0) + Math.sin(combo) * 2;
+      ctx.strokeStyle = "#a86a48"; ctx.lineWidth = 10; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.moveTo(bx + braco * 18, 244); ctx.lineTo(bx + braco * 40, 268 + erguer); ctx.stroke();
+      // carimbo
+      ctx.fillStyle = "#7a2e2e"; ctx.fillRect(bx + braco * 40 - 9, 262 + erguer, 18, 14);
+      // pilha de alvarás restantes (diminui)
+      const restam = Math.max(0, META - conta);
+      for (let i = 0; i < Math.min(restam, 12); i++) {
+        ctx.fillStyle = i % 2 ? "#f4ecd9" : "#e2d6ba";
+        ctx.fillRect(CW - 220 + (i % 4) * 4, 300 - i * 4, 70, 10);
+      }
+      // alvará carimbado voando
+      if (flash > 0) { texto("✔ CARIMBADO!", bx, 150, "bold 24px Georgia", "#7CFC9A"); }
+      // barra de tempo
+      ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.fillRect(120, 400, CW - 240, 20);
+      ctx.fillStyle = tempo < 6 ? "#e8413a" : "#5bbf6a";
+      ctx.fillRect(122, 402, (CW - 244) * Math.max(0, tempo) / TEMPO, 16);
+      texto("ALTERNE ◄ e ► para carimbar — ritmo constante!", CW / 2, 438, "bold 15px Georgia", "#ffe2a8");
+      if (acabou) texto(conta >= META ? "🏆 FILA ZERADA!" : "⏰ TEMPO!", CW / 2, 150, "bold 40px Georgia, serif", conta >= META ? "#7CFC9A" : "#ffd24a");
+    }
+    function fim() {
+      const v = conta >= META; fechar();
+      aplicarFim(v, "alvaraJecc",
+        v ? "⚡ " + conta + " alvarás carimbados! Núbia limpa a testa, vitoriosa: “setor de alvarás NUNCA falha, doutor. Antes do café, lembra?”"
+          : "⚡ O relógio venceu desta vez (" + conta + " alvarás). Núbia ri: “amanhã eu zero antes do senhor piscar.” (estresse aliviado)", aoFim);
+    }
+    fundo("#3a2c52", "#23396b");
+    texto("⚡ CORRIDA DO ALVARÁ", CW / 2, 150, "bold 38px Georgia, serif", "#ffe2a8");
+    texto("Ajude a Núbia a zerar a fila: " + META + " alvarás em " + TEMPO + "s.", CW / 2, 210, "bold 18px Georgia", "#f4ecd9");
+    texto("ALTERNE ◄ e ► para manter o ritmo dos carimbos.", CW / 2, 245, "16px Georgia", "#f4ecd9");
+    texto("▶ aperte AÇÃO para começar", CW / 2, 330, "bold 20px Georgia", "#ffe2a8");
+    aguardarAcao(function () { loop(passo); });
+  }
+
+  /* ============================================================
+     🎂 BRINDE DO 4º TÍTULO — timing (4 velas / 4 taças)
+     Pare o marcador na zona dourada para acender cada vela.
+     ============================================================ */
+  function brindeJuizado(aoFim) {
+    if (emJogo) return; abrir();
+    const RODADAS = 4;
+    let rod = 0, acertos = 0, marker = 0, dir = 1, vveloc = 0.9, parado = false;
+    let resultado = "", tRes = 0, acabou = false, tFim = 0;
+    const zonaC = 0.5, zonaMeia = 0.11;     // centro e meia-largura da zona dourada
+
+    onPress = function (n) {
+      if (acabou || parado) return;
+      if (n === "acao") {
+        parado = true; tRes = 0;
+        const ok = Math.abs(marker - zonaC) <= zonaMeia;
+        if (ok) { acertos++; resultado = "✔ ACENDEU!"; } else { resultado = "✘ quase!"; }
+      }
+    };
+    function novaRodada() {
+      marker = 0; dir = 1; parado = false; resultado = "";
+      vveloc = 0.9 + rod * 0.18;            // cada vela mais difícil
+    }
+    function passo(dt) {
+      if (!acabou) {
+        if (!parado) {
+          marker += dir * vveloc * dt;
+          if (marker > 1) { marker = 1; dir = -1; }
+          if (marker < 0) { marker = 0; dir = 1; }
+        } else {
+          tRes += dt;
+          if (tRes > 1.0) { rod++; if (rod >= RODADAS) { acabou = true; tFim = 0; } else novaRodada(); }
+        }
+      } else { tFim += dt; if (tFim > 1.1) { fim(); return; } }
+
+      fundo("#5a2e3a", "#23396b");
+      painelTopo("🎂 Brinde do 4º Título", "velas: " + acertos + "/" + RODADAS);
+      // bolo
+      const bx = CW / 2, by = 250;
+      ctx.fillStyle = "#f4ecd9"; ctx.fillRect(bx - 120, by, 240, 90);
+      ctx.fillStyle = "#9c2b22"; ctx.fillRect(bx - 120, by - 14, 240, 16);
+      // 4 velas (acendem conforme acertos)
+      for (let i = 0; i < RODADAS; i++) {
+        const vx = bx - 90 + i * 60;
+        ctx.fillStyle = "#e7cf9a"; ctx.fillRect(vx - 4, by - 50, 8, 40);
+        if (i < acertos) {
+          ctx.beginPath(); ctx.arc(vx, by - 58, 9, 0, Math.PI * 2);
+          ctx.fillStyle = "#ffcf6a"; ctx.fill();
+        }
+      }
+      // barra de timing
+      const barX = 140, barW = CW - 280, barY = 400;
+      ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.fillRect(barX, barY, barW, 24);
+      ctx.fillStyle = "rgba(255,210,106,.45)";
+      ctx.fillRect(barX + barW * (zonaC - zonaMeia), barY, barW * zonaMeia * 2, 24);   // zona dourada
+      ctx.fillStyle = "#fff"; ctx.fillRect(barX + barW * marker - 3, barY - 6, 6, 36); // marcador
+      texto("aperte AÇÃO quando o marcador estiver na zona DOURADA", CW / 2, 440, "bold 15px Georgia", "#ffe2a8");
+      if (resultado) texto(resultado, CW / 2, 150, "bold 34px Georgia, serif", resultado.indexOf("✔") === 0 ? "#7CFC9A" : "#ffd24a");
+      if (acabou) texto(acertos >= 3 ? "🥂 SAÚDE, EQUIPE!" : "🥂 Brinde feito!", CW / 2, 110, "bold 34px Georgia, serif", "#ffe2a8");
+    }
+    function fim() {
+      const v = acertos >= 3; fechar();
+      aplicarFim(v, "brindeJecc",
+        v ? "🥂 Quatro velas, quatro títulos — e o brinde saiu perfeito! A equipe ergue as taças: “à unidade mais rápida do Ceará!”"
+          : "🥂 O brinde saiu meio torto (" + acertos + "/4), mas ninguém liga: o que vale é a turma reunida. (estresse aliviado)", aoFim);
+    }
+    fundo("#5a2e3a", "#23396b");
+    texto("🎂 BRINDE DO 4º TÍTULO", CW / 2, 150, "bold 36px Georgia, serif", "#ffe2a8");
+    texto("Acenda as 4 velas: pare o marcador na zona dourada.", CW / 2, 210, "bold 18px Georgia", "#f4ecd9");
+    texto("Cada vela vem mais rápida que a anterior.", CW / 2, 245, "16px Georgia", "#f4ecd9");
+    texto("▶ aperte AÇÃO para começar", CW / 2, 330, "bold 20px Georgia", "#ffe2a8");
+    aguardarAcao(function () { novaRodada(); loop(passo); });
+  }
+
+  /* ============================================================
+     🖨 O SCANNER DO CARLOS TIERRY — digitalize antes que TRAVE
+     A cabeça de leitura varre o papel; aperte AÇÃO quando ela
+     estiver alinhada (faixa verde). Fora dela: TRAVOU! (a saga)
+     ============================================================ */
+  function scannerTierry(aoFim) {
+    if (emJogo) return; abrir();
+    const META = 7, TEMPO = 24;
+    let conta = 0, tempo = TEMPO, head = 0, dir = 1, veloc = 0.85;
+    let travado = 0, flash = 0, flashMsg = "", acabou = false, tFim = 0;
+    const alvoC = 0.5, alvoMeia = 0.1;
+
+    onPress = function (n) {
+      if (acabou || travado > 0) return;
+      if (n === "acao") {
+        if (Math.abs(head - alvoC) <= alvoMeia) {
+          conta++; flash = 0.4; flashMsg = "✔ página " + conta;
+          veloc = 0.85 + conta * 0.12;          // vai ficando nervoso
+        } else {
+          travado = 1.1; flash = 0.4; flashMsg = "TRAVOU! 🖨";
+        }
+      }
+    };
+    function passo(dt) {
+      if (!acabou) {
+        if (travado > 0) { travado -= dt; }
+        else {
+          head += dir * veloc * dt;
+          if (head > 1) { head = 1; dir = -1; }
+          if (head < 0) { head = 0; dir = 1; }
+        }
+        tempo -= dt;
+        if (conta >= META || tempo <= 0) acabou = true;
+      } else { tFim += dt; if (tFim > 0.9) { fim(); return; } }
+      if (flash > 0) flash -= dt;
+
+      fundo("#2a2d33", "#15110c");
+      painelTopo("🖨 Scanner do Carlos Tierry", "páginas: " + conta + "/" + META);
+      // corpo do scanner
+      const sx = 150, sw = CW - 300, sy = 210, sh = 120;
+      ctx.fillStyle = "#3a3d42"; ctx.fillRect(sx, sy, sw, sh);
+      ctx.fillStyle = "#cfd8df"; ctx.fillRect(sx + 14, sy + 16, sw - 28, sh - 32);   // vidro
+      // faixa-alvo (verde)
+      ctx.fillStyle = "rgba(91,191,106,.35)";
+      ctx.fillRect(sx + 14 + (sw - 28) * (alvoC - alvoMeia), sy + 16, (sw - 28) * alvoMeia * 2, sh - 32);
+      // cabeça de leitura
+      const hx = sx + 14 + (sw - 28) * head;
+      ctx.fillStyle = travado > 0 ? "#e8413a" : "#3ad6ff";
+      ctx.fillRect(hx - 4, sy + 12, 8, sh - 24);
+      // estagiário
+      ctx.fillStyle = "#d8a87f"; ctx.beginPath(); ctx.arc(CW / 2, 130, 22, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#4a5a6e"; ctx.fillRect(CW / 2 - 26, 150, 52, 44);
+      if (flash > 0) texto(flashMsg, CW / 2, 92, "bold 24px Georgia", flashMsg.indexOf("✔") === 0 ? "#7CFC9A" : "#e8413a");
+      if (travado > 0) texto("reiniciando...", CW / 2, sy + sh + 26, "bold 16px Georgia", "#e8413a");
+      // barra de tempo
+      ctx.fillStyle = "rgba(0,0,0,.4)"; ctx.fillRect(sx, 400, sw, 20);
+      ctx.fillStyle = tempo < 6 ? "#e8413a" : "#5bbf6a";
+      ctx.fillRect(sx + 2, 402, (sw - 4) * Math.max(0, tempo) / TEMPO, 16);
+      texto("AÇÃO quando a luz cruzar a faixa VERDE — erre e ele TRAVA!", CW / 2, 440, "bold 15px Georgia", "#ffe2a8");
+      if (acabou) texto(conta >= META ? "🏆 TUDO DIGITALIZADO!" : "⏰ TEMPO!", CW / 2, sy - 60, "bold 36px Georgia, serif", conta >= META ? "#7CFC9A" : "#ffd24a");
+    }
+    function fim() {
+      const v = conta >= META; fechar();
+      aplicarFim(v, "scannerJecc",
+        v ? "🖨 " + conta + " páginas digitalizadas e nos autos! Carlos Tierry comemora: “venci o scanner, doutor! ...na sétima tentativa, mas venci!”"
+          : "🖨 O scanner travou mais que digitalizou (" + conta + " páginas). Carlos Tierry: “a pós não me preparou pra isso.” (estresse aliviado)", aoFim);
+    }
+    fundo("#2a2d33", "#15110c");
+    texto("🖨 O SCANNER DO CARLOS TIERRY", CW / 2, 150, "bold 30px Georgia, serif", "#ffe2a8");
+    texto("Digitalize " + META + " páginas em " + TEMPO + "s — sem deixar travar.", CW / 2, 210, "bold 18px Georgia", "#f4ecd9");
+    texto("Aperte AÇÃO quando a luz cruzar a faixa verde.", CW / 2, 245, "16px Georgia", "#f4ecd9");
+    texto("▶ aperte AÇÃO para começar", CW / 2, 330, "bold 20px Georgia", "#ffe2a8");
+    aguardarAcao(function () { loop(passo); });
+  }
+
   return {
     penaltis: penaltis,
     beachTennis: beachTennis,
     natacao: natacao,
+    corridaAlvara: corridaAlvara,
+    brindeJuizado: brindeJuizado,
+    scannerTierry: scannerTierry,
     get emJogo() { return emJogo; }
   };
 })();

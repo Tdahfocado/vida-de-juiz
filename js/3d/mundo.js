@@ -69,6 +69,8 @@ TOGA.mundo3d = (function () {
     balcao:        { x: 5.5, z: -1.5 },
     mural:         { x: -5, z: 1.8 },
     portaSaida:    { x: -13.8, z: 0 },
+    portaJuizado:  { x: 11, z: 1.3 },                         // passagem p/ o Juizado Especial
+    voltaJuizado:  { x: 11, z: 0.4, angulo: Math.PI },        // onde o juiz reaparece ao voltar
     // encostados na parede sul, LONGE do vão da porta da sala (x ∈ [0.2, 1.8])
     bancosCorredor: [ { x: -2.4, z: 1.4 }, { x: -4.2, z: 1.4 }, { x: 3.4, z: 1.4 }, { x: 5.2, z: 1.4 } ],
     // ---- ala nova ----
@@ -432,6 +434,17 @@ TOGA.mundo3d = (function () {
                             : new THREE.MeshBasicMaterial({ color: 0xf4ecd9 }));
     folhas.position.set(-5, 1.7, 1.9); folhas.rotation.y = Math.PI;
     scene.add(folhas);
+
+    // Porta para o JUIZADO ESPECIAL (parede sul do corredor, x≈11)
+    caixa(scene, 1.6, 2.4, 0.12, 11, 1.2, 1.94, mat(0x241809), { colide: false });
+    caixa(scene, 0.14, 1.2, 0.06, 11.45, 1.1, 1.86, mat(0xc9a35c), { colide: false }); // batente dourado
+    if (TOGA.texturas3d.placa) {
+      const placaJ = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.36),
+        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.placa("JUIZADO ESPECIAL"),
+          polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      placaJ.position.set(11, 2.55, 1.86); placaJ.rotation.y = Math.PI;
+      scene.add(placaJ);
+    }
 
     // Quadros, luz e plantas: o corredor deixa de ser um tubo vazio
     if (TOGA.texturas3d.quadro) {
