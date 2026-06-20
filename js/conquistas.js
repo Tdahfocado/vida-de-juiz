@@ -249,7 +249,19 @@ TOGA.conquistas = (function () {
 
     { id: "tetraJuizado", icone: "🏆", nome: "Tetracampeão da gestão",
       desc: "Comemore, com a equipe, o 4º título consecutivo no Prêmio + Gestão do TJCE — Certificação Excelência, no Juizado Especial.",
-      se: c => c.gatilho === "festa-juizado" }
+      se: c => c.gatilho === "festa-juizado" },
+
+    { id: "juizadoExpediente", icone: "🏛", nome: "Expediente do Juizado",
+      desc: "Conclua o Dia no Juizado Especial — as quatro audiências do JECC, da contravenção ao consumo.",
+      se: c => c.gatilho === "epilogo" && c.estado && c.estado.pauta === "dia6" && pautaCompleta(c) },
+
+    { id: "proporcaoJecc", icone: "⚖", nome: "A medida certa do Direito Penal",
+      desc: "No Juizado Criminal, rejeite a denúncia do som alto (festa de aniversário) e reconheça a atipicidade da moto sem CNH — proporção nos dois casos.",
+      se: c => c.gatilho === "epilogo" && c.flags.somDenunciaRejeitada && c.flags.cnhAtipicidade },
+
+    { id: "festeiroJecc", icone: "🎊", nome: "Alma da festa do Juizado",
+      desc: "Vença uma das dinâmicas da festa do 4º título — a corrida do alvará, o brinde ou o scanner do Carlos Tierry.",
+      se: c => !!(c.flags._mini_alvaraJecc || c.flags._mini_brindeJecc || c.flags._mini_scannerJecc) }
   ];
 
   /* ---------- persistência ---------- */

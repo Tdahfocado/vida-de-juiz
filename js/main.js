@@ -902,6 +902,18 @@ document.addEventListener("DOMContentLoaded", function () {
      Cada dia tem o SEU save: jogar um não apaga o outro. ----- */
   var listaDias = $("#lista-dias");
 
+  // desbloqueio persistente da festa para TESTE (sobrevive ao menu)
+  function festaDestravadaTeste() {
+    try { return localStorage.getItem("toga.festaLiberada") === "1"; } catch (e) { return false; }
+  }
+  // comandos de console: TOGA.liberarFesta() destrava o cartão; TOGA.festa() entra direto
+  TOGA.liberarFesta = function () {
+    try { localStorage.setItem("toga.festaLiberada", "1"); } catch (e) {}
+    atualizarCartoesDia();
+    return "🏆 Festa do Juizado destravada no menu (persiste entre telas). Clique no cartão dourado — ou rode TOGA.festa().";
+  };
+  TOGA.festa = function () { comecarFesta(); return "🎉 Entrando na festa do Juizado..."; };
+
   function novoDia(pautaId) {
     TOGA.motor.novoJogo(pautaId);
     TOGA.motor.estado.modoEstudo = TOGA.config.modoEstudo;
@@ -981,9 +993,10 @@ document.addEventListener("DOMContentLoaded", function () {
       listaDias.appendChild(wrap);
     });
 
-    // ----- CARTÃO DO DIA DE FESTA (4º título) — destrava com o Dia 6 -----
+    // ----- CARTÃO DO DIA DE FESTA (4º título) — destrava com o Dia 6
+    // (ou, para teste, com TOGA.liberarFesta() no console — persiste) -----
     var peekFesta = TOGA.motor.peekSave("dia6");
-    var festaLiberada = !!(peekFesta && peekFesta.concluido);
+    var festaLiberada = !!((peekFesta && peekFesta.concluido) || festaDestravadaTeste());
     var wrapF = document.createElement("div");
     wrapF.className = "dia-wrap";
     var bf = document.createElement("button");

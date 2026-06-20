@@ -1065,11 +1065,12 @@ TOGA.mundo3d = (function () {
       pe.position.set(18.2, 1.6, -1.81);
       scene.add(pe);
     }
-    // vitrine de fotos históricas da comarca, perto do mural
-    caixa(scene, 1.8, 0.9, 0.35, -8, 0.45, 1.7, mat(0x4a3018), { studs: "#4a3018" });
-    caixa(scene, 1.7, 0.06, 0.3, -8, 0.93, 1.7, mat(0xb9d2e0), { colide: false }); // tampo de vidro
+    // vitrine de fotos históricas da comarca (afastada da porta do
+    // Juizado, em x≈-7, para não obstruí-la — fica na quadra oeste)
+    caixa(scene, 1.8, 0.9, 0.35, -11.5, 0.45, 1.7, mat(0x4a3018), { studs: "#4a3018" });
+    caixa(scene, 1.7, 0.06, 0.3, -11.5, 0.93, 1.7, mat(0xb9d2e0), { colide: false }); // tampo de vidro
     if (TOGA.texturas3d.quadro) {
-      [[-8.6, 3], [-7.4, 4]].forEach(function (q) {
+      [[-12.1, 3], [-10.9, 4]].forEach(function (q) {
         const foto = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.6),
           new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.quadro(q[1]) }));
         foto.position.set(q[0], 1.85, 1.9); foto.rotation.y = Math.PI;
