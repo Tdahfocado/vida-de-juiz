@@ -69,8 +69,8 @@ TOGA.mundo3d = (function () {
     balcao:        { x: 5.5, z: -1.5 },
     mural:         { x: -5, z: 1.8 },
     portaSaida:    { x: -13.8, z: 0 },
-    portaJuizado:  { x: 11, z: 1.3 },                         // passagem p/ o Juizado Especial
-    voltaJuizado:  { x: 11, z: 0.4, angulo: Math.PI },        // onde o juiz reaparece ao voltar
+    portaJuizado:  { x: -7, z: 1.2 },                         // passagem p/ o Juizado Especial (caminho principal)
+    voltaJuizado:  { x: -7, z: 0.3, angulo: Math.PI },        // onde o juiz reaparece ao voltar
     // encostados na parede sul, LONGE do vão da porta da sala (x ∈ [0.2, 1.8])
     bancosCorredor: [ { x: -2.4, z: 1.4 }, { x: -4.2, z: 1.4 }, { x: 3.4, z: 1.4 }, { x: 5.2, z: 1.4 } ],
     // ---- ala nova ----
@@ -435,16 +435,30 @@ TOGA.mundo3d = (function () {
     folhas.position.set(-5, 1.7, 1.9); folhas.rotation.y = Math.PI;
     scene.add(folhas);
 
-    // Porta para o JUIZADO ESPECIAL (parede sul do corredor, x≈11)
-    caixa(scene, 1.6, 2.4, 0.12, 11, 1.2, 1.94, mat(0x241809), { colide: false });
-    caixa(scene, 0.14, 1.2, 0.06, 11.45, 1.1, 1.86, mat(0xc9a35c), { colide: false }); // batente dourado
+    // Porta para o JUIZADO ESPECIAL (parede sul do corredor, no caminho
+    // principal entre o gabinete e a sala — x≈-7). Portal destacado:
+    // batentes claros, lintel, folha de porta e placa iluminada.
+    const PJ = -7;
+    caixa(scene, 1.5, 2.3, 0.10, PJ, 1.15, 1.92, mat(0x3a2412), { colide: false });     // vão escuro
+    caixa(scene, 1.3, 2.05, 0.06, PJ, 1.02, 1.88, mat(0x6e4a2a), { colide: false });    // folha de porta (madeira)
+    caixa(scene, 0.18, 2.3, 0.16, PJ - 0.84, 1.15, 1.9, mat(0xc9a35c), { colide: false }); // batente esq (latão)
+    caixa(scene, 0.18, 2.3, 0.16, PJ + 0.84, 1.15, 1.9, mat(0xc9a35c), { colide: false }); // batente dir
+    caixa(scene, 1.86, 0.18, 0.16, PJ, 2.35, 1.9, mat(0xc9a35c), { colide: false });    // lintel
+    caixa(scene, 0.06, 0.34, 0.04, PJ + 0.45, 1.05, 1.82, mat(0xe7cf9a), { colide: false, semSombra: true }); // maçaneta
+    // placa iluminada acima da porta
+    const placaFundo = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 0.42),
+      new THREE.MeshBasicMaterial({ color: 0x23396b }));
+    placaFundo.position.set(PJ, 2.66, 1.86); placaFundo.rotation.y = Math.PI;
+    scene.add(placaFundo);
     if (TOGA.texturas3d.placa) {
-      const placaJ = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.36),
-        new THREE.MeshLambertMaterial({ map: TOGA.texturas3d.placa("JUIZADO ESPECIAL"),
-          polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
-      placaJ.position.set(11, 2.55, 1.86); placaJ.rotation.y = Math.PI;
+      const placaJ = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.34),
+        new THREE.MeshBasicMaterial({ map: TOGA.texturas3d.placa("JUIZADO ESPECIAL"),
+          transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+      placaJ.position.set(PJ, 2.66, 1.855); placaJ.rotation.y = Math.PI;
       scene.add(placaJ);
     }
+    // tapete de boas-vindas no chão, em frente à porta (pista visual)
+    caixa(scene, 1.4, 0.02, 0.9, PJ, 0.02, 1.25, mat(0x5e2424), { colide: false, semSombra: true });
 
     // Quadros, luz e plantas: o corredor deixa de ser um tubo vazio
     if (TOGA.texturas3d.quadro) {

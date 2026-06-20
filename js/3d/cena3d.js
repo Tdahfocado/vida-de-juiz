@@ -1201,7 +1201,7 @@ TOGA.cena3d = (function () {
         acao: function () { TOGA.ui.mostrarEpilogo(); } },
 
       // o JUIZADO ESPECIAL — porta no corredor (x≈11), livre a qualquer hora
-      { id: "juizado", pos: P.portaJuizado || { x: 11, z: 1.3 }, raio: 2.0,
+      { id: "juizado", pos: P.portaJuizado || { x: -7, z: 1.2 }, raio: 2.2,
         rotulo: "🏛 entrar no Juizado Especial Cível e Criminal",
         visivel: function () { return !!(M().estado && TOGA.juizado3d); },
         acao: function () { entrarJuizado(); } },
