@@ -142,9 +142,18 @@ TOGA.rotinas3d = (function () {
     }
   }
 
+  /* pausa/retoma a rotina de um boneco (ex.: festa do Juizado) */
+  function pausar(boneco) {
+    cancelar(boneco);
+    rotinas.forEach(function (r) { if (r.boneco === boneco) { r.pausado = true; r.executando = false; } });
+  }
+  function retomar(boneco) {
+    rotinas.forEach(function (r) { if (r.boneco === boneco) r.pausado = false; });
+  }
+
   function tickRotinas(dt) {
     rotinas.forEach(function (r) {
-      if (r.executando) return;
+      if (r.pausado || r.executando) return;
       if (r.espera > 0) {
         r.espera -= dt;
         if (r.espera > 0) return;
@@ -629,6 +638,8 @@ TOGA.rotinas3d = (function () {
   return {
     irPara: irPara,
     cancelar: cancelar,
+    pausar: pausar,
+    retomar: retomar,
     adicionarRotina: adicionarRotina,
     iniciarElenco: iniciarElenco,
     elenco: function () { return elenco; },

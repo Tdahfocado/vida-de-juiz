@@ -2157,6 +2157,7 @@ TOGA.cena3d = (function () {
     // casos do Juizado Especial são encenados na PRÓPRIA sala do JECC
     if (casoNoJecc() && TOGA.juizado3d) {
       if (!infoJuizado) infoJuizado = TOGA.juizado3d.construir(TOGA.nucleo3d.scene);
+      TOGA.juizado3d.iniciarVida();
       const PJ = infoJuizado.pontos;
       return {
         id: "jecc",
@@ -2219,6 +2220,7 @@ TOGA.cena3d = (function () {
     // na sala do JECC, a equipe residente (Rochelle, juízas leigas...)
     // some durante o ato para não se sobrepor às partes
     if (palco.id === "jecc" && infoJuizado && infoJuizado.vivos) {
+      if (TOGA.juizado3d.pausarVida) TOGA.juizado3d.pausarVida();
       infoJuizado.vivos.forEach(function (b) { b.grupo.visible = false; });
     }
 
@@ -2609,9 +2611,9 @@ TOGA.cena3d = (function () {
     jogador.grupo.position.y = 0;
     const palcoFim = palcoCorrente || palcoDoCaso();
     if (palcoFim.id === "jecc") {
-      // a equipe do JECC reaparece; o juiz volta ao corredor do fórum
-      // (o expediente do dia é conduzido a partir do fórum)
+      // a equipe do JECC reaparece e volta à vida; o juiz volta ao fórum
       if (infoJuizado && infoJuizado.vivos) infoJuizado.vivos.forEach(function (b) { b.grupo.visible = true; });
+      if (TOGA.juizado3d.retomarVida) TOGA.juizado3d.retomarVida();
       const fb = mundoInfo.pontos.bancada;
       TOGA.controles3d.teleportar(fb.x, fb.z - 2.2, Math.PI);
     } else {
@@ -3162,7 +3164,8 @@ TOGA.cena3d = (function () {
     limparToasts();
     infoJuizado = TOGA.juizado3d.construir(TOGA.nucleo3d.scene);
     if (TOGA.juizado3d.esconderFesta) TOGA.juizado3d.esconderFesta();
-    restaurarEquipeJuizado();
+    TOGA.juizado3d.iniciarVida();      // rotinas de movimento + público (uma vez)
+    TOGA.juizado3d.retomarVida();      // a equipe volta às estações e se mexe
     localAtivo = "juizado";
     garantirTickJuizado();
     TOGA.controles3d.setMundo(infoJuizado);
@@ -3170,16 +3173,16 @@ TOGA.cena3d = (function () {
     TOGA.controles3d.teleportar(sp.x, sp.z, sp.angulo || 0);
     TOGA.controles3d.ativar();
     TOGA.interacao3d.definir(interagiveisJuizado(false));
-    alvoObjetivo = null;
-    // dia de serviço do JECC: a unidade mais rápida do Estado trabalha ACELERADA
+    // a seta/bússola guia até a sala de audiências/conciliação do JECC
+    alvoObjetivo = infoJuizado.pontos.bancadaJecc;
     const e = TOGA.motor.estado;
     juizadoAcelerado = !!(e && e.pauta === "dia6");
     if (juizadoAcelerado) {
-      definirObjetivo("Juizado Especial — DIA DE SERVIÇO: a equipe está em ritmo acelerado. Fale com elas (E)");
-      toastMundo("⚡ O Juizado Especial Cível e Criminal em DIA DE SERVIÇO — e aqui ninguém anda devagar. Teclados crepitam, carimbos batem, minutas voam: não se é a unidade mais RÁPIDA do Estado sem trabalhar acelerado. A equipe está a mil; fale com cada uma (E).");
+      definirObjetivo("Juizado em DIA DE SERVIÇO — equipe a mil. Siga a seta até a Sala de Audiências/Conciliação");
+      toastMundo("⚡ O Juizado Especial Cível e Criminal em DIA DE SERVIÇO — e aqui ninguém anda devagar. Teclados crepitam, carimbos batem, minutas voam, o pregão chama as partes: não se é a unidade mais RÁPIDA do Estado sem trabalhar acelerado. Circule, fale com a equipe (E) e siga a seta até a sala de audiências.");
     } else {
-      definirObjetivo("Juizado Especial Cível e Criminal — converse com a equipe; o ‹ FÓRUM volta pelo salão");
-      toastMundo("🏛 O Juizado Especial Cível e Criminal: a unidade onde o senhor cravou cinco anos de trabalho. Secretaria, atendimento (atermação), o gabinete e a sala de audiências. A equipe está cada uma no seu posto — fale com elas (E).");
+      definirObjetivo("Juizado Especial — converse com a equipe (E); a seta leva à Sala de Audiências/Conciliação");
+      toastMundo("🏛 O Juizado Especial Cível e Criminal, a unidade onde o senhor cravou cinco anos. Secretaria, atermação da Débora, gabinete, conciliação da Rochelle e a instrução on-line das juízas leigas. A equipe está em movimento e o público circula — fale com elas (E).");
     }
   }
 
@@ -3189,6 +3192,8 @@ TOGA.cena3d = (function () {
     limparToasts();
     infoJuizado = TOGA.juizado3d.construir(TOGA.nucleo3d.scene);
     TOGA.juizado3d.montarFesta(TOGA.nucleo3d.scene);
+    TOGA.juizado3d.iniciarVida();   // garante a equipe no elenco (animada)
+    TOGA.juizado3d.pausarVida();    // ...mas hoje é festa: rotinas pausadas
     localAtivo = "juizado";
     festaJuizadoAtiva = true;
     juizadoAcelerado = false;   // festa é comemoração, não expediente
@@ -3229,40 +3234,13 @@ TOGA.cena3d = (function () {
       bonecosFesta.push(b);
     });
   }
-  function restaurarEquipeJuizado() {
-    const eq = infoJuizado && infoJuizado.equipe; if (!eq) return;
-    Object.keys(eq).forEach(function (id) {
-      const b = eq[id], e = b.estacao; if (!e) return;
-      if (b.sentar) b.sentar(e.sentado);
-      b.grupo.position.set(e.x, 0, e.z);
-      b.grupo.rotation.y = e.rotY;
-      b.setEmocao(id === "carlostierry" ? "surpresa" : "neutro");
-    });
-    bonecosFesta = [];
-  }
-  let _festaEmoT = 0, _aceleraT = 0;
+  let _festaEmoT = 0;
   function tickJuizado(dt, t) {
     if (localAtivo !== "juizado" || !infoJuizado) return;
-    // 1) TODA a equipe vive sempre: respiração, piscar, pose da emoção.
-    //    No DIA DE SERVIÇO o relógio da equipe corre mais rápido (acelerados).
-    const vivos = infoJuizado.vivos || [];
-    const accel = (juizadoAcelerado && !festaJuizadoAtiva) ? 1.9 : 1;
-    for (let i = 0; i < vivos.length; i++) vivos[i].tick(dt * accel, t * accel);
-    if (juizadoAcelerado && !festaJuizadoAtiva) {
-      // a unidade mais rápida do Estado: gestos de trabalho em rajada
-      if (t - _aceleraT > 1.5) {
-        _aceleraT = t;
-        const gestos = ["lerPapel", "enfase", "entregar"];
-        for (let i = 0; i < vivos.length; i++) {
-          const b = vivos[i];
-          if (!b.acao && Math.random() < 0.55) b.executarAcao(gestos[Math.floor(Math.random() * gestos.length)]);
-          b.setEmocao(Math.random() < 0.25 ? "feliz" : "firme");
-        }
-      }
-      return;
-    }
+    // a equipe (e o público) são animados e movidos pelo rotinas3d.
+    // Aqui só cuidamos da FESTA: confete, dança e balões.
     if (!festaJuizadoAtiva) return;
-    // 2) na festa: confete caindo + a dança POR CIMA do idle
+    // na festa: confete caindo + a dança POR CIMA do idle
     const conf = TOGA.juizado3d.confetesFesta ? TOGA.juizado3d.confetesFesta() : [];
     for (let i = 0; i < conf.length; i++) {
       const m = conf[i], u = m.userData.confete; if (!u) continue;
@@ -3335,21 +3313,21 @@ TOGA.cena3d = (function () {
     const contadores = {};
     const lista = [];
 
-    // diálogo de cada personagem da equipe (cicla pelas falas)
+    // diálogo de cada personagem — a posição ACOMPANHA o NPC em movimento
+    // (pos = a própria Vector3 do grupo: o ponto de interação anda com ele)
     elenco.forEach(function (item) {
       const b = eq[item.id];
-      const pos = festa && b ? { x: b.grupo.position.x, z: b.grupo.position.z } : (b ? { x: b.estacao.x, z: b.estacao.z } : null);
-      if (!pos) return;
+      if (!b) return;
       lista.push({
         id: "jecc_" + item.id,
-        pos: pos, raio: 1.8,
+        pos: b.grupo.position, raio: 2.2,
         rotulo: "falar com " + item.nome + " — " + item.cargo,
         acao: function () {
-          if (b) {
-            b.setEmocao("feliz");
-            if (jogador) b.olharPara(jogador.grupo.position.clone().setY(1.4));
-            setTimeout(function () { if (b) b.olharPara(null); }, 5000);
-          }
+          // o NPC pausa, vira-se para você e fala
+          if (TOGA.rotinas3d && !festa) TOGA.rotinas3d.cancelar(b);
+          b.setEmocao("feliz");
+          if (jogador) b.olharPara(jogador.grupo.position.clone().setY(1.4));
+          setTimeout(function () { if (b) b.olharPara(null); }, 5000);
           const n = contadores[item.id] || 0;
           contadores[item.id] = n + 1;
           toastMundo(item.falas[n % item.falas.length]);
